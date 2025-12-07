@@ -392,7 +392,7 @@
                 swarmHp: 10,
                 heavyHp: 40,
                 laserHp: 30,
-                bossHp: 3000,
+                bossHp: 2500, // Updated for Stage 2 Boss
                 heavyAgile: false,
                 enemyCountMult: 0.5, 
                 fireRateMult: 1.5, 
@@ -443,7 +443,9 @@
          */
         let scene, camera, renderer;
         let menuCore, stars, bossPhase2Mesh;
+        let stickFigureGroup; // NEW: Group for Stick Figure
         let isPhase2Active = false;
+        let isStickFigureActive = false;
         
         // Supernova Variables
         let supernovaMesh, supernovaParticles;
@@ -482,7 +484,7 @@
                 stars = new THREE.Points(starGeo, starMat);
                 scene.add(stars);
 
-                // 3. PHASE 2 BOSS MESH
+                // 3. PHASE 2 BOSS MESH (Standard)
                 const bossGeo = new THREE.TorusKnotGeometry(12, 3, 100, 16);
                 const bossMat = new THREE.MeshBasicMaterial({ color: 0xff3300, wireframe: true });
                 bossPhase2Mesh = new THREE.Mesh(bossGeo, bossMat);
@@ -495,7 +497,10 @@
                 const ring = new THREE.Mesh(ringGeo, ringMat);
                 bossPhase2Mesh.add(ring);
 
-                // 4. SUPERNOVA ASSETS
+                // 4. VOID STICK FIGURE BOSS (Stage 2)
+                createStickFigureBoss();
+
+                // 5. SUPERNOVA ASSETS
                 const snGeo = new THREE.SphereGeometry(1, 32, 32);
                 const snMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0, wireframe: true });
                 supernovaMesh = new THREE.Mesh(snGeo, snMat);
@@ -527,17 +532,82 @@
             } catch (e) { console.warn("Error initializing 3D:", e); }
         }
 
+        function createStickFigureBoss() {
+            stickFigureGroup = new THREE.Group();
+            
+            // Materials
+            const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Main body
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true }); // Outline/Wireframe
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red Eyes
+
+            // Head
+            const headGeo = new THREE.SphereGeometry(4, 32, 32);
+            const head = new THREE.Mesh(headGeo, blackMat);
+            // Wireframe overlay for visibility
+            const headWire = new THREE.Mesh(headGeo, glowMat);
+            headWire.scale.set(1.1, 1.1, 1.1);
+            head.add(headWire);
+            stickFigureGroup.add(head);
+
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.8, 16, 16);
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+            leftEye.position.set(-1.5, 0.5, 3.5);
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+            rightEye.position.set(1.5, 0.5, 3.5);
+            head.add(leftEye);
+            head.add(rightEye);
+
+            // Body
+            const bodyGeo = new THREE.CylinderGeometry(0.8, 0.8, 12, 8);
+            const body = new THREE.Mesh(bodyGeo, blackMat);
+            body.position.y = -8;
+            stickFigureGroup.add(body);
+
+            // Arms (Static T-Pose/Slightly lowered for now)
+            const limbGeo = new THREE.CylinderGeometry(0.6, 0.6, 10, 8);
+            
+            const leftArm = new THREE.Mesh(limbGeo, blackMat);
+            leftArm.position.set(-6, -4, 0);
+            leftArm.rotation.z = Math.PI / 4;
+            stickFigureGroup.add(leftArm);
+
+            const rightArm = new THREE.Mesh(limbGeo, blackMat);
+            rightArm.position.set(6, -4, 0);
+            rightArm.rotation.z = -Math.PI / 4;
+            stickFigureGroup.add(rightArm);
+
+            // Legs
+            const leftLeg = new THREE.Mesh(limbGeo, blackMat);
+            leftLeg.position.set(-3, -18, 0);
+            leftLeg.rotation.z = Math.PI / 8;
+            stickFigureGroup.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(limbGeo, blackMat);
+            rightLeg.position.set(3, -18, 0);
+            rightLeg.rotation.z = -Math.PI / 8;
+            stickFigureGroup.add(rightLeg);
+
+            stickFigureGroup.visible = false;
+            stickFigureGroup.position.z = -20;
+            scene.add(stickFigureGroup);
+        }
+
         function triggerSupernova() {
             if(!supernovaMesh || !supernovaParticles) return;
             isSupernovaExploding = true;
             
             // Move to boss position
-            if(bossPhase2Mesh) {
+            if(bossPhase2Mesh && isPhase2Active && !isStickFigureActive) {
                 supernovaMesh.position.copy(bossPhase2Mesh.position);
                 supernovaParticles.position.copy(bossPhase2Mesh.position);
+            } else if (stickFigureGroup && isStickFigureActive) {
+                supernovaMesh.position.copy(stickFigureGroup.position);
+                supernovaParticles.position.copy(stickFigureGroup.position);
             }
 
             if(bossPhase2Mesh) bossPhase2Mesh.visible = false;
+            if(stickFigureGroup) stickFigureGroup.visible = false;
             
             supernovaMesh.scale.set(1,1,1);
             supernovaMesh.material.opacity = 1;
@@ -558,8 +628,36 @@
                 menuCore.rotation.x += 0.005; menuCore.rotation.y += 0.01; menuCore.visible = true;
             } else if (menuCore) { menuCore.visible = false; }
 
-            // Boss Phase 2 (TRUE FORM GLITCHING)
-            if (isPhase2Active && bossPhase2Mesh && !isSupernovaExploding) {
+            // STICK FIGURE BOSS UPDATE (Stage 2)
+            if (isStickFigureActive && stickFigureGroup && boss && !isSupernovaExploding) {
+                stickFigureGroup.visible = true;
+                
+                // Map Game Coordinates (0..width, 0..height) to Three.js Coordinates
+                // Assume Camera Z is 50. Visible height at Z=-20 is roughly 60 units.
+                // Simple mapping:
+                const mapX = (boss.x / width) * 100 - 50;
+                const mapY = -((boss.y / height) * 60 - 30);
+                
+                stickFigureGroup.position.x += (mapX - stickFigureGroup.position.x) * 0.1;
+                stickFigureGroup.position.y += (mapY - stickFigureGroup.position.y) * 0.1;
+                
+                // Bobbing / Flying animation
+                stickFigureGroup.rotation.z = Math.sin(frames * 0.05) * 0.1;
+
+                // Scale up in True Form (Phase 2)
+                if (boss.isPhaseTwo) {
+                     const targetScale = 2.5;
+                     stickFigureGroup.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.05);
+                } else {
+                     stickFigureGroup.scale.lerp(new THREE.Vector3(1.5, 1.5, 1.5), 0.05);
+                }
+
+            } else if (stickFigureGroup) {
+                stickFigureGroup.visible = false;
+            }
+
+            // STANDARD BOSS UPDATE (Stage 1 / Default)
+            if (isPhase2Active && bossPhase2Mesh && !isStickFigureActive && !isSupernovaExploding) {
                 bossPhase2Mesh.visible = true;
                 bossPhase2Mesh.rotation.x += 0.02; bossPhase2Mesh.rotation.y += 0.03;
                 
@@ -588,7 +686,7 @@
                     if(bossPhase2Mesh.material) bossPhase2Mesh.material.color.setHex(0xff3300);
                     bossPhase2Mesh.rotation.z = 0;
                 }
-            } else if (bossPhase2Mesh && !isSupernovaExploding) { bossPhase2Mesh.visible = false; }
+            } else if (bossPhase2Mesh && !isSupernovaExploding && !isStickFigureActive) { bossPhase2Mesh.visible = false; }
 
             if (isSupernovaExploding) {
                 const scale = supernovaMesh.scale.x + 3;
@@ -662,7 +760,8 @@
         /**
          * GAME LOGIC
          */
-        const ATTACK_SEQUENCE = ['laser', 'swarm', 'laser', 'laser', 'redLines', 'laser', 'laser', 'rings', 'laser', 'laser', 'missiles'];
+        // Updated Attack Sequence for variety
+        const ATTACK_SEQUENCE = ['laser', 'swarm', 'fireballs', 'laser', 'laser', 'redLines', 'fireballs', 'rings', 'laser', 'laser', 'missiles'];
 
         class Particle {
             constructor(x, y, color, speed, size, life) {
@@ -698,6 +797,8 @@
                     this.damage = currentSettings.playerDamage; 
                 } else if (type === 'boss_orb') {
                     this.color = '#ffaa00'; this.size = 6; this.damage = 10;
+                } else if (type === 'fireball') {
+                    this.color = '#ff4400'; this.size = 10; this.damage = 15;
                 } else if (type === 'boss_laser_bit') {
                     this.color = '#ff0055'; this.size = 4; this.damage = 15;
                 } else if (type === 'missile') {
@@ -719,6 +820,12 @@
                     this.guidanceTimer--;
                     if (Math.random() > 0.5) particles.push(new Particle(this.x, this.y, '#555', 1, 3, 20));
                 }
+                
+                // Fireball visual effect
+                if (this.type === 'fireball') {
+                     particles.push(new Particle(this.x, this.y, '#ffaa00', 1, 4, 10));
+                }
+
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < -50 || this.x > width + 50 || this.y < -50 || this.y > height + 50) this.active = false;
             }
@@ -964,20 +1071,24 @@
                 this.damageMultiplier = 1; 
                 this.laserAngle = Math.PI / 2;
                 this.isDesperationMode = false;
+                this.isStickFigure = false; // New Property
+                this.targetX = width / 2; // For smooth movement
             }
 
             // Called when starting Stage 2 specifically
             initAsStage2() {
-                this.isPhaseTwo = true;
+                this.isPhaseTwo = false; // Starts normal, becomes True Form later
+                this.isStickFigure = true;
                 this.damageMultiplier = 2;
                 this.spawnRate = 45 * currentSettings.fireRateMult;
-                this.maxHp = currentSettings.bossHp * 1.5; // Stronger
+                this.maxHp = 2500; // Rookie Health
                 this.hp = this.maxHp;
                 
-                bossName.innerText = "System Core: OMEGA UNLEASHED";
-                bossName.style.color = "#ffaa00";
+                bossName.innerText = "The Stick Figure";
+                bossName.style.color = "#ffffff";
                 
-                isPhase2Active = true; 
+                isStickFigureActive = true;
+                isPhase2Active = false; // Disable standard boss mesh
             }
 
             activate() {
@@ -989,7 +1100,12 @@
                 if (!this.active) return;
                 if (this.flashTimer > 0) this.flashTimer--;
 
-                if (!this.isPhaseTwo && this.hp < this.maxHp / 2) this.triggerPhaseTwo();
+                // Phase 2 Trigger for Stick Figure (True Form)
+                if (this.isStickFigure && !this.isPhaseTwo && this.hp < this.maxHp / 2) {
+                    this.triggerPhaseTwo();
+                } else if (!this.isStickFigure && !this.isPhaseTwo && this.hp < this.maxHp / 2) {
+                    this.triggerPhaseTwo();
+                }
                 
                 if (!this.isDesperationMode && this.hp <= 1000 && this.isPhaseTwo) {
                     this.isDesperationMode = true;
@@ -1005,31 +1121,47 @@
                     return;
                 }
 
-                if (!(this.isDesperationMode && this.laserActive)) {
-                    this.x = width/2 + Math.sin(frames * 0.02) * 100;
+                // MOVEMENT LOGIC
+                if (this.isStickFigure) {
+                    // Fly all over the map logic
+                    if (frames % 60 === 0) {
+                         this.targetX = Math.random() * (width - 100) + 50;
+                         this.targetY = Math.random() * (height / 2) + 50; 
+                    }
+                    this.x += (this.targetX - this.x) * 0.05;
+                    this.y += (this.targetY - this.y) * 0.05;
+                } else {
+                    // Standard boss movement
+                    if (!(this.isDesperationMode && this.laserActive)) {
+                        this.x = width/2 + Math.sin(frames * 0.02) * 100;
+                    }
                 }
                 
                 this.attackTimer++;
                 
-                if (frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
+                // Passive Spawn (Disabled for Stick Figure to focus on abilities, or reduced)
+                if (!this.isStickFigure && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
                       enemies.push(new SwarmEnemy(this.x - 40, this.y));
                       enemies.push(new SwarmEnemy(this.x + 40, this.y));
-                      if (this.isPhaseTwo) {
-                        enemies.push(new SwarmEnemy(this.x - 80, this.y - 20));
-                        enemies.push(new SwarmEnemy(this.x + 80, this.y - 20));
-                      }
                 }
                 this.handleAttack();
             }
 
             triggerPhaseTwo() {
                 this.isPhaseTwo = true;
-                isPhase2Active = true;
                 this.damageMultiplier = 2; 
                 this.spawnRate = 45 * currentSettings.fireRateMult;       
                 for(let i=0; i<100; i++) particles.push(new Particle(this.x, this.y, '#ff3300', 10, 8, 80));
-                bossName.innerText = "System Core: OMEGA UNLEASHED";
-                bossName.style.color = "#ffaa00";
+                
+                if (this.isStickFigure) {
+                    bossName.innerText = "TRUE FORM ACTIVATED";
+                    bossName.style.color = "#ff0000";
+                } else {
+                    bossName.innerText = "System Core: OMEGA UNLEASHED";
+                    bossName.style.color = "#ffaa00";
+                    isPhase2Active = true;
+                }
+
                 createShockwave(this.x, this.y);
                 
                 flashOverlay.style.transition = 'none';
@@ -1051,52 +1183,94 @@
 
             handleAttack() {
                 switch(this.currentAttack) {
+                    case 'fireballs': // Stick Figure Normal Attack
+                        if (this.attackTimer % 30 === 0 && this.attackTimer < 200) {
+                            // Fire from "hands" (offsets)
+                            bullets.push(new Bullet(this.x - 40, this.y, (player.x - (this.x-40))*0.02, (player.y-this.y)*0.02, 'fireball'));
+                            bullets.push(new Bullet(this.x + 40, this.y, (player.x - (this.x+40))*0.02, (player.y-this.y)*0.02, 'fireball'));
+                        }
+                        if (this.attackTimer > 250) this.startNextAttack();
+                        break;
+                    
                     case 'laser':
-                        if (this.attackTimer < 60) {
-                            this.laserCharge = this.attackTimer / 60;
-                            
-                            if (this.isDesperationMode) {
+                        if (this.isStickFigure) {
+                            // Stick Figure Laser Eyes
+                            if (this.attackTimer < 60) {
+                                // Charge up
+                                this.laserCharge = this.attackTimer / 60;
+                                // Aim at player
                                 let target = Math.atan2(player.y - this.y, player.x - this.x);
-                                let diff = target - this.laserAngle;
-                                while (diff < -Math.PI) diff += Math.PI * 2;
-                                while (diff > Math.PI) diff -= Math.PI * 2;
-                                this.laserAngle += diff * 0.1;
+                                this.laserAngle = target + Math.PI/2; 
+                            } else if (this.attackTimer < 140) {
+                                this.laserActive = true;
+                                // Hit detection Raycast style
+                                let angle = this.laserAngle - Math.PI/2;
+                                let dx = player.x - this.x; let dy = player.y - this.y;
+                                // Rotate point to check if within beam width
+                                let rx = dx * Math.cos(-angle) - dy * Math.sin(-angle);
+                                if (Math.abs(rx) < 20 && dy > 0) player.hit(2);
                             } else {
-                                this.laserAngle = Math.PI / 2;
+                                this.laserActive = false;
+                                if (this.attackTimer > 180) this.startNextAttack();
                             }
 
-                        } else if (this.attackTimer < 160) {
-                            this.laserActive = true; 
-                            
-                            let hit = false;
-                            if (this.isDesperationMode) {
-                                let dx = player.x - this.x;
-                                let dy = player.y - this.y;
-                                let angle = -(this.laserAngle - Math.PI/2);
-                                let rx = dx * Math.cos(angle) - dy * Math.sin(angle);
-                                if (Math.abs(rx) < 30 && dy > 0) hit = true; 
-                            } else {
-                                if (Math.abs(player.x - this.x) < 30) hit = true;
-                            }
-
-                            if (hit) player.hit(2 * this.damageMultiplier);
-                            
-                            if (frames % 4 === 0) {
-                                ctx.translate(Math.random()*4-2, 0);
-                                setTimeout(()=>ctx.setTransform(1,0,0,1,0,0), 20);
-                            }
                         } else {
-                            this.laserActive = false;
-                            if (this.attackTimer > 200) this.startNextAttack();
+                            // Original Laser Logic
+                            if (this.attackTimer < 60) {
+                                this.laserCharge = this.attackTimer / 60;
+                                if (this.isDesperationMode) {
+                                    let target = Math.atan2(player.y - this.y, player.x - this.x);
+                                    let diff = target - this.laserAngle;
+                                    while (diff < -Math.PI) diff += Math.PI * 2;
+                                    while (diff > Math.PI) diff -= Math.PI * 2;
+                                    this.laserAngle += diff * 0.1;
+                                } else {
+                                    this.laserAngle = Math.PI / 2;
+                                }
+                            } else if (this.attackTimer < 160) {
+                                this.laserActive = true; 
+                                let hit = false;
+                                if (this.isDesperationMode) {
+                                    let dx = player.x - this.x; let dy = player.y - this.y;
+                                    let angle = -(this.laserAngle - Math.PI/2);
+                                    let rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+                                    if (Math.abs(rx) < 30 && dy > 0) hit = true; 
+                                } else {
+                                    if (Math.abs(player.x - this.x) < 30) hit = true;
+                                }
+                                if (hit) player.hit(2 * this.damageMultiplier);
+                                if (frames % 4 === 0) {
+                                    ctx.translate(Math.random()*4-2, 0);
+                                    setTimeout(()=>ctx.setTransform(1,0,0,1,0,0), 20);
+                                }
+                            } else {
+                                this.laserActive = false;
+                                if (this.attackTimer > 200) this.startNextAttack();
+                            }
                         }
                         break;
+
                     case 'swarm':
-                        if (this.attackTimer === 1) {
-                            let count = this.isPhaseTwo ? 15 : 10;
-                            count = Math.floor(count * currentSettings.enemyCountMult);
-                            for(let i=0; i<count; i++) enemies.push(new SwarmEnemy(Math.random() * width, -50 - (i*50)));
-                        }
-                        if (this.attackTimer > 400) this.startNextAttack();
+                         if (this.isStickFigure && this.isPhaseTwo) {
+                             // TRUE FORM SUMMON
+                             if (this.attackTimer % 100 === 0 && this.attackTimer < 300) {
+                                 for(let i=0; i<5; i++) {
+                                     let angle = (Math.PI*2/5)*i;
+                                     let sx = this.x + Math.cos(angle)*100;
+                                     let sy = this.y + Math.sin(angle)*100;
+                                     enemies.push(new SwarmEnemy(sx, sy));
+                                 }
+                             }
+                             if (this.attackTimer > 350) this.startNextAttack();
+                         } else {
+                            // Standard Swarm
+                            if (this.attackTimer === 1) {
+                                let count = this.isPhaseTwo ? 15 : 10;
+                                count = Math.floor(count * currentSettings.enemyCountMult);
+                                for(let i=0; i<count; i++) enemies.push(new SwarmEnemy(Math.random() * width, -50 - (i*50)));
+                            }
+                            if (this.attackTimer > 400) this.startNextAttack();
+                         }
                         break;
                     case 'redLines':
                         if (this.attackTimer === 1) {
@@ -1135,6 +1309,29 @@
 
             draw() {
                 if (!this.active) return;
+                
+                // --- STICK FIGURE DRAWING (CANVAS OVERLAYS) ---
+                // We mainly rely on Three.js for the body, but let's draw the attacks here.
+                if (this.isStickFigure) {
+                     if (this.currentAttack === 'laser' && this.laserActive) {
+                         ctx.save();
+                         ctx.translate(this.x, this.y);
+                         // Draw two beams from "eyes"
+                         ctx.rotate(this.laserAngle - Math.PI/2);
+                         ctx.shadowBlur = 20; ctx.shadowColor = 'red';
+                         ctx.strokeStyle = 'red'; ctx.lineWidth = 5;
+                         
+                         // Left Eye Beam
+                         ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-10, 1000); ctx.stroke();
+                         // Right Eye Beam
+                         ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(10, 1000); ctx.stroke();
+                         
+                         ctx.restore();
+                     }
+                     return; // Don't draw the standard orb boss
+                }
+
+                // --- STANDARD BOSS DRAWING ---
                 ctx.save(); ctx.translate(this.x, this.y);
 
                 if (this.currentAttack === 'laser') {
@@ -1200,6 +1397,7 @@
                 if (this.hp <= 0 && this.active) {
                     this.active = false; bossHealthBar.style.width = '0%';
                     isPhase2Active = false;
+                    isStickFigureActive = false; // Hide stick figure
                     for(let i=0; i<100; i++) {
                         particles.push(new Particle(this.x, this.y, '#ffaa00', 10, 8, 100));
                         particles.push(new Particle(this.x, this.y, '#ffffff', 15, 5, 120));
@@ -1248,7 +1446,7 @@
             let maxDelay = 0;
             const countMult = currentSettings.enemyCountMult;
 
-            // --- STAGE 2 LOGIC (15 Waves, Omega Unleashed Boss) ---
+            // --- STAGE 2 LOGIC (15 Waves, Stick Figure Boss) ---
             if (activeDifficultyMode === 'easy' && currentLevelIndex === 2) {
                 
                 if (wave >= 1 && wave <= 4) {
@@ -1299,9 +1497,9 @@
                         setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
                     }
                 } else if (wave === 15) {
-                    // BOSS: OMEGA UNLEASHED
+                    // BOSS: VOID STICK FIGURE
                     boss.activate();
-                    boss.initAsStage2(); // Make it harder/change name
+                    boss.initAsStage2(); 
                 }
 
             } else {
@@ -1433,6 +1631,7 @@
             
             gameState = STATE.PLAYING;
             isPhase2Active = false;
+            isStickFigureActive = false; // Reset stick figure
             
             playerHud.style.opacity = '1'; canvas.style.opacity = '1';
             bossHud.style.opacity = 0; 
@@ -1468,8 +1667,10 @@
             bossHud.style.opacity = 0;
             enemies = []; bullets = []; particles = [];
             isSupernovaExploding = false;
+            isStickFigureActive = false; // Reset stick figure
             if(supernovaMesh) supernovaMesh.visible = false;
             if(supernovaParticles) supernovaParticles.visible = false;
+            if(stickFigureGroup) stickFigureGroup.visible = false;
         }
 
         function gameOver(win) {
