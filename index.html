@@ -112,9 +112,9 @@
             pointer-events: auto;
             background: rgba(0,0,0,0.4);
         }
-        #level-select-screen {
+        #level-select-screen, #expert-level-select-screen {
             pointer-events: auto;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.8);
             opacity: 0; /* Hidden by default */
             pointer-events: none;
         }
@@ -133,7 +133,6 @@
             opacity: 0;
             pointer-events: none;
             z-index: 100;
-            /* Transition set via JS for control */
         }
         .title-text {
             font-size: 64px;
@@ -224,6 +223,31 @@
             transform: scale(1.1);
         }
 
+        /* RED THEME FOR EXPERT */
+        .red-theme .title-text {
+            color: #ff4444 !important;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+        .red-theme .level-btn.active {
+            border-color: #ff4444;
+            color: #ff4444;
+            background: rgba(50, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+        .red-theme .level-btn.active:hover {
+            background: #ff4444;
+            color: black;
+            box-shadow: 0 0 30px #ff4444;
+        }
+        .red-theme .btn {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+        .red-theme .btn:hover {
+            background: #ff4444;
+            color: white;
+        }
+
         /* Wave Announcement Text */
         #wave-announcement {
             position: absolute;
@@ -277,6 +301,7 @@
         <div id="player-hud">
             <div class="hud-text">HP: <span id="player-hp">100</span>%</div>
             <div class="hud-text">SCORE: <span id="score">0</span></div>
+            <div class="hud-text" style="font-size: 14px; margin-top: 5px; color: #aaa;">STAGE: <span id="stage-display">1</span></div>
         </div>
         <div class="phase-indicator" id="phase-debug">INIT</div>
         <div id="wave-announcement">WAVE 1</div>
@@ -297,7 +322,25 @@
     <div id="level-select-screen" class="screen-overlay">
         <div class="title-text" style="color: #00ffff;">BEGINNER CAMPAIGN</div>
         <div class="level-grid">
-            <button class="level-btn active" onclick="launchMission('easy')">01</button>
+            <button class="level-btn active" onclick="launchMission('easy', 1)">01</button>
+            <button class="level-btn active" onclick="launchMission('easy', 2)">02</button>
+            <button class="level-btn">03</button>
+            <button class="level-btn">04</button>
+            <button class="level-btn">05</button>
+            <button class="level-btn">06</button>
+            <button class="level-btn">07</button>
+            <button class="level-btn">08</button>
+            <button class="level-btn">09</button>
+            <button class="level-btn">10</button>
+        </div>
+        <button class="btn" onclick="resetToMenu()">BACK</button>
+    </div>
+
+    <!-- EXPERT LEVEL SELECT -->
+    <div id="expert-level-select-screen" class="screen-overlay red-theme">
+        <div class="title-text">EXPERT CAMPAIGN</div>
+        <div class="level-grid">
+            <button class="level-btn active" onclick="launchMission('hard', 1)">01</button>
             <button class="level-btn">02</button>
             <button class="level-btn">03</button>
             <button class="level-btn">04</button>
@@ -326,6 +369,8 @@
         };
         let gameState = STATE.MENU;
         let width, height;
+        let currentLevelIndex = 1;
+        let activeDifficultyMode = 'easy';
 
         // DIFFICULTY CONFIGURATION
         const DIFFICULTY = {
@@ -361,6 +406,7 @@
         const flashOverlay = document.getElementById('flash-overlay');
         const menuScreen = document.getElementById('menu-screen');
         const levelSelectScreen = document.getElementById('level-select-screen');
+        const expertSelectScreen = document.getElementById('expert-level-select-screen');
         const gameOverScreen = document.getElementById('game-over-screen');
         
         function resizeGame() {
@@ -379,6 +425,7 @@
         const playerHud = document.getElementById('player-hud');
         const playerHpEl = document.getElementById('player-hp');
         const scoreEl = document.getElementById('score');
+        const stageDisplayEl = document.getElementById('stage-display');
         const gameOverTitle = document.getElementById('game-over-title');
         const phaseDebug = document.getElementById('phase-debug');
         const waveText = document.getElementById('wave-announcement');
@@ -919,6 +966,20 @@
                 this.isDesperationMode = false;
             }
 
+            // Called when starting Stage 2 specifically
+            initAsStage2() {
+                this.isPhaseTwo = true;
+                this.damageMultiplier = 2;
+                this.spawnRate = 45 * currentSettings.fireRateMult;
+                this.maxHp = currentSettings.bossHp * 1.5; // Stronger
+                this.hp = this.maxHp;
+                
+                bossName.innerText = "System Core: OMEGA UNLEASHED";
+                bossName.style.color = "#ffaa00";
+                
+                isPhase2Active = true; 
+            }
+
             activate() {
                 this.active = true;
                 bossHud.style.opacity = 1;
@@ -951,12 +1012,12 @@
                 this.attackTimer++;
                 
                 if (frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
-                     enemies.push(new SwarmEnemy(this.x - 40, this.y));
-                     enemies.push(new SwarmEnemy(this.x + 40, this.y));
-                     if (this.isPhaseTwo) {
+                      enemies.push(new SwarmEnemy(this.x - 40, this.y));
+                      enemies.push(new SwarmEnemy(this.x + 40, this.y));
+                      if (this.isPhaseTwo) {
                         enemies.push(new SwarmEnemy(this.x - 80, this.y - 20));
                         enemies.push(new SwarmEnemy(this.x + 80, this.y - 20));
-                     }
+                      }
                 }
                 this.handleAttack();
             }
@@ -1170,7 +1231,9 @@
             currentWave = wave;
             waveClearCheckReady = false; 
             
-            waveText.innerText = currentWave === 10 ? "BOSS WARNING" : `WAVE ${currentWave}`;
+            let maxWaves = (activeDifficultyMode === 'easy' && currentLevelIndex === 2) ? 15 : 10;
+            
+            waveText.innerText = currentWave === maxWaves ? "BOSS WARNING" : `WAVE ${currentWave}`;
             waveText.style.opacity = 1;
             waveText.style.transform = "scale(1.2)";
             
@@ -1185,79 +1248,138 @@
             let maxDelay = 0;
             const countMult = currentSettings.enemyCountMult;
 
-            if (wave === 1) {
-                let count = Math.ceil(10 * countMult);
-                for(let i=0; i<count; i++) { 
-                    let d = i*400; if(d>maxDelay) maxDelay=d;
-                    setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+            // --- STAGE 2 LOGIC (15 Waves, Omega Unleashed Boss) ---
+            if (activeDifficultyMode === 'easy' && currentLevelIndex === 2) {
+                
+                if (wave >= 1 && wave <= 4) {
+                    // Intro Waves
+                    let count = Math.ceil((12 + wave * 2) * countMult);
+                    for(let i=0; i<count; i++) {
+                        let d = i * (400 - wave * 20); if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                } else if (wave === 5) {
+                    // Mini Boss Check
+                    enemies.push(new HeavyStriker(width/2, -100));
+                    setTimeout(() => enemies.push(new HeavyStriker(width/2 - 100, -200)), 500);
+                    setTimeout(() => enemies.push(new HeavyStriker(width/2 + 100, -200)), 500);
+                    maxDelay = 1000;
+                } else if (wave >= 6 && wave <= 9) {
+                    // Laser + Swarm
+                    enemies.push(new LaserEnemy(width * 0.2, -100));
+                    enemies.push(new LaserEnemy(width * 0.8, -100));
+                    if(wave > 7) enemies.push(new LaserEnemy(width * 0.5, -200));
+                    
+                    let count = Math.ceil(20 * countMult);
+                    for(let i=0; i<count; i++) {
+                        let d = 1000 + i * 200; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                } else if (wave === 10) {
+                    // Heavy + Laser
+                    enemies.push(new HeavyStriker(width/3, -100));
+                    enemies.push(new HeavyStriker(width*2/3, -100));
+                    enemies.push(new LaserEnemy(width/2, -200));
+                    maxDelay = 500;
+                } else if (wave >= 11 && wave <= 14) {
+                    // Chaos Waves
+                    let laserCount = Math.floor((wave - 9) / 2) + 1;
+                    for(let l=0; l<laserCount; l++) {
+                        setTimeout(() => enemies.push(new LaserEnemy(width * ((l+1)/(laserCount+1)), -100)), l*500);
+                    }
+                    
+                    let heavyCount = 2;
+                    for(let h=0; h<heavyCount; h++) {
+                        setTimeout(() => enemies.push(new HeavyStriker(Math.random()*width, -100)), 2000 + h*1000);
+                    }
+
+                    let count = Math.ceil(30 * countMult);
+                    for(let i=0; i<count; i++) {
+                        let d = i * 150; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                } else if (wave === 15) {
+                    // BOSS: OMEGA UNLEASHED
+                    boss.activate();
+                    boss.initAsStage2(); // Make it harder/change name
                 }
-            } else if (wave === 2) {
-                let count = Math.ceil(16 * countMult);
-                for(let i=0; i<count; i++) { 
-                    let d = i*300; if(d>maxDelay) maxDelay=d;
-                    setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+
+            } else {
+                // --- DEFAULT LOGIC (Stage 1 / Expert) ---
+                if (wave === 1) {
+                    let count = Math.ceil(10 * countMult);
+                    for(let i=0; i<count; i++) { 
+                        let d = i*400; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                } else if (wave === 2) {
+                    let count = Math.ceil(16 * countMult);
+                    for(let i=0; i<count; i++) { 
+                        let d = i*300; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                } else if (wave === 3) {
+                    let count = Math.ceil(24 * countMult);
+                    for(let i=0; i<count; i++) { 
+                        let d = i*200; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                } else if (wave === 4) {
+                    setTimeout(() => enemies.push(new HeavyStriker(width/2, -100)), 0);
+                    let count = Math.ceil(15 * countMult);
+                    for(let i=0; i<count; i++) { 
+                        let d = 1000 + i*300; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                } else if (wave === 5) {
+                    enemies.push(new HeavyStriker(width/4, -100));
+                    enemies.push(new HeavyStriker(width*2/4, -150));
+                    enemies.push(new HeavyStriker(width*3/4, -100));
+                    let count = Math.ceil(20 * countMult);
+                    for(let i=0; i<count; i++) { 
+                        let d = 2000 + i*250; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                    maxDelay = 2000 + count*250;
+                } else if (wave === 6) {
+                    enemies.push(new LaserEnemy(width*0.2, -100));
+                    enemies.push(new LaserEnemy(width*0.8, -100));
+                    let count = Math.ceil(20 * countMult);
+                    for(let i=0; i<count; i++) { 
+                        let d = i*200; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                } else if (wave === 7) {
+                    enemies.push(new LaserEnemy(width*0.1, -100));
+                    enemies.push(new LaserEnemy(width*0.9, -100));
+                    setTimeout(() => enemies.push(new HeavyStriker(width/2, -100)), 500);
+                    setTimeout(() => enemies.push(new HeavyStriker(width/4, -100)), 1000);
+                    setTimeout(() => enemies.push(new HeavyStriker(width*3/4, -100)), 1500);
+                    maxDelay = 1500;
+                } else if (wave === 8) {
+                    enemies.push(new LaserEnemy(width/2, -100));
+                    enemies.push(new LaserEnemy(200, -200));
+                    enemies.push(new LaserEnemy(width-200, -200));
+                    let count = Math.ceil(30 * countMult);
+                    for(let i=0; i<count; i++) { 
+                        let d = 1000 + i*200; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                    maxDelay = 1000 + count*200;
+                } else if (wave === 9) {
+                    enemies.push(new LaserEnemy(width*0.2, -100));
+                    enemies.push(new LaserEnemy(width*0.8, -100));
+                    enemies.push(new HeavyStriker(width/3, -200));
+                    enemies.push(new HeavyStriker(width*2/3, -200));
+                    let count = Math.ceil(40 * countMult);
+                    for(let i=0; i<count; i++) { 
+                        let d = 500 + i*150; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                    }
+                    maxDelay = 500 + count*150;
+                } else if (wave === 10) {
+                    boss.activate();
                 }
-            } else if (wave === 3) {
-                let count = Math.ceil(24 * countMult);
-                for(let i=0; i<count; i++) { 
-                    let d = i*200; if(d>maxDelay) maxDelay=d;
-                    setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
-                }
-            } else if (wave === 4) {
-                setTimeout(() => enemies.push(new HeavyStriker(width/2, -100)), 0);
-                let count = Math.ceil(15 * countMult);
-                for(let i=0; i<count; i++) { 
-                    let d = 1000 + i*300; if(d>maxDelay) maxDelay=d;
-                    setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
-                }
-            } else if (wave === 5) {
-                enemies.push(new HeavyStriker(width/4, -100));
-                enemies.push(new HeavyStriker(width*2/4, -150));
-                enemies.push(new HeavyStriker(width*3/4, -100));
-                let count = Math.ceil(20 * countMult);
-                for(let i=0; i<count; i++) { 
-                    let d = 2000 + i*250; if(d>maxDelay) maxDelay=d;
-                    setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
-                }
-                maxDelay = 2000 + count*250;
-            } else if (wave === 6) {
-                enemies.push(new LaserEnemy(width*0.2, -100));
-                enemies.push(new LaserEnemy(width*0.8, -100));
-                let count = Math.ceil(20 * countMult);
-                for(let i=0; i<count; i++) { 
-                    let d = i*200; if(d>maxDelay) maxDelay=d;
-                    setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
-                }
-            } else if (wave === 7) {
-                enemies.push(new LaserEnemy(width*0.1, -100));
-                enemies.push(new LaserEnemy(width*0.9, -100));
-                setTimeout(() => enemies.push(new HeavyStriker(width/2, -100)), 500);
-                setTimeout(() => enemies.push(new HeavyStriker(width/4, -100)), 1000);
-                setTimeout(() => enemies.push(new HeavyStriker(width*3/4, -100)), 1500);
-                maxDelay = 1500;
-            } else if (wave === 8) {
-                enemies.push(new LaserEnemy(width/2, -100));
-                enemies.push(new LaserEnemy(200, -200));
-                enemies.push(new LaserEnemy(width-200, -200));
-                let count = Math.ceil(30 * countMult);
-                for(let i=0; i<count; i++) { 
-                    let d = 1000 + i*200; if(d>maxDelay) maxDelay=d;
-                    setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
-                }
-                maxDelay = 1000 + count*200;
-            } else if (wave === 9) {
-                enemies.push(new LaserEnemy(width*0.2, -100));
-                enemies.push(new LaserEnemy(width*0.8, -100));
-                enemies.push(new HeavyStriker(width/3, -200));
-                enemies.push(new HeavyStriker(width*2/3, -200));
-                let count = Math.ceil(40 * countMult);
-                for(let i=0; i<count; i++) { 
-                    let d = 500 + i*150; if(d>maxDelay) maxDelay=d;
-                    setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
-                }
-                maxDelay = 500 + count*150;
-            } else if (wave === 10) {
-                boss.activate();
             }
 
             setTimeout(() => {
@@ -1270,35 +1392,31 @@
         let score = 0, frames = 0;
         let victoryTimer = 0;
 
-        function startGame(mode) {
-            // Check for veteran mode direct launch
-            if (mode === 'hard') {
-                launchMission('hard');
-                return;
-            }
-            
-            // For rookie, show level select
-            if (mode === 'easy') {
-                showRookieSelect();
-                return;
-            }
+        function showExpertSelect() {
+            gameState = STATE.LEVEL_SELECT;
+            menuScreen.style.opacity = '0';
+            menuScreen.style.pointerEvents = 'none';
+            expertSelectScreen.style.opacity = '1';
+            expertSelectScreen.style.pointerEvents = 'auto';
         }
 
         function showRookieSelect() {
             gameState = STATE.LEVEL_SELECT;
             menuScreen.style.opacity = '0';
             menuScreen.style.pointerEvents = 'none';
-            
             levelSelectScreen.style.opacity = '1';
             levelSelectScreen.style.pointerEvents = 'auto';
         }
 
-        function launchMission(mode) {
+        function launchMission(mode, levelIndex) {
             currentSettings = mode === 'hard' ? DIFFICULTY.NORMAL : DIFFICULTY.EASY;
+            activeDifficultyMode = mode;
+            currentLevelIndex = levelIndex;
             
             // Hide all menus
             menuScreen.style.opacity = '0'; menuScreen.style.pointerEvents = 'none';
             levelSelectScreen.style.opacity = '0'; levelSelectScreen.style.pointerEvents = 'none';
+            expertSelectScreen.style.opacity = '0'; expertSelectScreen.style.pointerEvents = 'none';
             gameOverScreen.style.opacity = '0'; gameOverScreen.style.pointerEvents = 'none';
             
             document.activeElement.blur();
@@ -1308,7 +1426,10 @@
             bullets = []; particles = []; enemies = [];
             score = 0; frames = 0;
             scoreEl.innerText = '0'; playerHpEl.innerText = '100';
+            stageDisplayEl.innerText = levelIndex;
             bossHealthBar.style.width = '100%';
+            bossName.innerText = "System Core: Omega"; // Reset name
+            bossName.style.color = "#ff4d4d";
             
             gameState = STATE.PLAYING;
             isPhase2Active = false;
@@ -1340,6 +1461,7 @@
             gameState = STATE.MENU;
             menuScreen.style.opacity = '1'; menuScreen.style.pointerEvents = 'auto';
             levelSelectScreen.style.opacity = '0'; levelSelectScreen.style.pointerEvents = 'none';
+            expertSelectScreen.style.opacity = '0'; expertSelectScreen.style.pointerEvents = 'none';
             gameOverScreen.style.opacity = '0'; gameOverScreen.style.pointerEvents = 'none';
             playerHud.style.opacity = '0';
             canvas.style.opacity = '0'; 
@@ -1367,7 +1489,9 @@
             frames++;
             if (gameState === STATE.PLAYING || gameState === STATE.GAMEOVER || gameState === STATE.VICTORY_SEQUENCE) {
                 
-                if (gameState === STATE.PLAYING && currentWave < 10 && enemies.length === 0 && waveClearCheckReady) {
+                let maxWaves = (activeDifficultyMode === 'easy' && currentLevelIndex === 2) ? 15 : 10;
+
+                if (gameState === STATE.PLAYING && currentWave < maxWaves && enemies.length === 0 && waveClearCheckReady) {
                     if (frames % 60 === 0) { 
                         startWave(currentWave + 1);
                     }
@@ -1439,8 +1563,8 @@
             }
         }
 
-        document.getElementById('start-hard-btn').addEventListener('click', () => startGame('hard'));
-        document.getElementById('start-easy-btn').addEventListener('click', () => startGame('easy'));
+        document.getElementById('start-hard-btn').addEventListener('click', showExpertSelect);
+        document.getElementById('start-easy-btn').addEventListener('click', showRookieSelect);
         if (typeof THREE !== 'undefined') initThreeMenu();
         animateGame();
     </script>
