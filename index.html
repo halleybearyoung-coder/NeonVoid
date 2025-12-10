@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Void: HANGAR & STARS (2D)</title>
+    <title>Neon Void: BRIEFING UPDATE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body {
@@ -122,7 +122,7 @@
             pointer-events: auto;
             background: rgba(0,0,0,0.4);
         }
-        #level-select-screen, #expert-level-select-screen, #hangar-screen {
+        #level-select-screen, #expert-level-select-screen, #hangar-screen, #intro-screen {
             pointer-events: auto;
             background: rgba(0,0,0,0.9);
             opacity: 0; /* Hidden by default */
@@ -195,7 +195,7 @@
             color: white;
             box-shadow: 0 0 40px #ff4444;
         }
-        /* HANGAR BUTTON & SCREEN */
+        /* HANGAR BUTTON & SCREEN (REFINED) */
         .hangar-toggle-btn {
             position: absolute;
             top: 20px;
@@ -215,44 +215,67 @@
             color: black;
             box-shadow: 0 0 20px #ffd700;
         }
+        #hangar-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 10, 10, 0.95);
+            padding: 40px;
+            border: 1px solid #00aaaa;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.1);
+            border-radius: 8px;
+        }
         .upgrade-row {
             display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 30px;
+            margin-bottom: 30px;
         }
         .upgrade-card {
-            width: 220px;
-            padding: 15px;
-            border: 1px solid #444;
-            background: rgba(20,20,20,0.8);
+            width: 240px;
+            padding: 20px;
+            border: 1px solid #333;
+            background: linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.9) 100%);
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .upgrade-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ffff;
+        }
+        .upgrade-title {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
         .upgrade-val {
-            font-size: 18px; color: #ccc; margin: 10px 0;
+            font-size: 24px; color: #fff; margin: 15px 0; font-weight: bold;
         }
-        .locked { border-color: #555; color: #555; }
-        .locked h3 { color: #555; }
+        .locked { border-color: #333; color: #555; opacity: 0.7; }
+        .locked:hover { transform: none; border-color: #333; }
         
         /* LEVEL SELECT GRID */
         .level-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            display: flex;
+            justify-content: center;
             gap: 30px;
             margin-bottom: 40px;
         }
         .level-btn {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            border-radius: 10%;
             background: rgba(0, 0, 0, 0.5);
             border: 2px solid #444;
             color: #444;
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
-            cursor: not-allowed;
+            cursor: pointer; 
             transition: all 0.3s;
             display: flex;
             justify-content: center;
@@ -262,119 +285,118 @@
         .level-btn.active {
             border-color: #00ffff;
             color: #00ffff;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-            cursor: pointer;
-            background: rgba(0, 50, 50, 0.5);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+            background: rgba(0, 50, 50, 0.6);
         }
         .level-btn.active:hover {
             background: #00ffff;
             color: black;
-            box-shadow: 0 0 30px #00ffff;
+            box-shadow: 0 0 40px #00ffff;
             transform: scale(1.1);
         }
-
+        .level-btn.locked {
+            border-color: rgba(0, 255, 255, 0.3);
+            color: rgba(0, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.7);
+            font-size: 24px;
+        }
+        
         /* RED THEME FOR EXPERT */
-        .red-theme .title-text {
-            color: #ff4444 !important;
-            text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        .red-theme .title-text { color: #ff4444 !important; text-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
+        .red-theme .level-btn.active { border-color: #ff4444; color: #ff4444; background: rgba(50, 0, 0, 0.5); box-shadow: 0 0 15px rgba(255, 0, 0, 0.3); }
+        .red-theme .level-btn.active:hover { background: #ff4444; color: black; box-shadow: 0 0 30px #ff4444; }
+        .red-theme .level-btn.locked { border-color: rgba(255, 68, 68, 0.3); color: rgba(255, 68, 68, 0.3); }
+        .red-theme .btn { border-color: #ff4444; color: #ff4444; }
+        .red-theme .btn:hover { background: #ff4444; color: white; }
+
+        /* INTRO / BRIEFING SCREEN */
+        .radio-box {
+            width: 60%;
+            max-width: 700px;
+            background: rgba(0, 15, 0, 0.95);
+            border: 2px solid #00ff00;
+            padding: 30px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.15);
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
-        .red-theme .level-btn.active {
-            border-color: #ff4444;
-            color: #ff4444;
-            background: rgba(50, 0, 0, 0.5);
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        .radio-header {
+            border-bottom: 1px solid #005500;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
         }
-        .red-theme .level-btn.active:hover {
-            background: #ff4444;
-            color: black;
-            box-shadow: 0 0 30px #ff4444;
+        .blink { animation: blink 1s infinite; }
+        .radio-content {
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            min-height: 100px;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
         }
-        .red-theme .btn {
-            border-color: #ff4444;
-            color: #ff4444;
+        .radio-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
         }
-        .red-theme .btn:hover {
-            background: #ff4444;
-            color: white;
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        /* CUSTOM MESSAGE MODAL */
+        #msg-modal {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95); border: 2px solid #ff4444;
+            padding: 30px; z-index: 200; text-align: center; display: none;
+            box-shadow: 0 0 30px rgba(255,0,0,0.3); pointer-events: auto;
         }
+        #msg-text { font-size: 20px; color: white; margin-bottom: 20px; }
 
         /* Wave Announcement Text */
         #wave-announcement {
-            position: absolute;
-            top: 40%;
-            width: 100%;
-            text-align: center;
-            font-size: 48px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 20px #00ffff;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s, transform 0.5s;
-            transform: scale(0.5);
-            letter-spacing: 10px;
-            z-index: 15;
+            position: absolute; top: 40%; width: 100%; text-align: center;
+            font-size: 48px; font-weight: bold; color: #fff;
+            text-shadow: 0 0 20px #00ffff; opacity: 0; pointer-events: none;
+            transition: opacity 0.5s, transform 0.5s; transform: scale(0.5);
+            letter-spacing: 10px; z-index: 15;
         }
         .phase-indicator {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 12px;
-            font-family: monospace;
-            text-align: right;
+            position: absolute; bottom: 20px; right: 20px;
+            color: rgba(255, 255, 255, 0.3); font-size: 12px;
+            font-family: monospace; text-align: right;
         }
         .controls-hint {
-            margin-top: 20px;
-            font-size: 14px;
-            color: rgba(255,255,255,0.5);
-            font-family: monospace;
+            margin-top: 20px; font-size: 14px;
+            color: rgba(255,255,255,0.5); font-family: monospace;
         }
 
         /* DEV/MOD MENU STYLES */
         .dev-overlay {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
+            position: absolute; top: 20px; right: 20px; z-index: 200;
+            display: flex; flex-direction: column; align-items: flex-end;
             pointer-events: auto;
         }
         .dev-toggle {
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #ff4444;
-            color: #ff4444;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            font-size: 12px;
-            padding: 5px 10px;
-            cursor: pointer;
-            backdrop-filter: blur(2px);
-            margin-bottom: 5px;
-            transition: 0.2s;
+            background: rgba(0, 0, 0, 0.7); border: 1px solid #ff4444;
+            color: #ff4444; font-family: 'Courier New', Courier, monospace;
+            font-weight: bold; font-size: 12px; padding: 5px 10px; cursor: pointer;
+            backdrop-filter: blur(2px); margin-bottom: 5px; transition: 0.2s;
         }
         .dev-toggle:hover { background: #ff4444; color: black; }
         .dev-menu {
-            display: none;
-            background: rgba(20, 0, 0, 0.9);
-            border: 1px solid #ff4444;
-            padding: 10px;
-            border-radius: 4px;
-            width: 180px;
+            display: none; background: rgba(20, 0, 0, 0.9);
+            border: 1px solid #ff4444; padding: 10px; border-radius: 4px; width: 180px;
         }
         .dev-btn {
-            background: #300;
-            border: 1px solid #600;
-            color: #f88;
-            width: 100%;
-            padding: 6px;
-            margin-bottom: 6px;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            text-align: center;
+            background: #300; border: 1px solid #600; color: #f88;
+            width: 100%; padding: 6px; margin-bottom: 6px; cursor: pointer;
+            font-family: 'Courier New', monospace; font-size: 11px; text-align: center;
         }
         .dev-btn:hover { background: #f00; color: white; border-color: #f00; }
         .dev-btn:active { transform: translateY(1px); }
@@ -389,6 +411,13 @@
     <!-- White Flash Overlay -->
     <div id="flash-overlay"></div>
 
+    <!-- Message Modal -->
+    <div id="msg-modal">
+        <div class="title-text" style="font-size: 30px; margin-bottom: 10px; color: #ff4444;">ACCESS DENIED</div>
+        <div id="msg-text">Level Locked. Complete previous sector.</div>
+        <button class="btn" onclick="closeMsgModal()" style="font-size: 16px; padding: 10px 30px;">OK</button>
+    </div>
+
     <!-- DEV MENU OVERLAY -->
     <div class="dev-overlay">
         <button class="dev-toggle" onclick="toggleDevMenu()">[ DEV TOOLS ]</button>
@@ -397,6 +426,7 @@
             <button class="dev-btn" onclick="setupTerminatorRun()">⚙️ SETUP: TERMINATOR</button>
             <button id="god-mode-btn" class="dev-btn" onclick="toggleGodMode()">🛡️ GOD MODE: OFF</button>
             <button class="dev-btn" onclick="killAllEnemies()">💀 KILL ALL</button>
+            <button class="dev-btn" onclick="unlockAllLevels()">🔓 UNLOCK ALL (DEV)</button>
         </div>
     </div>
 
@@ -418,6 +448,22 @@
         <div id="wave-announcement">WAVE 1</div>
     </div>
 
+    <!-- INTRO / BRIEFING SCREEN -->
+    <div id="intro-screen" class="screen-overlay">
+        <div class="radio-box">
+            <div class="radio-header">
+                <span>INCOMING TRANSMISSION</span>
+                <span class="blink">● REC</span>
+            </div>
+            <div id="radio-content" class="radio-content">
+                <!-- Text goes here -->
+            </div>
+            <div class="radio-footer">
+                <button class="btn" style="border-color: #00ff00; color: #00ff00; font-family: inherit;" onclick="skipIntro()">ESTABLISH LINK (SKIP) <span id="intro-countdown">30</span>s</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MAIN MENU -->
     <div id="menu-screen" class="screen-overlay">
         <div class="title-text" style="color: #00ffff;">NEON VOID</div>
@@ -433,11 +479,8 @@
     <div id="level-select-screen" class="screen-overlay">
         <button class="hangar-toggle-btn" onclick="openHangar('easy')">🛠️ HANGAR</button>
         <div class="title-text" style="color: #00ffff;">BEGINNER CAMPAIGN</div>
-        <div class="level-grid">
-            <button class="level-btn active" onclick="launchMission('easy', 1)">01</button>
-            <button class="level-btn active" onclick="launchMission('easy', 2)">02</button>
-            <button class="level-btn">03</button>
-            <!-- ... -->
+        <div id="easy-grid" class="level-grid">
+            <!-- JS GENERATED -->
         </div>
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
@@ -446,42 +489,43 @@
     <div id="expert-level-select-screen" class="screen-overlay red-theme">
         <button class="hangar-toggle-btn" onclick="openHangar('hard')">🛠️ HANGAR</button>
         <div class="title-text">EXPERT CAMPAIGN</div>
-        <div class="level-grid">
-            <button class="level-btn active" onclick="launchMission('hard', 1)">01</button>
-            <button class="level-btn">02</button>
-            <button class="level-btn">03</button>
-            <!-- ... -->
+        <div id="hard-grid" class="level-grid">
+            <!-- JS GENERATED -->
         </div>
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
 
-    <!-- HANGAR SCREEN -->
+    <!-- HANGAR SCREEN (REFINED) -->
     <div id="hangar-screen" class="screen-overlay">
-        <div class="title-text" id="hangar-title">HANGAR</div>
-        <div style="font-size: 24px; color: #ffd700; margin-bottom: 20px;">STARS: <span id="hangar-stars">0</span></div>
-        
-        <!-- Ship Preview Canvas in Hangar -->
-        <canvas id="hangarShipCanvas" width="200" height="200" style="background: rgba(0,20,20,0.5); border: 2px solid #00ffff; border-radius: 10px; margin-bottom: 20px;"></canvas>
-
-        <div class="upgrade-row">
-            <div class="upgrade-card">
-                <h3 style="color: #00ffff;">HEALTH</h3>
-                <div class="upgrade-val" id="hp-lvl">Lvl 0</div>
-                <div class="upgrade-val" id="hp-bonus" style="font-size:14px; color:#0f0;">+0 HP</div>
-                <button id="btn-upg-hp" class="btn" style="font-size: 14px; padding: 10px;" onclick="upgradeHealth()">UPGRADE</button>
+        <div id="hangar-content">
+            <div class="title-text" id="hangar-title" style="font-size: 36px; margin-bottom: 20px;">HANGAR</div>
+            <div style="font-size: 24px; color: #ffd700; margin-bottom: 20px; font-weight: bold; text-shadow: 0 0 10px #ffd700;">STARS: <span id="hangar-stars">0</span></div>
+            
+            <!-- Ship Preview Canvas -->
+            <canvas id="hangarShipCanvas" width="200" height="200" style="background: rgba(0,30,30,0.8); border: 2px solid #00ffff; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 0 20px rgba(0,255,255,0.2);"></canvas>
+    
+            <div class="upgrade-row">
+                <div class="upgrade-card">
+                    <h3 class="upgrade-title" style="color: #00ffff;">HULL INTEGRITY</h3>
+                    <div class="upgrade-val" id="hp-lvl">Lvl 0</div>
+                    <div class="upgrade-val" id="hp-bonus" style="font-size:14px; color:#0f0;">+0 HP</div>
+                    <button id="btn-upg-hp" class="btn" style="font-size: 14px; padding: 10px; width: 100%;" onclick="upgradeHealth()">UPGRADE</button>
+                </div>
+                <div class="upgrade-card">
+                    <h3 class="upgrade-title" style="color: #00ffff;">MAIN CANNON</h3>
+                    <div class="upgrade-val">Lvl 1</div>
+                    <div class="upgrade-val" style="font-size:14px; color:#ccc;">Standard</div>
+                    <button class="btn" style="font-size: 14px; padding: 10px; width: 100%; opacity: 0.5; cursor: not-allowed;">MAXED</button>
+                </div>
+                <div class="upgrade-card locked">
+                    <h3 class="upgrade-title">HEAVY BEAM</h3>
+                    <div class="upgrade-val">LOCKED</div>
+                    <div class="upgrade-val" style="font-size:14px; color:#555;">Level 5 Req.</div>
+                    <button class="btn" style="font-size: 14px; padding: 10px; width: 100%; background: #222; border-color: #444; cursor: not-allowed; color: #666;">LOCKED</button>
+                </div>
             </div>
-            <div class="upgrade-card">
-                <h3 style="color: #00ffff;">MAIN CANNON</h3>
-                <div class="upgrade-val">Lvl 1</div>
-                <button class="btn" style="font-size: 14px; padding: 10px; opacity: 0.5; cursor: not-allowed;">UPGRADE</button>
-            </div>
-            <div class="upgrade-card locked">
-                <h3>LASER</h3>
-                <div class="upgrade-val">LOCKED</div>
-                <button class="btn" style="font-size: 14px; padding: 10px; background: #333; border-color: #555; cursor: not-allowed;">LOCKED</button>
-            </div>
+            <button class="btn" style="margin-top: 10px;" onclick="closeHangar()">EXIT HANGAR</button>
         </div>
-        <button class="btn" onclick="closeHangar()">EXIT HANGAR</button>
     </div>
 
     <div id="game-over-screen" class="screen-overlay">
@@ -493,6 +537,7 @@
         const STATE = { 
             MENU: 'menu', 
             LEVEL_SELECT: 'level_select', 
+            INTRO: 'intro',
             PLAYING: 'playing', 
             GAMEOVER: 'gameover', 
             VICTORY_SEQUENCE: 'victory_sequence',
@@ -504,22 +549,31 @@
         let activeDifficultyMode = 'easy'; // 'easy' or 'hard'
         let currentHangarMode = 'easy'; // Tracks which hangar is open
         let godModeActive = false;
+        let introTimer = 30;
+        let introInterval = null;
+
+        // --- STAGE MESSAGES ---
+        const STAGE_MESSAGES = {
+            'easy_1': "Pilot, we have lost contact with Outpost Omega. Sensors indicate the System Core has gone rogue. <br><br>Neutralize the threat before it spreads to the network.",
+            'easy_2': "Warning! Massive energy signature detected. It's the Terminator class dreadnought. <br><br> This won't be like the simulations. Stay sharp.",
+            'hard_1': "Veteran difficulty authorized. <br><br>The enemy AI has adapted to standard tactics. Expect aggressive maneuvers.",
+            'hard_2': "This is it. The Elite Terminator unit has been deployed. <br><br>Survival probability is near zero. Good luck, Commander."
+        };
 
         // --- DATA PERSISTENCE ---
-        // Separate data for Easy (Rookie) and Hard (Expert)
-        let gameData = JSON.parse(localStorage.getItem('neonVoidData_v2')) || {
-            easy: { stars: 0, healthLvl: 0 },
-            hard: { stars: 0, healthLvl: 0 }
+        let gameData = JSON.parse(localStorage.getItem('neonVoidData_v3')) || {
+            easy: { stars: 0, healthLvl: 0, maxStage: 1 },
+            hard: { stars: 0, healthLvl: 0, maxStage: 1 }
         };
 
         function saveData() {
-            localStorage.setItem('neonVoidData_v2', JSON.stringify(gameData));
+            localStorage.setItem('neonVoidData_v3', JSON.stringify(gameData));
         }
 
         // --- UPGRADE CONFIGURATION ---
         const HEALTH_UPGRADES = {
-            costs: [110, 150, 200, 600, 1100], // Increased by 100
-            bonuses: [5, 10, 15, 20, 50]     // HP added at Level 1, 2, 3, 4, 5 (Cumulative)
+            costs: [110, 150, 200, 600, 1100], 
+            bonuses: [5, 10, 15, 20, 50]     
         };
 
         const canvas = document.getElementById('gameCanvas');
@@ -530,6 +584,8 @@
         const expertSelectScreen = document.getElementById('expert-level-select-screen');
         const gameOverScreen = document.getElementById('game-over-screen');
         const hangarScreen = document.getElementById('hangar-screen');
+        const introScreen = document.getElementById('intro-screen');
+        const msgModal = document.getElementById('msg-modal');
         
         function resizeGame() {
             width = window.innerWidth;
@@ -568,14 +624,12 @@
         let scene, camera, renderer;
         let menuCore, stars, bossPhase2Mesh, bossShieldMesh;
         let isPhase2Active = false;
-        
-        // Supernova Variables
         let supernovaMesh, supernovaParticles;
         let supernovaVelocities = [];
         let isSupernovaExploding = false;
 
         // 2D DROPS
-        let dropMeshes = []; // Not used in 2D mode, keeping var clean
+        let dropMeshes = []; 
 
         function initThreeMenu() {
             if (typeof THREE === 'undefined') return;
@@ -622,7 +676,7 @@
                 const ring = new THREE.Mesh(ringGeo, ringMat);
                 bossPhase2Mesh.add(ring);
 
-                // 4. BOSS SHIELD (New)
+                // 4. BOSS SHIELD
                 const shieldGeo = new THREE.SphereGeometry(25, 32, 32);
                 const shieldMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.3 });
                 bossShieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
@@ -710,8 +764,8 @@
                 }
             }
 
-            // SHOW CORE IN MENU OR LEVEL SELECT OR HANGAR
-            if ((gameState === STATE.MENU || gameState === STATE.LEVEL_SELECT || gameState === STATE.HANGAR) && menuCore) {
+            // SHOW CORE IN MENU OR LEVEL SELECT OR HANGAR OR INTRO
+            if ((gameState === STATE.MENU || gameState === STATE.LEVEL_SELECT || gameState === STATE.HANGAR || gameState === STATE.INTRO) && menuCore) {
                 menuCore.rotation.x += 0.005; menuCore.rotation.y += 0.01; menuCore.visible = true;
             } else if (menuCore) { menuCore.visible = false; }
 
@@ -868,7 +922,6 @@
             }
         }
 
-        // NEW: 2D STAR & DROP SYSTEM
         class Drop {
             constructor(x, y, type) {
                 this.x = x; this.y = y;
@@ -877,13 +930,9 @@
                 this.rot = 0;
             }
             update() {
-                // Move straight down at heavy enemy speed (approx 1.0)
                 this.y += 1.0; 
                 this.rot += 0.05;
-                
-                if (this.y > height + 20) {
-                    this.active = false;
-                }
+                if (this.y > height + 20) this.active = false;
 
                 if (player && player.active) {
                     let dist = Math.hypot(this.x - player.x, this.y - player.y);
@@ -894,20 +943,13 @@
                 this.active = false;
                 
                 if (this.type === 'star') {
-                    // Add star to CURRENT difficulty bank
-                    if (activeDifficultyMode === 'easy') {
-                        gameData.easy.stars++;
-                    } else {
-                        gameData.hard.stars++;
-                    }
+                    if (activeDifficultyMode === 'easy') gameData.easy.stars++;
+                    else gameData.hard.stars++;
                     saveData();
                     updateUI();
-                    
-                    // FX
                     for(let i=0; i<5; i++) particles.push(new Particle(this.x, this.y, '#ffd700', 3, 2, 20));
                 } else if (this.type === 'health') {
                     if (player.hp < player.maxHp) {
-                        // Heal 10% of Max HP
                         const healAmount = player.maxHp * 0.1;
                         player.hp = Math.min(player.maxHp, player.hp + healAmount);
                         playerHpEl.innerText = Math.floor(player.hp);
@@ -921,30 +963,18 @@
                 ctx.rotate(this.rot);
                 
                 if (this.type === 'star') {
-                    // Draw Star Shape
-                    ctx.fillStyle = '#ffd700';
-                    ctx.shadowBlur = 15; ctx.shadowColor = '#ffd700';
+                    ctx.fillStyle = '#ffd700'; ctx.shadowBlur = 15; ctx.shadowColor = '#ffd700';
                     ctx.beginPath();
                     for (let i = 0; i < 5; i++) {
-                        ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 10,
-                                   -Math.sin((18 + i * 72) * Math.PI / 180) * 10);
-                        ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 4,
-                                   -Math.sin((54 + i * 72) * Math.PI / 180) * 4);
+                        ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 10, -Math.sin((18 + i * 72) * Math.PI / 180) * 10);
+                        ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 4, -Math.sin((54 + i * 72) * Math.PI / 180) * 4);
                     }
-                    ctx.closePath();
-                    ctx.fill();
+                    ctx.closePath(); ctx.fill();
                 } else {
-                    // Health Pack (Blue Cross Box)
-                    ctx.strokeStyle = '#00ffff';
-                    ctx.lineWidth = 2;
-                    ctx.fillStyle = 'rgba(0, 50, 50, 0.8)';
+                    ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(0, 50, 50, 0.8)';
                     ctx.shadowBlur = 10; ctx.shadowColor = '#00ffff';
-                    ctx.fillRect(-8, -8, 16, 16);
-                    ctx.strokeRect(-8, -8, 16, 16);
-                    
-                    ctx.fillStyle = '#00ffff';
-                    ctx.fillRect(-2, -5, 4, 10);
-                    ctx.fillRect(-5, -2, 10, 4);
+                    ctx.fillRect(-8, -8, 16, 16); ctx.strokeRect(-8, -8, 16, 16);
+                    ctx.fillStyle = '#00ffff'; ctx.fillRect(-2, -5, 4, 10); ctx.fillRect(-5, -2, 10, 4);
                 }
                 ctx.restore();
             }
@@ -984,12 +1014,9 @@
                     this.guidanceTimer--;
                     if (Math.random() > 0.5) particles.push(new Particle(this.x, this.y, '#555', 1, 3, 20));
                 }
-                
-                // Fireball visual effect
                 if (this.type === 'fireball') {
                      particles.push(new Particle(this.x, this.y, '#ffaa00', 1, 4, 10));
                 }
-
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < -100 || this.x > width + 100 || this.y < -100 || this.y > height + 100) this.active = false;
             }
@@ -1000,19 +1027,10 @@
                     ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-5, 5); ctx.lineTo(-5, -5); ctx.fill();
                     ctx.restore();
                 } else if (this.type === 'saw') {
-                    ctx.save(); ctx.translate(this.x, this.y); 
-                    ctx.rotate(frames * 0.5); // Spin
-                    ctx.beginPath();
-                    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    // Saw teeth
-                    ctx.fillStyle = "#888";
-                    for(let i=0; i<8; i++) {
-                        ctx.rotate(Math.PI/4);
-                        ctx.fillRect(12, -4, 8, 8);
-                    }
-                    ctx.fillStyle = "#ff0000";
-                    ctx.beginPath(); ctx.arc(0,0, 5, 0, Math.PI*2); ctx.fill();
+                    ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(frames * 0.5); 
+                    ctx.beginPath(); ctx.arc(0, 0, this.size, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = "#888"; for(let i=0; i<8; i++) { ctx.rotate(Math.PI/4); ctx.fillRect(12, -4, 8, 8); }
+                    ctx.fillStyle = "#ff0000"; ctx.beginPath(); ctx.arc(0,0, 5, 0, Math.PI*2); ctx.fill();
                     ctx.restore();
                 } else {
                     ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
@@ -1025,28 +1043,17 @@
             constructor() {
                 this.x = width / 2; this.y = height - 100;
                 this.active = true; this.iframes = 0; this.speed = 8;
-                
-                // CALCULATE MAX HP BASED ON UPGRADES
                 let baseHp = 100;
                 let bonusHp = 0;
-                // Get upgrade level for current active difficulty mode
                 const stats = gameData[activeDifficultyMode]; 
                 const level = stats.healthLvl;
-                
-                // Cumulative logic: Sum all bonuses up to current level
-                for(let i=0; i < level; i++) {
-                    bonusHp += HEALTH_UPGRADES.bonuses[i];
-                }
-                
+                for(let i=0; i < level; i++) { bonusHp += HEALTH_UPGRADES.bonuses[i]; }
                 this.maxHp = baseHp + bonusHp;
                 this.hp = this.maxHp;
-                
-                // Set initial HUD
                 playerHpEl.innerText = Math.floor(this.hp);
             }
             update() {
                 if (!this.active) return;
-                
                 if (gameState === STATE.PLAYING) {
                     let dx = 0, dy = 0;
                     if (keys.ArrowUp || keys.w) dy -= this.speed;
@@ -1054,7 +1061,6 @@
                     if (keys.ArrowLeft || keys.a) dx -= this.speed;
                     if (keys.ArrowRight || keys.d) dx += this.speed;
                     if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
-                    
                     if (dx !== 0 || dy !== 0) {
                         this.x += dx; this.y += dy;
                         mouse.targetX = this.x; mouse.targetY = this.y;
@@ -1070,60 +1076,27 @@
                         bullets.push(new Bullet(this.x + 10, this.y - 10, 0, -15, 'player'));
                     }
                 }
-                
                 if (this.iframes > 0) this.iframes--;
                 particles.push(new Particle(this.x, this.y + 15, '#00ffff', 2, 4, 10));
             }
             draw() {
                 if (!this.active && gameState !== STATE.VICTORY_SEQUENCE) return;
                 
-                // GOD MODE LASER DRAWING
                 if (godModeActive && this.active && gameState === STATE.PLAYING) {
-                    // Massive Laser Beam
-                    ctx.save();
-                    ctx.translate(this.x, this.y);
+                    ctx.save(); ctx.translate(this.x, this.y);
                     const beamWidth = 40 + Math.sin(Date.now() * 0.05) * 10;
-                    
-                    // Core
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    ctx.fillRect(-beamWidth/4, -1000, beamWidth/2, 1000);
-                    
-                    // Outer Glow
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.fillRect(-beamWidth/4, -1000, beamWidth/2, 1000);
                     ctx.shadowBlur = 30; ctx.shadowColor = '#00ffff';
-                    ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
-                    ctx.fillRect(-beamWidth/2, -1000, beamWidth, 1000);
-                    
-                    // Hit Effect Logic (Kill enemies in path)
-                    enemies.forEach(e => {
-                        if(Math.abs(e.x - this.x) < beamWidth && e.y < this.y) {
-                            e.hit(9999); // INSTA KILL
-                            // Sparks
-                            for(let i=0; i<3; i++) particles.push(new Particle(e.x, e.y, '#fff', 5, 3, 20));
-                        }
-                    });
-                    
-                    // Destroy Projectiles
-                    bullets.forEach(b => {
-                        if(b.type !== 'player' && Math.abs(b.x - this.x) < beamWidth && b.y < this.y) {
-                            b.active = false;
-                            particles.push(new Particle(b.x, b.y, '#00ffff', 3, 2, 10));
-                        }
-                    });
-
-                    // Hit Boss
-                    if(boss && boss.active && Math.abs(boss.x - this.x) < beamWidth + 50) {
-                        boss.hit(10); // Massive damage per frame
-                    }
-
+                    ctx.fillStyle = 'rgba(0, 255, 255, 0.5)'; ctx.fillRect(-beamWidth/2, -1000, beamWidth, 1000);
+                    enemies.forEach(e => { if(Math.abs(e.x - this.x) < beamWidth && e.y < this.y) { e.hit(9999); for(let i=0; i<3; i++) particles.push(new Particle(e.x, e.y, '#fff', 5, 3, 20)); } });
+                    bullets.forEach(b => { if(b.type !== 'player' && Math.abs(b.x - this.x) < beamWidth && b.y < this.y) { b.active = false; particles.push(new Particle(b.x, b.y, '#00ffff', 3, 2, 10)); } });
+                    if(boss && boss.active && Math.abs(boss.x - this.x) < beamWidth + 50) boss.hit(10); 
                     ctx.restore();
                 }
 
                 if (this.iframes > 0 && Math.floor(frames / 4) % 2 === 0) return;
                 ctx.save(); ctx.translate(this.x, this.y);
-                
-                // GOD MODE SCALE
                 if(godModeActive) ctx.scale(4, 4); 
-
                 ctx.shadowBlur = 20; ctx.shadowColor = '#00ffff'; ctx.fillStyle = '#fff';
                 ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 15); ctx.lineTo(0, 10); ctx.lineTo(-15, 15); ctx.fill();
                 ctx.fillStyle = '#00aaaa';
@@ -1133,10 +1106,7 @@
             }
             hit(damage) {
                 if (this.iframes > 0 || !this.active) return;
-                
-                // GOD MODE CHECK
                 if (godModeActive) return; 
-
                 this.hp -= damage; this.iframes = 30;
                 playerHpEl.innerText = Math.max(0, Math.floor(this.hp));
                 ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10);
@@ -1182,7 +1152,6 @@
                 if (this.hp <= 0) {
                     this.active = false; score += this.points; scoreEl.innerText = score;
                     for(let i=0; i<5; i++) particles.push(new Particle(this.x, this.y, '#ff00ff', 3, 3, 30));
-                    // DROP 1 STAR
                     drops.push(new Drop(this.x, this.y, 'star'));
                 }
             }
@@ -1231,7 +1200,6 @@
                 if(this.hp <= 0) {
                     this.active = false; score += this.points; scoreEl.innerText = score;
                     for(let i=0; i<10; i++) particles.push(new Particle(this.x, this.y, '#ff4400', 4, 5, 40));
-                    // DROP 3 STARS
                     for(let k=0; k<3; k++) drops.push(new Drop(this.x + (k*10 - 10), this.y, 'star'));
                 }
             }
@@ -1303,7 +1271,6 @@
                 if(this.hp <= 0) {
                     this.active = false; score += this.points; scoreEl.innerText = score;
                     for(let i=0; i<10; i++) particles.push(new Particle(this.x, this.y, '#00aaaa', 4, 5, 40));
-                    // DROP HEALTH
                     drops.push(new Drop(this.x, this.y, 'health'));
                 }
             }
@@ -1339,11 +1306,14 @@
                 this.isPhaseTwo = false; 
                 this.isTerminator = true;
                 this.damageMultiplier = 1.5;
-                this.maxHp = 3000; // Terminator Health
+                
+                // DYNAMIC HP FOR EXPERT MODE
+                this.maxHp = (activeDifficultyMode === 'hard') ? 6000 : 3000;
+                
                 this.hp = this.maxHp;
                 this.shredderMode = false;
                 
-                bossName.innerText = "TERMINATOR";
+                bossName.innerText = activeDifficultyMode === 'hard' ? "TERMINATOR [ELITE]" : "TERMINATOR";
                 bossName.style.color = "#ff0000";
                 
                 isPhase2Active = false; // Disable standard boss mesh
@@ -1816,7 +1786,8 @@
             currentWave = wave;
             waveClearCheckReady = false; 
             
-            let maxWaves = (activeDifficultyMode === 'easy' && currentLevelIndex === 2) ? 15 : 10;
+            // Both difficulties now have 15 waves for Stage 2
+            let maxWaves = (currentLevelIndex === 2) ? 15 : 10;
             
             waveText.innerText = currentWave === maxWaves ? "BOSS WARNING" : `WAVE ${currentWave}`;
             waveText.style.color = "#fff"; // reset color in case shredder changed it
@@ -1834,64 +1805,112 @@
             let maxDelay = 0;
             const countMult = currentSettings.enemyCountMult;
 
-            // --- STAGE 2 LOGIC (15 Waves, Terminator Boss) ---
-            if (activeDifficultyMode === 'easy' && currentLevelIndex === 2) {
+            // ===============================================
+            // STAGE 2 LOGIC (TERMINATOR CAMPAIGN)
+            // ===============================================
+            if (currentLevelIndex === 2) {
                 
-                if (wave >= 1 && wave <= 4) {
-                    // Intro Waves
-                    let count = Math.ceil((12 + wave * 2) * countMult);
-                    for(let i=0; i<count; i++) {
-                        let d = i * (400 - wave * 20); if(d>maxDelay) maxDelay=d;
-                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                // --- EXPERT STAGE 2 (HARD) ---
+                if (activeDifficultyMode === 'hard') {
+                    if (wave === 1) {
+                        // Start hard: 3 Heavies immediately
+                        enemies.push(new HeavyStriker(width*0.25, -100));
+                        enemies.push(new HeavyStriker(width*0.5, -200));
+                        enemies.push(new HeavyStriker(width*0.75, -100));
+                        maxDelay = 500;
+                    } else if (wave === 2) {
+                        // Fast Swarm Rush
+                        let count = 25;
+                        for(let i=0; i<count; i++) {
+                            setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), i * 100);
+                        }
+                        maxDelay = 2500;
+                    } else if (wave === 3) {
+                        // Flanking Lasers
+                        enemies.push(new LaserEnemy(width*0.1, -100));
+                        enemies.push(new LaserEnemy(width*0.9, -100));
+                        setTimeout(() => {
+                            enemies.push(new HeavyStriker(width*0.5, -100));
+                        }, 1000);
+                        maxDelay = 1000;
+                    } else if (wave >= 4 && wave <= 7) {
+                        // THE GRID: Laser heavy waves
+                        let laserCount = 3 + (wave - 4);
+                        for(let i=0; i<laserCount; i++) {
+                            setTimeout(() => enemies.push(new LaserEnemy(width * ((i+1)/(laserCount+1)), -100)), i * 500);
+                        }
+                        let swarmCount = 15;
+                        for(let i=0; i<swarmCount; i++) {
+                            setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), 1000 + i*150);
+                        }
+                        maxDelay = 3000;
+                    } else if (wave >= 8 && wave <= 14) {
+                        // THE WALL: Heavy Striker Rows
+                        let heavyCount = 3 + Math.floor((wave-8)/2);
+                        for(let i=0; i<heavyCount; i++) {
+                            setTimeout(() => enemies.push(new HeavyStriker(width * ((i+1)/(heavyCount+1)), -100)), i*300);
+                        }
+                        // Suppressive fire
+                        setTimeout(() => enemies.push(new LaserEnemy(width*0.1, -200)), 0);
+                        setTimeout(() => enemies.push(new LaserEnemy(width*0.9, -200)), 0);
+                        maxDelay = 2000;
+                    } else if (wave === 15) {
+                        // BOSS: ELITE TERMINATOR
+                        boss.activate();
+                        boss.initAsStage2();
                     }
-                } else if (wave === 5) {
-                    // Mini Boss Check
-                    enemies.push(new HeavyStriker(width/2, -100));
-                    setTimeout(() => enemies.push(new HeavyStriker(width/2 - 100, -200)), 500);
-                    setTimeout(() => enemies.push(new HeavyStriker(width/2 + 100, -200)), 500);
-                    maxDelay = 1000;
-                } else if (wave >= 6 && wave <= 9) {
-                    // Laser + Swarm
-                    enemies.push(new LaserEnemy(width * 0.2, -100));
-                    enemies.push(new LaserEnemy(width * 0.8, -100));
-                    if(wave > 7) enemies.push(new LaserEnemy(width * 0.5, -200));
-                    
-                    let count = Math.ceil(20 * countMult);
-                    for(let i=0; i<count; i++) {
-                        let d = 1000 + i * 200; if(d>maxDelay) maxDelay=d;
-                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                } 
+                // --- ROOKIE STAGE 2 (EASY) ---
+                else {
+                    if (wave >= 1 && wave <= 4) {
+                        let count = Math.ceil((12 + wave * 2) * countMult);
+                        for(let i=0; i<count; i++) {
+                            let d = i * (400 - wave * 20); if(d>maxDelay) maxDelay=d;
+                            setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                        }
+                    } else if (wave === 5) {
+                        enemies.push(new HeavyStriker(width/2, -100));
+                        setTimeout(() => enemies.push(new HeavyStriker(width/2 - 100, -200)), 500);
+                        setTimeout(() => enemies.push(new HeavyStriker(width/2 + 100, -200)), 500);
+                        maxDelay = 1000;
+                    } else if (wave >= 6 && wave <= 9) {
+                        enemies.push(new LaserEnemy(width * 0.2, -100));
+                        enemies.push(new LaserEnemy(width * 0.8, -100));
+                        if(wave > 7) enemies.push(new LaserEnemy(width * 0.5, -200));
+                        let count = Math.ceil(20 * countMult);
+                        for(let i=0; i<count; i++) {
+                            let d = 1000 + i * 200; if(d>maxDelay) maxDelay=d;
+                            setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                        }
+                    } else if (wave === 10) {
+                        enemies.push(new HeavyStriker(width/3, -100));
+                        enemies.push(new HeavyStriker(width*2/3, -100));
+                        enemies.push(new LaserEnemy(width/2, -200));
+                        maxDelay = 500;
+                    } else if (wave >= 11 && wave <= 14) {
+                        let laserCount = Math.floor((wave - 9) / 2) + 1;
+                        for(let l=0; l<laserCount; l++) {
+                            setTimeout(() => enemies.push(new LaserEnemy(width * ((l+1)/(laserCount+1)), -100)), l*500);
+                        }
+                        let heavyCount = 2;
+                        for(let h=0; h<heavyCount; h++) {
+                            setTimeout(() => enemies.push(new HeavyStriker(Math.random()*width, -100)), 2000 + h*1000);
+                        }
+                        let count = Math.ceil(30 * countMult);
+                        for(let i=0; i<count; i++) {
+                            let d = i * 150; if(d>maxDelay) maxDelay=d;
+                            setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
+                        }
+                    } else if (wave === 15) {
+                        boss.activate();
+                        boss.initAsStage2(); 
                     }
-                } else if (wave === 10) {
-                    // Heavy + Laser
-                    enemies.push(new HeavyStriker(width/3, -100));
-                    enemies.push(new HeavyStriker(width*2/3, -100));
-                    enemies.push(new LaserEnemy(width/2, -200));
-                    maxDelay = 500;
-                } else if (wave >= 11 && wave <= 14) {
-                    // Chaos Waves
-                    let laserCount = Math.floor((wave - 9) / 2) + 1;
-                    for(let l=0; l<laserCount; l++) {
-                        setTimeout(() => enemies.push(new LaserEnemy(width * ((l+1)/(laserCount+1)), -100)), l*500);
-                    }
-                    
-                    let heavyCount = 2;
-                    for(let h=0; h<heavyCount; h++) {
-                        setTimeout(() => enemies.push(new HeavyStriker(Math.random()*width, -100)), 2000 + h*1000);
-                    }
-
-                    let count = Math.ceil(30 * countMult);
-                    for(let i=0; i<count; i++) {
-                        let d = i * 150; if(d>maxDelay) maxDelay=d;
-                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), d);
-                    }
-                } else if (wave === 15) {
-                    // BOSS: TERMINATOR
-                    boss.activate();
-                    boss.initAsStage2(); 
                 }
-
-            } else {
-                // --- DEFAULT LOGIC (Stage 1 / Expert) ---
+            } 
+            // ===============================================
+            // DEFAULT LOGIC (STAGE 1 & GENERIC)
+            // ===============================================
+            else {
                 if (wave === 1) {
                     let count = Math.ceil(10 * countMult);
                     for(let i=0; i<count; i++) { 
@@ -1984,6 +2003,7 @@
             menuScreen.style.pointerEvents = 'none';
             expertSelectScreen.style.opacity = '1';
             expertSelectScreen.style.pointerEvents = 'auto';
+            updateLevelGrid('hard');
         }
 
         function showRookieSelect() {
@@ -1992,39 +2012,62 @@
             menuScreen.style.pointerEvents = 'none';
             levelSelectScreen.style.opacity = '1';
             levelSelectScreen.style.pointerEvents = 'auto';
+            updateLevelGrid('easy');
+        }
+
+        // --- NEW: STAGE LOCK & GRID GENERATION ---
+        function updateLevelGrid(mode) {
+            const stats = (mode === 'easy') ? gameData.easy : gameData.hard;
+            const gridId = (mode === 'easy') ? 'easy-grid' : 'hard-grid';
+            const gridEl = document.getElementById(gridId);
+            
+            gridEl.innerHTML = ''; // Clear existing
+
+            for(let i = 1; i <= 2; i++) { // Changed 10 to 2
+                const btn = document.createElement('button');
+                btn.className = 'level-btn';
+                
+                if (i <= stats.maxStage) {
+                    // UNLOCKED
+                    btn.classList.add('active');
+                    btn.innerText = i < 10 ? `0${i}` : i;
+                    btn.onclick = () => launchMission(mode, i);
+                } else {
+                    // LOCKED
+                    btn.classList.add('locked');
+                    btn.innerHTML = `${i < 10 ? '0'+i : i} <span style="font-size:12px">🔒</span>`;
+                    btn.onclick = showLockedMessage;
+                }
+                gridEl.appendChild(btn);
+            }
+        }
+
+        function showLockedMessage() {
+            msgModal.style.display = 'block';
+        }
+
+        function closeMsgModal() {
+            msgModal.style.display = 'none';
         }
 
         // --- HANGAR LOGIC ---
         function openHangar(mode) {
             gameState = STATE.HANGAR;
-            currentHangarMode = mode; // Store mode for upgrades
-            
-            // Determine stats based on mode
+            currentHangarMode = mode; 
             const stats = (mode === 'easy') ? gameData.easy : gameData.hard;
-            
             document.getElementById('hangar-stars').innerText = stats.stars;
             document.getElementById('hangar-title').innerText = (mode === 'easy' ? "ROOKIE" : "EXPERT") + " HANGAR";
-            
-            // Update Health Card UI
             updateHangarUI();
-
-            // Hide other screens
             levelSelectScreen.style.opacity = '0'; levelSelectScreen.style.pointerEvents = 'none';
             expertSelectScreen.style.opacity = '0'; expertSelectScreen.style.pointerEvents = 'none';
             hangarScreen.style.opacity = '1'; hangarScreen.style.pointerEvents = 'auto';
-
-            // Draw Ship Preview
             const hCanvas = document.getElementById('hangarShipCanvas');
             const hCtx = hCanvas.getContext('2d');
             hCtx.clearRect(0,0,200,200);
-            
-            hCtx.save();
-            hCtx.translate(100, 100);
-            hCtx.scale(2, 2); 
+            hCtx.save(); hCtx.translate(100, 100); hCtx.scale(2, 2); 
             hCtx.shadowBlur = 20; hCtx.shadowColor = '#00ffff'; hCtx.fillStyle = '#fff';
             hCtx.beginPath(); hCtx.moveTo(0, -20); hCtx.lineTo(15, 15); hCtx.lineTo(0, 10); hCtx.lineTo(-15, 15); hCtx.fill();
-            hCtx.fillStyle = '#00aaaa';
-            hCtx.beginPath(); hCtx.moveTo(0, 0); hCtx.lineTo(20, 10); hCtx.lineTo(20, 25); hCtx.lineTo(5, 15); hCtx.fill();
+            hCtx.fillStyle = '#00aaaa'; hCtx.beginPath(); hCtx.moveTo(0, 0); hCtx.lineTo(20, 10); hCtx.lineTo(20, 25); hCtx.lineTo(5, 15); hCtx.fill();
             hCtx.beginPath(); hCtx.moveTo(0, 0); hCtx.lineTo(-20, 10); hCtx.lineTo(-20, 25); hCtx.lineTo(-5, 15); hCtx.fill();
             hCtx.restore();
         }
@@ -2032,31 +2075,27 @@
         function closeHangar() {
             gameState = STATE.LEVEL_SELECT; 
             hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
-            
             const title = document.getElementById('hangar-title').innerText;
             if(title.includes("EXPERT")) {
                 expertSelectScreen.style.opacity = '1'; expertSelectScreen.style.pointerEvents = 'auto';
+                updateLevelGrid('hard');
             } else {
                 levelSelectScreen.style.opacity = '1'; levelSelectScreen.style.pointerEvents = 'auto';
+                updateLevelGrid('easy');
             }
         }
 
         function updateHangarUI() {
             const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
             document.getElementById('hangar-stars').innerText = stats.stars;
-
-            // Health Upgrade UI Logic
             const hpLvl = stats.healthLvl;
             const hpBtn = document.getElementById('btn-upg-hp');
             const hpLvlEl = document.getElementById('hp-lvl');
             const hpBonusEl = document.getElementById('hp-bonus');
-
             let totalBonus = 0;
             for(let i=0; i<hpLvl; i++) totalBonus += HEALTH_UPGRADES.bonuses[i];
-
             hpLvlEl.innerText = "Lvl " + hpLvl;
             hpBonusEl.innerText = "+" + totalBonus + " HP";
-
             if (hpLvl >= 5) {
                 hpBtn.innerText = "MAXED";
                 hpBtn.style.opacity = 0.5;
@@ -2067,25 +2106,22 @@
                 hpBtn.innerText = `UPGRADE (${cost} ⭐)`;
                 hpBtn.style.opacity = 1;
                 hpBtn.style.cursor = "pointer";
-                hpBtn.onclick = upgradeHealth; // Re-bind
+                hpBtn.onclick = upgradeHealth; 
             }
         }
 
         function upgradeHealth() {
             const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
             const currentLvl = stats.healthLvl;
-
             if (currentLvl >= 5) return;
-
             const cost = HEALTH_UPGRADES.costs[currentLvl];
-
             if (stats.stars >= cost) {
                 stats.stars -= cost;
                 stats.healthLvl++;
                 saveData();
                 updateHangarUI();
             } else {
-                alert("Not enough stars!"); // Simple feedback
+                alert("Not enough stars!"); 
             }
         }
 
@@ -2097,18 +2133,50 @@
             }
         }
 
+        // --- INTRO / BRIEFING LOGIC ---
         function launchMission(mode, levelIndex) {
             currentSettings = mode === 'hard' ? DIFFICULTY.NORMAL : DIFFICULTY.EASY;
             activeDifficultyMode = mode;
             currentLevelIndex = levelIndex;
             
-            // Hide all menus
+            // Hide menu screens
             menuScreen.style.opacity = '0'; menuScreen.style.pointerEvents = 'none';
             levelSelectScreen.style.opacity = '0'; levelSelectScreen.style.pointerEvents = 'none';
             expertSelectScreen.style.opacity = '0'; expertSelectScreen.style.pointerEvents = 'none';
             gameOverScreen.style.opacity = '0'; gameOverScreen.style.pointerEvents = 'none';
             hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
             
+            // Trigger Intro State
+            startIntro(mode, levelIndex);
+        }
+
+        function startIntro(mode, levelIndex) {
+            gameState = STATE.INTRO;
+            introScreen.style.opacity = '1'; introScreen.style.pointerEvents = 'auto';
+            
+            // Set message
+            const key = `${mode}_${levelIndex}`;
+            const msg = STAGE_MESSAGES[key] || "Transmission unclear. Proceed with caution.";
+            document.getElementById('radio-content').innerHTML = msg;
+            
+            // Reset timer
+            introTimer = 30;
+            document.getElementById('intro-countdown').innerText = introTimer;
+            if(introInterval) clearInterval(introInterval);
+            introInterval = setInterval(() => {
+                introTimer--;
+                document.getElementById('intro-countdown').innerText = introTimer;
+                if(introTimer <= 0) skipIntro();
+            }, 1000);
+        }
+
+        function skipIntro() {
+            if(introInterval) clearInterval(introInterval);
+            introScreen.style.opacity = '0'; introScreen.style.pointerEvents = 'none';
+            startActualGameplay();
+        }
+
+        function startActualGameplay() {
             document.activeElement.blur();
 
             player = new Player();
@@ -2116,13 +2184,13 @@
             bullets = []; particles = []; enemies = []; drops = [];
             score = 0; frames = 0;
             scoreEl.innerText = '0'; playerHpEl.innerText = '100';
-            stageDisplayEl.innerText = levelIndex;
+            stageDisplayEl.innerText = currentLevelIndex;
             bossHealthBar.style.width = '100%';
             bossShieldBar.style.width = '0%';
             bossName.innerText = "System Core: Omega"; 
             bossName.style.color = "#ff4d4d";
             
-            updateUI(); // Set star count
+            updateUI(); 
 
             gameState = STATE.PLAYING;
             isPhase2Active = false;
@@ -2132,7 +2200,6 @@
             
             mouse.targetX = width/2; mouse.targetY = height - 100;
 
-            // START WAVE 1
             currentWave = 0;
             startWave(1);
         }
@@ -2163,8 +2230,6 @@
             isSupernovaExploding = false;
             if(supernovaMesh) supernovaMesh.visible = false;
             if(supernovaParticles) supernovaParticles.visible = false;
-            
-            // Clean up 3D drops
             dropMeshes.forEach(d => { if(d.mesh) { scene.remove(d.mesh); d.mesh.geometry.dispose(); d.mesh.material.dispose(); } });
             dropMeshes = [];
         }
@@ -2175,6 +2240,16 @@
             gameOverTitle.innerText = win ? "STAGE CLEARED" : "MISSION FAILED";
             gameOverTitle.style.color = win ? "#00ff00" : "#ff0000";
             waveText.style.opacity = 0;
+
+            // STAGE PROGRESSION LOGIC
+            if (win) {
+                const stats = (activeDifficultyMode === 'easy') ? gameData.easy : gameData.hard;
+                // If we beat current max stage, unlock next (capped at 2 now)
+                if (currentLevelIndex === stats.maxStage && stats.maxStage < 2) {
+                    stats.maxStage++;
+                    saveData();
+                }
+            }
         }
 
         function animateGame() {
@@ -2204,13 +2279,10 @@
                             let e = enemies[i]; e.update(); e.draw(); 
                             if (!e.active) enemies.splice(i, 1);
                         }
-                        
-                        // DROPS
                         for (let i = drops.length - 1; i >= 0; i--) {
                             let d = drops[i]; d.update(); d.draw();
                             if (!d.active) drops.splice(i, 1);
                         }
-
                         for (let i = bullets.length - 1; i >= 0; i--) {
                             let b = bullets[i]; b.update(); b.draw();
                             if (!b.active) { bullets.splice(i, 1); continue; }
@@ -2241,26 +2313,18 @@
                         }
                     } else if (gameState === STATE.VICTORY_SEQUENCE) {
                         player.draw(); 
-                        
-                        // AUTO COLLECT DROPS ON VICTORY
                         drops.forEach(d => { d.x += (player.x - d.x)*0.1; d.y += (player.y - d.y)*0.1; if(Math.abs(d.x-player.x)<20) d.collect(); d.draw(); });
-
                         victoryTimer++;
                         if (victoryTimer <= 100) {
                             player.x += (Math.random() - 0.5) * 2;
-                            if(frames % 5 === 0) {
-                                particles.push(new Particle(player.x, player.y + 20, '#00ffff', 1, 3, 5));
-                            }
+                            if(frames % 5 === 0) particles.push(new Particle(player.x, player.y + 20, '#00ffff', 1, 3, 5));
                         }
                         if (victoryTimer > 100) {
                             player.y -= 12;
                             particles.push(new Particle(player.x, player.y + 20, '#00ffff', 2, 6, 15));
                             particles.push(new Particle(player.x - 5, player.y + 20, '#00ffff', 1, 3, 10));
                             particles.push(new Particle(player.x + 5, player.y + 20, '#00ffff', 1, 3, 10));
-
-                            if (player.y < -50) {
-                                gameOver(true);
-                            }
+                            if (player.y < -50) gameOver(true);
                         }
                     }
                 }
@@ -2288,7 +2352,6 @@
 
         function warpToWave(n) {
             if(n < 1) n = 1;
-            
             if (gameState !== STATE.PLAYING || activeDifficultyMode !== 'easy' || currentLevelIndex !== 2) {
                  launchMission('easy', 2);
                  setTimeout(() => {
@@ -2310,25 +2373,28 @@
         function toggleGodMode() {
             godModeActive = !godModeActive;
             const btn = document.getElementById('god-mode-btn');
-            
             if(gameState === STATE.PLAYING && player) {
-                if(godModeActive) {
-                    player.hp = 9999;
-                    playerHpEl.innerText = "INF";
-                    btn.innerText = "🛡️ GOD MODE: ON";
-                } else {
-                    player.hp = 100;
-                    playerHpEl.innerText = "100";
-                    btn.innerText = "🛡️ GOD MODE: OFF";
-                }
+                if(godModeActive) { player.hp = 9999; playerHpEl.innerText = "INF"; btn.innerText = "🛡️ GOD MODE: ON"; } 
+                else { player.hp = 100; playerHpEl.innerText = "100"; btn.innerText = "🛡️ GOD MODE: OFF"; }
             } else {
                 btn.innerText = godModeActive ? "🛡️ GOD MODE: ON" : "🛡️ GOD MODE: OFF";
             }
         }
 
         function killAllEnemies() {
-            enemies = [];
-            bullets = [];
+            enemies = []; bullets = [];
+        }
+
+        function unlockAllLevels() {
+            gameData.easy.maxStage = 2; // Updated max to 2
+            gameData.hard.maxStage = 2; // Updated max to 2
+            saveData();
+            alert("All levels unlocked!");
+            // Refresh view if open
+            if(gameState === STATE.LEVEL_SELECT) {
+                if(activeDifficultyMode === 'easy') updateLevelGrid('easy');
+                else updateLevelGrid('hard');
+            }
         }
 
         document.getElementById('start-hard-btn').addEventListener('click', showExpertSelect);
