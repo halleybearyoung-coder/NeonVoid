@@ -221,11 +221,17 @@
             margin-bottom: 20px;
         }
         .upgrade-card {
-            width: 200px;
+            width: 220px;
             padding: 15px;
             border: 1px solid #444;
             background: rgba(20,20,20,0.8);
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .upgrade-val {
+            font-size: 18px; color: #ccc; margin: 10px 0;
         }
         .locked { border-color: #555; color: #555; }
         .locked h3 { color: #555; }
@@ -460,17 +466,18 @@
         <div class="upgrade-row">
             <div class="upgrade-card">
                 <h3 style="color: #00ffff;">HEALTH</h3>
-                <p>Increase Max Hull</p>
-                <button class="btn" style="font-size: 14px; padding: 10px; opacity: 0.5; cursor: not-allowed;">UPGRADE</button>
+                <div class="upgrade-val" id="hp-lvl">Lvl 0</div>
+                <div class="upgrade-val" id="hp-bonus" style="font-size:14px; color:#0f0;">+0 HP</div>
+                <button id="btn-upg-hp" class="btn" style="font-size: 14px; padding: 10px;" onclick="upgradeHealth()">UPGRADE</button>
             </div>
             <div class="upgrade-card">
                 <h3 style="color: #00ffff;">MAIN CANNON</h3>
-                <p>Increase Fire Rate</p>
+                <div class="upgrade-val">Lvl 1</div>
                 <button class="btn" style="font-size: 14px; padding: 10px; opacity: 0.5; cursor: not-allowed;">UPGRADE</button>
             </div>
             <div class="upgrade-card locked">
                 <h3>LASER</h3>
-                <p>Unlock Heavy Beam</p>
+                <div class="upgrade-val">LOCKED</div>
                 <button class="btn" style="font-size: 14px; padding: 10px; background: #333; border-color: #555; cursor: not-allowed;">LOCKED</button>
             </div>
         </div>
@@ -494,18 +501,26 @@
         let gameState = STATE.MENU;
         let width, height;
         let currentLevelIndex = 1;
-        let activeDifficultyMode = 'easy';
+        let activeDifficultyMode = 'easy'; // 'easy' or 'hard'
+        let currentHangarMode = 'easy'; // Tracks which hangar is open
         let godModeActive = false;
 
         // --- DATA PERSISTENCE ---
-        let gameData = JSON.parse(localStorage.getItem('neonVoidData_v1')) || {
-            easy: { stars: 0 },
-            hard: { stars: 0 }
+        // Separate data for Easy (Rookie) and Hard (Expert)
+        let gameData = JSON.parse(localStorage.getItem('neonVoidData_v2')) || {
+            easy: { stars: 0, healthLvl: 0 },
+            hard: { stars: 0, healthLvl: 0 }
         };
 
         function saveData() {
-            localStorage.setItem('neonVoidData_v1', JSON.stringify(gameData));
+            localStorage.setItem('neonVoidData_v2', JSON.stringify(gameData));
         }
+
+        // --- UPGRADE CONFIGURATION ---
+        const HEALTH_UPGRADES = {
+            costs: [110, 150, 200, 600, 1100], // Increased by 100
+            bonuses: [5, 10, 15, 20, 50]     // HP added at Level 1, 2, 3, 4, 5 (Cumulative)
+        };
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -891,8 +906,10 @@
                     // FX
                     for(let i=0; i<5; i++) particles.push(new Particle(this.x, this.y, '#ffd700', 3, 2, 20));
                 } else if (this.type === 'health') {
-                    if (player.hp < 100) {
-                        player.hp = Math.min(100, player.hp + 10);
+                    if (player.hp < player.maxHp) {
+                        // Heal 10% of Max HP
+                        const healAmount = player.maxHp * 0.1;
+                        player.hp = Math.min(player.maxHp, player.hp + healAmount);
                         playerHpEl.innerText = Math.floor(player.hp);
                         for(let i=0; i<10; i++) particles.push(new Particle(this.x, this.y, '#00ffff', 4, 3, 30));
                     }
@@ -1007,7 +1024,25 @@
         class Player {
             constructor() {
                 this.x = width / 2; this.y = height - 100;
-                this.hp = 100; this.active = true; this.iframes = 0; this.speed = 8;
+                this.active = true; this.iframes = 0; this.speed = 8;
+                
+                // CALCULATE MAX HP BASED ON UPGRADES
+                let baseHp = 100;
+                let bonusHp = 0;
+                // Get upgrade level for current active difficulty mode
+                const stats = gameData[activeDifficultyMode]; 
+                const level = stats.healthLvl;
+                
+                // Cumulative logic: Sum all bonuses up to current level
+                for(let i=0; i < level; i++) {
+                    bonusHp += HEALTH_UPGRADES.bonuses[i];
+                }
+                
+                this.maxHp = baseHp + bonusHp;
+                this.hp = this.maxHp;
+                
+                // Set initial HUD
+                playerHpEl.innerText = Math.floor(this.hp);
             }
             update() {
                 if (!this.active) return;
@@ -1103,7 +1138,7 @@
                 if (godModeActive) return; 
 
                 this.hp -= damage; this.iframes = 30;
-                playerHpEl.innerText = Math.max(0, this.hp);
+                playerHpEl.innerText = Math.max(0, Math.floor(this.hp));
                 ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10);
                 setTimeout(() => ctx.setTransform(1,0,0,1,0,0), 50);
                 if (this.hp <= 0) {
@@ -1754,11 +1789,11 @@
                     flashOverlay.style.transition = 'opacity 2s ease-out';
                     flashOverlay.style.opacity = 0;
                     
-                    // BOSS DROP (50-60 STARS)
-                    let dropCount = this.isTerminator ? 60 : 50;
+                    // BOSS DROP (15 STARS)
+                    let dropCount = 15;
                     for(let k=0; k<dropCount; k++) {
-                        // Spread drops slightly
-                        drops.push(new Drop(this.x + (Math.random()-0.5)*100, this.y, 'star'));
+                        // Spread drops WIDELY (500px range)
+                        drops.push(new Drop(this.x + (Math.random()-0.5)*500, this.y, 'star'));
                     }
 
                     triggerSupernova();
@@ -1962,12 +1997,17 @@
         // --- HANGAR LOGIC ---
         function openHangar(mode) {
             gameState = STATE.HANGAR;
-            // Determine stats based on mode
-            const starCount = (mode === 'easy') ? gameData.easy.stars : gameData.hard.stars;
+            currentHangarMode = mode; // Store mode for upgrades
             
-            document.getElementById('hangar-stars').innerText = starCount;
+            // Determine stats based on mode
+            const stats = (mode === 'easy') ? gameData.easy : gameData.hard;
+            
+            document.getElementById('hangar-stars').innerText = stats.stars;
             document.getElementById('hangar-title').innerText = (mode === 'easy' ? "ROOKIE" : "EXPERT") + " HANGAR";
             
+            // Update Health Card UI
+            updateHangarUI();
+
             // Hide other screens
             levelSelectScreen.style.opacity = '0'; levelSelectScreen.style.pointerEvents = 'none';
             expertSelectScreen.style.opacity = '0'; expertSelectScreen.style.pointerEvents = 'none';
@@ -1978,10 +2018,9 @@
             const hCtx = hCanvas.getContext('2d');
             hCtx.clearRect(0,0,200,200);
             
-            // Draw Player Ship (Center)
             hCtx.save();
             hCtx.translate(100, 100);
-            hCtx.scale(2, 2); // Bigger
+            hCtx.scale(2, 2); 
             hCtx.shadowBlur = 20; hCtx.shadowColor = '#00ffff'; hCtx.fillStyle = '#fff';
             hCtx.beginPath(); hCtx.moveTo(0, -20); hCtx.lineTo(15, 15); hCtx.lineTo(0, 10); hCtx.lineTo(-15, 15); hCtx.fill();
             hCtx.fillStyle = '#00aaaa';
@@ -1991,18 +2030,62 @@
         }
 
         function closeHangar() {
-            gameState = STATE.LEVEL_SELECT; // Or keep generic? No, user came from level select.
+            gameState = STATE.LEVEL_SELECT; 
             hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
             
-            // Return to appropriate screen (we don't know which one was open easily unless we track it)
-            // Simple logic: if we opened expert hangar, go back to expert screen.
-            // But for now, user clicks 'Hangar' button on specific screen. 
-            // Let's check text content of title
             const title = document.getElementById('hangar-title').innerText;
             if(title.includes("EXPERT")) {
                 expertSelectScreen.style.opacity = '1'; expertSelectScreen.style.pointerEvents = 'auto';
             } else {
                 levelSelectScreen.style.opacity = '1'; levelSelectScreen.style.pointerEvents = 'auto';
+            }
+        }
+
+        function updateHangarUI() {
+            const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
+            document.getElementById('hangar-stars').innerText = stats.stars;
+
+            // Health Upgrade UI Logic
+            const hpLvl = stats.healthLvl;
+            const hpBtn = document.getElementById('btn-upg-hp');
+            const hpLvlEl = document.getElementById('hp-lvl');
+            const hpBonusEl = document.getElementById('hp-bonus');
+
+            let totalBonus = 0;
+            for(let i=0; i<hpLvl; i++) totalBonus += HEALTH_UPGRADES.bonuses[i];
+
+            hpLvlEl.innerText = "Lvl " + hpLvl;
+            hpBonusEl.innerText = "+" + totalBonus + " HP";
+
+            if (hpLvl >= 5) {
+                hpBtn.innerText = "MAXED";
+                hpBtn.style.opacity = 0.5;
+                hpBtn.style.cursor = "default";
+                hpBtn.onclick = null;
+            } else {
+                const cost = HEALTH_UPGRADES.costs[hpLvl];
+                hpBtn.innerText = `UPGRADE (${cost} ⭐)`;
+                hpBtn.style.opacity = 1;
+                hpBtn.style.cursor = "pointer";
+                hpBtn.onclick = upgradeHealth; // Re-bind
+            }
+        }
+
+        function upgradeHealth() {
+            const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
+            const currentLvl = stats.healthLvl;
+
+            if (currentLvl >= 5) return;
+
+            const cost = HEALTH_UPGRADES.costs[currentLvl];
+
+            if (stats.stars >= cost) {
+                stats.stars -= cost;
+                stats.healthLvl++;
+                saveData();
+                updateHangarUI();
+            } else {
+                alert("Not enough stars!"); // Simple feedback
             }
         }
 
