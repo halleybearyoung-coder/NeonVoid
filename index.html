@@ -215,49 +215,146 @@
             color: black;
             box-shadow: 0 0 20px #ffd700;
         }
+        /* NEW HANGAR STYLES */
         #hangar-content {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: rgba(0, 10, 10, 0.95);
+            /* Cyberpunk Panel Background */
+            background: rgba(5, 10, 15, 0.95);
+            /* Tech Grid Texture */
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
             padding: 40px;
             border: 1px solid #00aaaa;
-            box-shadow: 0 0 50px rgba(0, 255, 255, 0.1);
-            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.15), inset 0 0 100px rgba(0,0,0,0.8);
+            /* Sci-Fi Cut Corners */
+            clip-path: polygon(
+                0 0, 
+                100% 0, 
+                100% calc(100% - 30px), 
+                calc(100% - 30px) 100%, 
+                30px 100%, 
+                0 calc(100% - 30px)
+            );
+            width: 85%;
+            max-width: 900px;
+            position: relative;
         }
+        /* Decorative corner lines for hangar */
+        #hangar-content::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border: 1px solid transparent;
+            pointer-events: none;
+        }
+
+        .hologram-container {
+            position: relative;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, rgba(0, 50, 50, 0.4) 0%, rgba(0,0,0,0) 70%);
+        }
+        /* Corner Brackets for Hologram */
+        .holo-bracket {
+            position: absolute; width: 20px; height: 20px;
+            border: 2px solid #00ffff;
+            opacity: 0.8;
+            transition: all 0.5s;
+        }
+        .hb-tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+        .hb-tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+        .hb-bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+        .hb-br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+        
+        /* Scanline Animation */
+        .scanline {
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 10px #00ffff;
+            animation: scan 3s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
         .upgrade-row {
             display: flex;
             gap: 30px;
             margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .upgrade-card {
-            width: 240px;
+            width: 220px;
             padding: 20px;
-            border: 1px solid #333;
-            background: linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.9) 100%);
+            background: rgba(20, 25, 30, 0.9);
+            border: 1px solid #334;
+            /* Top accent bar */
+            border-top: 3px solid #444; 
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: transform 0.2s, border-color 0.2s;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            position: relative;
         }
+        /* Type specific accents */
+        .card-hp { border-top-color: #00ff00; }
+        .card-cannon { border-top-color: #00ffff; }
+        .card-special { border-top-color: #ff4444; }
+
         .upgrade-card:hover {
             transform: translateY(-5px);
-            border-color: #00ffff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            background: rgba(30, 35, 40, 0.95);
         }
+        .card-hp:hover { border-color: #00ff00; box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
+        .card-cannon:hover { border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
+        .card-special:hover:not(.locked) { border-color: #ff4444; box-shadow: 0 0 15px rgba(255, 68, 68, 0.2); }
+
         .upgrade-title {
             font-family: 'Courier New', monospace;
-            font-size: 18px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+            font-size: 16px;
+            color: #aaa;
+            text-transform: uppercase;
             letter-spacing: 1px;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
         .upgrade-val {
-            font-size: 24px; color: #fff; margin: 15px 0; font-weight: bold;
+            font-size: 14px; color: #fff; margin: 5px 0; font-weight: normal;
         }
-        .locked { border-color: #333; color: #555; opacity: 0.7; }
-        .locked:hover { transform: none; border-color: #333; }
+        .highlight-val {
+            font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 10px;
+            text-shadow: 0 0 5px rgba(255,255,255,0.3);
+        }
+
+        /* Segmented Level Bar */
+        .level-bar-container {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .level-segment {
+            width: 8px; height: 12px;
+            background: #222;
+            border: 1px solid #444;
+            transform: skewX(-20deg);
+            transition: all 0.3s;
+        }
+        /* Active colors for segments */
+        .card-hp .level-segment.active { background: #00ff00; box-shadow: 0 0 5px #00ff00; border-color: #00ff00; }
+        .card-cannon .level-segment.active { background: #00ffff; box-shadow: 0 0 5px #00ffff; border-color: #00ffff; }
+        .card-special .level-segment.active { background: #ff4444; box-shadow: 0 0 5px #ff4444; border-color: #ff4444; }
+
+        .locked { border-color: #333; color: #555; opacity: 0.6; pointer-events: none; border-top-color: #333; }
+        .locked:hover { transform: none; box-shadow: none; border-color: #333; }
         
         /* LEVEL SELECT GRID */
         .level-grid {
@@ -375,31 +472,6 @@
             margin-top: 20px; font-size: 14px;
             color: rgba(255,255,255,0.5); font-family: monospace;
         }
-
-        /* DEV/MOD MENU STYLES */
-        .dev-overlay {
-            position: absolute; top: 20px; right: 20px; z-index: 200;
-            display: flex; flex-direction: column; align-items: flex-end;
-            pointer-events: auto;
-        }
-        .dev-toggle {
-            background: rgba(0, 0, 0, 0.7); border: 1px solid #ff4444;
-            color: #ff4444; font-family: 'Courier New', Courier, monospace;
-            font-weight: bold; font-size: 12px; padding: 5px 10px; cursor: pointer;
-            backdrop-filter: blur(2px); margin-bottom: 5px; transition: 0.2s;
-        }
-        .dev-toggle:hover { background: #ff4444; color: black; }
-        .dev-menu {
-            display: none; background: rgba(20, 0, 0, 0.9);
-            border: 1px solid #ff4444; padding: 10px; border-radius: 4px; width: 180px;
-        }
-        .dev-btn {
-            background: #300; border: 1px solid #600; color: #f88;
-            width: 100%; padding: 6px; margin-bottom: 6px; cursor: pointer;
-            font-family: 'Courier New', monospace; font-size: 11px; text-align: center;
-        }
-        .dev-btn:hover { background: #f00; color: white; border-color: #f00; }
-        .dev-btn:active { transform: translateY(1px); }
     </style>
 </head>
 <body>
@@ -416,18 +488,6 @@
         <div class="title-text" style="font-size: 30px; margin-bottom: 10px; color: #ff4444;">ACCESS DENIED</div>
         <div id="msg-text">Level Locked. Complete previous sector.</div>
         <button class="btn" onclick="closeMsgModal()" style="font-size: 16px; padding: 10px 30px;">OK</button>
-    </div>
-
-    <!-- DEV MENU OVERLAY -->
-    <div class="dev-overlay">
-        <button class="dev-toggle" onclick="toggleDevMenu()">[ DEV TOOLS ]</button>
-        <div id="dev-menu" class="dev-menu">
-            <button class="dev-btn" onclick="requestWarp()">⏩ WARP TO WAVE...</button>
-            <button class="dev-btn" onclick="setupTerminatorRun()">⚙️ SETUP: TERMINATOR</button>
-            <button id="god-mode-btn" class="dev-btn" onclick="toggleGodMode()">🛡️ GOD MODE: OFF</button>
-            <button class="dev-btn" onclick="killAllEnemies()">💀 KILL ALL</button>
-            <button class="dev-btn" onclick="unlockAllLevels()">🔓 UNLOCK ALL (DEV)</button>
-        </div>
     </div>
 
     <div id="ui-layer">
@@ -498,33 +558,51 @@
     <!-- HANGAR SCREEN (REFINED) -->
     <div id="hangar-screen" class="screen-overlay">
         <div id="hangar-content">
-            <div class="title-text" id="hangar-title" style="font-size: 36px; margin-bottom: 20px;">HANGAR</div>
-            <div style="font-size: 24px; color: #ffd700; margin-bottom: 20px; font-weight: bold; text-shadow: 0 0 10px #ffd700;">STARS: <span id="hangar-stars">0</span></div>
+            <div class="title-text" id="hangar-title" style="font-size: 36px; margin-bottom: 10px; color: #fff; text-shadow: 0 0 20px #00ffff;">HANGAR</div>
+            <div style="font-size: 20px; color: #ffd700; margin-bottom: 30px; font-weight: bold; text-shadow: 0 0 10px #ffd700; letter-spacing: 2px;">CREDITS: <span id="hangar-stars">0</span> ⭐</div>
             
-            <!-- Ship Preview Canvas -->
-            <canvas id="hangarShipCanvas" width="200" height="200" style="background: rgba(0,30,30,0.8); border: 2px solid #00ffff; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 0 20px rgba(0,255,255,0.2);"></canvas>
+            <!-- Ship Preview Hologram -->
+            <div class="hologram-container">
+                <div class="holo-bracket hb-tl"></div>
+                <div class="holo-bracket hb-tr"></div>
+                <div class="holo-bracket hb-bl"></div>
+                <div class="holo-bracket hb-br"></div>
+                <div class="scanline"></div>
+                <canvas id="hangarShipCanvas" width="200" height="200" style="z-index: 2;"></canvas>
+            </div>
     
             <div class="upgrade-row">
-                <div class="upgrade-card">
-                    <h3 class="upgrade-title" style="color: #00ffff;">HULL INTEGRITY</h3>
-                    <div class="upgrade-val" id="hp-lvl">Lvl 0</div>
-                    <div class="upgrade-val" id="hp-bonus" style="font-size:14px; color:#0f0;">+0 HP</div>
-                    <button id="btn-upg-hp" class="btn" style="font-size: 14px; padding: 10px; width: 100%;" onclick="upgradeHealth()">UPGRADE</button>
+                <!-- HP CARD -->
+                <div class="upgrade-card card-hp">
+                    <div class="upgrade-title">HULL INTEGRITY</div>
+                    <div class="level-bar-container" id="hp-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="hp-bonus" style="color: #0f0;">+0 HP</div>
+                    <button id="btn-upg-hp" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #0f0; color: #0f0;" onclick="upgradeHealth()">UPGRADE</button>
                 </div>
-                <div class="upgrade-card">
-                    <h3 class="upgrade-title" style="color: #00ffff;">MAIN CANNON</h3>
-                    <div class="upgrade-val">Lvl 1</div>
-                    <div class="upgrade-val" style="font-size:14px; color:#ccc;">Standard</div>
-                    <button class="btn" style="font-size: 14px; padding: 10px; width: 100%; opacity: 0.5; cursor: not-allowed;">MAXED</button>
+
+                <!-- CANNON CARD -->
+                <div class="upgrade-card card-cannon">
+                    <div class="upgrade-title">MAIN CANNON</div>
+                    <div class="level-bar-container" id="cannon-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="cannon-bonus" style="color: #00ffff;">+0 DMG</div>
+                    <button id="btn-upg-cannon" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #00ffff; color: #00ffff;" onclick="upgradeCannon()">UPGRADE</button>
                 </div>
-                <div class="upgrade-card locked">
-                    <h3 class="upgrade-title">HEAVY BEAM</h3>
-                    <div class="upgrade-val">LOCKED</div>
-                    <div class="upgrade-val" style="font-size:14px; color:#555;">Level 5 Req.</div>
-                    <button class="btn" style="font-size: 14px; padding: 10px; width: 100%; background: #222; border-color: #444; cursor: not-allowed; color: #666;">LOCKED</button>
+
+                <!-- SPECIAL CARD (LOCKED) -->
+                <div class="upgrade-card card-special locked">
+                    <div class="upgrade-title">HEAVY BEAM</div>
+                    <div class="level-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" style="color: #555;">LOCKED</div>
+                    <button class="btn" style="font-size: 14px; padding: 10px; width: 100%; background: #111; border-color: #333; cursor: not-allowed; color: #555;">REQ. LVL 5</button>
                 </div>
             </div>
-            <button class="btn" style="margin-top: 10px;" onclick="closeHangar()">EXIT HANGAR</button>
+            <button class="btn" style="margin-top: 10px; border-color: #fff; color: #fff;" onclick="closeHangar()">EXIT HANGAR</button>
         </div>
     </div>
 
@@ -548,7 +626,6 @@
         let currentLevelIndex = 1;
         let activeDifficultyMode = 'easy'; // 'easy' or 'hard'
         let currentHangarMode = 'easy'; // Tracks which hangar is open
-        let godModeActive = false;
         let introTimer = 30;
         let introInterval = null;
 
@@ -562,9 +639,12 @@
 
         // --- DATA PERSISTENCE ---
         let gameData = JSON.parse(localStorage.getItem('neonVoidData_v3')) || {
-            easy: { stars: 0, healthLvl: 0, maxStage: 1 },
-            hard: { stars: 0, healthLvl: 0, maxStage: 1 }
+            easy: { stars: 0, healthLvl: 0, cannonLvl: 0, maxStage: 1 },
+            hard: { stars: 0, healthLvl: 0, cannonLvl: 0, maxStage: 1 }
         };
+        // Ensure new properties exist for old saves
+        if (gameData.easy.cannonLvl === undefined) gameData.easy.cannonLvl = 0;
+        if (gameData.hard.cannonLvl === undefined) gameData.hard.cannonLvl = 0;
 
         function saveData() {
             localStorage.setItem('neonVoidData_v3', JSON.stringify(gameData));
@@ -573,7 +653,12 @@
         // --- UPGRADE CONFIGURATION ---
         const HEALTH_UPGRADES = {
             costs: [110, 150, 200, 600, 1100], 
-            bonuses: [5, 10, 15, 20, 50]     
+            bonuses: [5, 10, 15, 20, 50]      
+        };
+
+        const CANNON_UPGRADES = {
+            costs: [150, 200, 500, 1000, 10000],
+            bonuses: [1, 2, 3, 4, 5] 
         };
 
         const canvas = document.getElementById('gameCanvas');
@@ -743,27 +828,6 @@
         function animateThree() {
             requestAnimationFrame(animateThree);
             
-            // GOD MODE ANIMATION
-            if(godModeActive) {
-                const gmBtn = document.getElementById('god-mode-btn');
-                if(gmBtn) {
-                    const time = Date.now() * 0.005;
-                    const hue = (time * 50) % 360;
-                    gmBtn.style.borderColor = `hsl(${hue}, 100%, 50%)`;
-                    gmBtn.style.boxShadow = `0 0 15px hsl(${hue}, 100%, 50%)`;
-                    gmBtn.style.transform = `scale(${1 + Math.sin(time) * 0.05})`;
-                    gmBtn.style.color = "white";
-                }
-            } else {
-                const gmBtn = document.getElementById('god-mode-btn');
-                if(gmBtn && gmBtn.style.transform !== '') {
-                    gmBtn.style.borderColor = '#600';
-                    gmBtn.style.boxShadow = 'none';
-                    gmBtn.style.transform = 'scale(1)';
-                    gmBtn.style.color = '#f88';
-                }
-            }
-
             // SHOW CORE IN MENU OR LEVEL SELECT OR HANGAR OR INTRO
             if ((gameState === STATE.MENU || gameState === STATE.LEVEL_SELECT || gameState === STATE.HANGAR || gameState === STATE.INTRO) && menuCore) {
                 menuCore.rotation.x += 0.005; menuCore.rotation.y += 0.01; menuCore.visible = true;
@@ -981,12 +1045,12 @@
         }
 
         class Bullet {
-            constructor(x, y, vx, vy, type) {
+            constructor(x, y, vx, vy, type, damage) {
                 this.x = x; this.y = y; this.vx = vx; this.vy = vy;
                 this.type = type; this.active = true;
                 if (type === 'player') {
                     this.color = '#00ffff'; this.size = 3; 
-                    this.damage = currentSettings.playerDamage; 
+                    this.damage = damage || currentSettings.playerDamage; 
                 } else if (type === 'boss_orb') {
                     this.color = '#ffaa00'; this.size = 6; this.damage = 10;
                 } else if (type === 'fireball') {
@@ -1015,7 +1079,7 @@
                     if (Math.random() > 0.5) particles.push(new Particle(this.x, this.y, '#555', 1, 3, 20));
                 }
                 if (this.type === 'fireball') {
-                     particles.push(new Particle(this.x, this.y, '#ffaa00', 1, 4, 10));
+                      particles.push(new Particle(this.x, this.y, '#ffaa00', 1, 4, 10));
                 }
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < -100 || this.x > width + 100 || this.y < -100 || this.y > height + 100) this.active = false;
@@ -1046,11 +1110,19 @@
                 let baseHp = 100;
                 let bonusHp = 0;
                 const stats = gameData[activeDifficultyMode]; 
-                const level = stats.healthLvl;
-                for(let i=0; i < level; i++) { bonusHp += HEALTH_UPGRADES.bonuses[i]; }
+                
+                // HP Calculation
+                const hpLevel = stats.healthLvl;
+                for(let i=0; i < hpLevel; i++) { bonusHp += HEALTH_UPGRADES.bonuses[i]; }
                 this.maxHp = baseHp + bonusHp;
                 this.hp = this.maxHp;
                 playerHpEl.innerText = Math.floor(this.hp);
+
+                // Damage Calculation
+                let bonusDamage = 0;
+                const cannonLevel = stats.cannonLvl;
+                for(let i=0; i < cannonLevel; i++) { bonusDamage += CANNON_UPGRADES.bonuses[i]; }
+                this.damage = currentSettings.playerDamage + bonusDamage;
             }
             update() {
                 if (!this.active) return;
@@ -1072,8 +1144,8 @@
                     this.y = Math.max(20, Math.min(height - 20, this.y));
 
                     if (frames % 6 === 0) {
-                        bullets.push(new Bullet(this.x - 10, this.y - 10, 0, -15, 'player'));
-                        bullets.push(new Bullet(this.x + 10, this.y - 10, 0, -15, 'player'));
+                        bullets.push(new Bullet(this.x - 10, this.y - 10, 0, -15, 'player', this.damage));
+                        bullets.push(new Bullet(this.x + 10, this.y - 10, 0, -15, 'player', this.damage));
                     }
                 }
                 if (this.iframes > 0) this.iframes--;
@@ -1082,21 +1154,8 @@
             draw() {
                 if (!this.active && gameState !== STATE.VICTORY_SEQUENCE) return;
                 
-                if (godModeActive && this.active && gameState === STATE.PLAYING) {
-                    ctx.save(); ctx.translate(this.x, this.y);
-                    const beamWidth = 40 + Math.sin(Date.now() * 0.05) * 10;
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.fillRect(-beamWidth/4, -1000, beamWidth/2, 1000);
-                    ctx.shadowBlur = 30; ctx.shadowColor = '#00ffff';
-                    ctx.fillStyle = 'rgba(0, 255, 255, 0.5)'; ctx.fillRect(-beamWidth/2, -1000, beamWidth, 1000);
-                    enemies.forEach(e => { if(Math.abs(e.x - this.x) < beamWidth && e.y < this.y) { e.hit(9999); for(let i=0; i<3; i++) particles.push(new Particle(e.x, e.y, '#fff', 5, 3, 20)); } });
-                    bullets.forEach(b => { if(b.type !== 'player' && Math.abs(b.x - this.x) < beamWidth && b.y < this.y) { b.active = false; particles.push(new Particle(b.x, b.y, '#00ffff', 3, 2, 10)); } });
-                    if(boss && boss.active && Math.abs(boss.x - this.x) < beamWidth + 50) boss.hit(10); 
-                    ctx.restore();
-                }
-
                 if (this.iframes > 0 && Math.floor(frames / 4) % 2 === 0) return;
                 ctx.save(); ctx.translate(this.x, this.y);
-                if(godModeActive) ctx.scale(4, 4); 
                 ctx.shadowBlur = 20; ctx.shadowColor = '#00ffff'; ctx.fillStyle = '#fff';
                 ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 15); ctx.lineTo(0, 10); ctx.lineTo(-15, 15); ctx.fill();
                 ctx.fillStyle = '#00aaaa';
@@ -1106,7 +1165,6 @@
             }
             hit(damage) {
                 if (this.iframes > 0 || !this.active) return;
-                if (godModeActive) return; 
                 this.hp -= damage; this.iframes = 30;
                 playerHpEl.innerText = Math.max(0, Math.floor(this.hp));
                 ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10);
@@ -1447,9 +1505,9 @@
                 this.sequenceIndex++;
                 
                 if(this.isTerminator) {
-                     phaseDebug.innerText = `PHASE: ${this.currentAttack.replace('terminator_', '').toUpperCase()}`;
+                      phaseDebug.innerText = `PHASE: ${this.currentAttack.replace('terminator_', '').toUpperCase()}`;
                 } else {
-                     phaseDebug.innerText = `PHASE: ${this.currentAttack.toUpperCase()}`;
+                      phaseDebug.innerText = `PHASE: ${this.currentAttack.toUpperCase()}`;
                 }
                 
                 this.laserCharge = 0; this.laserActive = false; this.redLines = [];
@@ -2088,14 +2146,21 @@
         function updateHangarUI() {
             const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
             document.getElementById('hangar-stars').innerText = stats.stars;
+            
+            // --- UPDATE HP CARD ---
             const hpLvl = stats.healthLvl;
             const hpBtn = document.getElementById('btn-upg-hp');
-            const hpLvlEl = document.getElementById('hp-lvl');
             const hpBonusEl = document.getElementById('hp-bonus');
-            let totalBonus = 0;
-            for(let i=0; i<hpLvl; i++) totalBonus += HEALTH_UPGRADES.bonuses[i];
-            hpLvlEl.innerText = "Lvl " + hpLvl;
-            hpBonusEl.innerText = "+" + totalBonus + " HP";
+            let totalBonusHp = 0;
+            for(let i=0; i<hpLvl; i++) totalBonusHp += HEALTH_UPGRADES.bonuses[i];
+            
+            const hpSegments = document.querySelectorAll('#hp-bar-container .level-segment');
+            hpSegments.forEach((seg, index) => {
+                if (index < hpLvl) seg.classList.add('active');
+                else seg.classList.remove('active');
+            });
+
+            hpBonusEl.innerText = "+" + totalBonusHp + " HP";
             if (hpLvl >= 5) {
                 hpBtn.innerText = "MAXED";
                 hpBtn.style.opacity = 0.5;
@@ -2108,6 +2173,33 @@
                 hpBtn.style.cursor = "pointer";
                 hpBtn.onclick = upgradeHealth; 
             }
+
+            // --- UPDATE CANNON CARD ---
+            const cannonLvl = stats.cannonLvl;
+            const cannonBtn = document.getElementById('btn-upg-cannon');
+            const cannonBonusEl = document.getElementById('cannon-bonus');
+            let totalBonusDmg = 0;
+            for(let i=0; i<cannonLvl; i++) totalBonusDmg += CANNON_UPGRADES.bonuses[i];
+
+            const cannonSegments = document.querySelectorAll('#cannon-bar-container .level-segment');
+            cannonSegments.forEach((seg, index) => {
+                if (index < cannonLvl) seg.classList.add('active');
+                else seg.classList.remove('active');
+            });
+
+            cannonBonusEl.innerText = "+" + totalBonusDmg + " DMG";
+            if (cannonLvl >= 5) {
+                cannonBtn.innerText = "MAXED";
+                cannonBtn.style.opacity = 0.5;
+                cannonBtn.style.cursor = "default";
+                cannonBtn.onclick = null;
+            } else {
+                const cost = CANNON_UPGRADES.costs[cannonLvl];
+                cannonBtn.innerText = `UPGRADE (${cost} ⭐)`;
+                cannonBtn.style.opacity = 1;
+                cannonBtn.style.cursor = "pointer";
+                cannonBtn.onclick = upgradeCannon; 
+            }
         }
 
         function upgradeHealth() {
@@ -2118,6 +2210,21 @@
             if (stats.stars >= cost) {
                 stats.stars -= cost;
                 stats.healthLvl++;
+                saveData();
+                updateHangarUI();
+            } else {
+                alert("Not enough stars!"); 
+            }
+        }
+
+        function upgradeCannon() {
+            const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
+            const currentLvl = stats.cannonLvl;
+            if (currentLvl >= 5) return;
+            const cost = CANNON_UPGRADES.costs[currentLvl];
+            if (stats.stars >= cost) {
+                stats.stars -= cost;
+                stats.cannonLvl++;
                 saveData();
                 updateHangarUI();
             } else {
@@ -2331,69 +2438,6 @@
             }
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1);
-            }
-        }
-
-        // --- DEV TOOLS LOGIC ---
-        function toggleDevMenu() {
-            const menu = document.getElementById('dev-menu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function requestWarp() {
-            const wave = prompt("Enter Wave Number to Warp to (1-15):", "15");
-            if(wave) {
-                const waveNum = parseInt(wave);
-                if(!isNaN(waveNum) && waveNum > 0) {
-                    warpToWave(waveNum);
-                }
-            }
-        }
-
-        function warpToWave(n) {
-            if(n < 1) n = 1;
-            if (gameState !== STATE.PLAYING || activeDifficultyMode !== 'easy' || currentLevelIndex !== 2) {
-                 launchMission('easy', 2);
-                 setTimeout(() => {
-                     enemies = []; bullets = []; drops = [];
-                     startWave(n);
-                 }, 100);
-                 return;
-            }
-            enemies = []; bullets = []; drops = [];
-            if(boss) boss.active = false;
-            bossHud.style.opacity = 0;
-            startWave(n);
-        }
-
-        function setupTerminatorRun() {
-            launchMission('easy', 2);
-        }
-
-        function toggleGodMode() {
-            godModeActive = !godModeActive;
-            const btn = document.getElementById('god-mode-btn');
-            if(gameState === STATE.PLAYING && player) {
-                if(godModeActive) { player.hp = 9999; playerHpEl.innerText = "INF"; btn.innerText = "🛡️ GOD MODE: ON"; } 
-                else { player.hp = 100; playerHpEl.innerText = "100"; btn.innerText = "🛡️ GOD MODE: OFF"; }
-            } else {
-                btn.innerText = godModeActive ? "🛡️ GOD MODE: ON" : "🛡️ GOD MODE: OFF";
-            }
-        }
-
-        function killAllEnemies() {
-            enemies = []; bullets = [];
-        }
-
-        function unlockAllLevels() {
-            gameData.easy.maxStage = 2; // Updated max to 2
-            gameData.hard.maxStage = 2; // Updated max to 2
-            saveData();
-            alert("All levels unlocked!");
-            // Refresh view if open
-            if(gameState === STATE.LEVEL_SELECT) {
-                if(activeDifficultyMode === 'easy') updateLevelGrid('easy');
-                else updateLevelGrid('hard');
             }
         }
 
