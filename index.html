@@ -1155,17 +1155,17 @@
             // Called when starting Stage 2 specifically
             initAsStage2() {
                 this.isPhaseTwo = false; // Starts normal, becomes True Form later
-                this.isStickFigure = true;
+                this.isStickFigure = false; // REVERTED: No longer stick figure
                 this.damageMultiplier = 2;
                 this.spawnRate = 45 * currentSettings.fireRateMult;
                 this.maxHp = 2500; // Rookie Health
                 this.hp = this.maxHp;
 
-                bossName.innerText = "The Stick Figure";
-                bossName.style.color = "#ffffff";
+                bossName.innerText = "System Core: Omega"; // REVERTED NAME
+                bossName.style.color = "#ff4d4d";
 
-                isStickFigureActive = true;
-                isPhase2Active = false; // Disable standard boss mesh
+                isStickFigureActive = false; // REVERTED
+                isPhase2Active = true; // Enable standard boss mesh
             }
 
             activate() {
@@ -1276,64 +1276,34 @@
                         break;
 
                     case 'laser':
-                        if (this.isStickFigure) {
-                            // Stick Figure Laser Eyes
-                            if (this.attackTimer < 60) {
-                                // Charge up
-                                this.laserCharge = this.attackTimer / 60;
-                                // Aim at player UNTIL lock-on threshold (e.g. 40)
-                                if (this.attackTimer < 40) {
-                                    let target = Math.atan2(player.y - this.y, player.x - this.x);
-                                    this.laserAngle = target + Math.PI / 2;
-                                }
-                                // Frames 40-60: LOCKED ON (no movement)
-                            } else if (this.attackTimer < 140) {
-                                this.laserActive = true;
-                                screenShake = 5; // VIBRATE
-                                // Hit detection Raycast style
-                                let angle = this.laserAngle - Math.PI / 2;
-                                let dx = player.x - this.x; let dy = player.y - this.y;
-                                // Rotate point to check if within beam width
-                                let rx = dx * Math.cos(-angle) - dy * Math.sin(-angle);
-                                if (Math.abs(rx) < 20 && dy > 0) player.hit(2);
-                            } else {
-                                this.laserActive = false;
-                                if (this.attackTimer > 180) this.startNextAttack();
+                        // Unified Laser Logic (Lock-on + Shake)
+                        if (this.attackTimer < 60) {
+                            // Charge up
+                            this.laserCharge = this.attackTimer / 60;
+                            // Aim at player UNTIL lock-on threshold (e.g. 40)
+                            if (this.attackTimer < 40) {
+                                let target = Math.atan2(player.y - this.y, player.x - this.x);
+                                this.laserAngle = target + Math.PI / 2;
                             }
+                            // Frames 40-60: LOCKED ON (no movement)
+                        } else if (this.attackTimer < 140) {
+                            this.laserActive = true;
+                            screenShake = 5; // VIBRATE
 
-                        } else {
-                            // Original Laser Logic
-                            if (this.attackTimer < 60) {
-                                this.laserCharge = this.attackTimer / 60;
-                                if (this.isDesperationMode) {
-                                    let target = Math.atan2(player.y - this.y, player.x - this.x);
-                                    let diff = target - this.laserAngle;
-                                    while (diff < -Math.PI) diff += Math.PI * 2;
-                                    while (diff > Math.PI) diff -= Math.PI * 2;
-                                    this.laserAngle += diff * 0.1;
-                                } else {
-                                    this.laserAngle = Math.PI / 2;
-                                }
-                            } else if (this.attackTimer < 160) {
-                                this.laserActive = true;
-                                let hit = false;
-                                if (this.isDesperationMode) {
-                                    let dx = player.x - this.x; let dy = player.y - this.y;
-                                    let angle = -(this.laserAngle - Math.PI / 2);
-                                    let rx = dx * Math.cos(angle) - dy * Math.sin(angle);
-                                    if (Math.abs(rx) < 30 && dy > 0) hit = true;
-                                } else {
-                                    if (Math.abs(player.x - this.x) < 30) hit = true;
-                                }
-                                if (hit) player.hit(2 * this.damageMultiplier);
-                                if (frames % 4 === 0) {
-                                    ctx.translate(Math.random() * 4 - 2, 0);
-                                    setTimeout(() => ctx.setTransform(1, 0, 0, 1, 0, 0), 20);
-                                }
-                            } else {
-                                this.laserActive = false;
-                                if (this.attackTimer > 200) this.startNextAttack();
+                            // Hit detection Raycast style
+                            let angle = this.laserAngle - Math.PI / 2;
+                            let dx = player.x - this.x; let dy = player.y - this.y;
+                            // Rotate point to check if within beam width
+                            let rx = dx * Math.cos(-angle) - dy * Math.sin(-angle);
+                            if (Math.abs(rx) < 30 && dy > 0) player.hit(2 * this.damageMultiplier);
+
+                            if (frames % 4 === 0) {
+                                ctx.translate(Math.random() * 4 - 2, 0);
+                                setTimeout(() => ctx.setTransform(1, 0, 0, 1, 0, 0), 20);
                             }
+                        } else {
+                            this.laserActive = false;
+                            if (this.attackTimer > 180) this.startNextAttack();
                         }
                         break;
 
@@ -1396,27 +1366,6 @@
 
             draw() {
                 if (!this.active) return;
-
-                // --- STICK FIGURE DRAWING (CANVAS OVERLAYS) ---
-                // We mainly rely on Three.js for the body, but let's draw the attacks here.
-                if (this.isStickFigure) {
-                    if (this.currentAttack === 'laser' && this.laserActive) {
-                        ctx.save();
-                        ctx.translate(this.x, this.y);
-                        // Draw two beams from "eyes"
-                        ctx.rotate(this.laserAngle - Math.PI / 2);
-                        ctx.shadowBlur = 20; ctx.shadowColor = 'red';
-                        ctx.strokeStyle = 'red'; ctx.lineWidth = 5;
-
-                        // Left Eye Beam
-                        ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-10, 1000); ctx.stroke();
-                        // Right Eye Beam
-                        ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(10, 1000); ctx.stroke();
-
-                        ctx.restore();
-                    }
-                    return; // Don't draw the standard orb boss
-                }
 
                 // --- STANDARD BOSS DRAWING ---
                 ctx.save(); ctx.translate(this.x, this.y);
