@@ -315,6 +315,40 @@
             color: rgba(255, 255, 255, 0.5);
             font-family: monospace;
         }
+
+        #debug-ui {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            pointer-events: auto;
+            display: flex;
+            gap: 5px;
+        }
+
+        #debug-wave-input {
+            width: 50px;
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 5px;
+        }
+
+        #debug-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        #debug-btn:hover {
+            background: #666;
+        }
     </style>
 </head>
 
@@ -342,6 +376,12 @@
         </div>
         <div class="phase-indicator" id="phase-debug">INIT</div>
         <div id="wave-announcement">WAVE 1</div>
+
+        <!-- DEBUG UI -->
+        <div id="debug-ui">
+            <input type="number" id="debug-wave-input" placeholder="#" min="1" max="15" value="15">
+            <button id="debug-btn" onclick="debugSkipWave()">SKIP TO WAVE</button>
+        </div>
     </div>
 
     <!-- MAIN MENU -->
@@ -1822,6 +1862,38 @@
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1);
             }
+        }
+
+        // DEBUG FUNCTION
+        function debugSkipWave() {
+            const input = document.getElementById('debug-wave-input');
+            const wave = parseInt(input.value);
+            if (!wave || wave < 1) return;
+
+            console.log(`Skipping to Wave ${wave}...`);
+
+            // Clear current state
+            enemies = [];
+            bullets = [];
+            particles = [];
+            if (boss) {
+                boss.active = false;
+                bossHud.style.opacity = 0;
+            }
+            isPhase2Active = false;
+            isStickFigureActive = false;
+            if (supernovaMesh) supernovaMesh.visible = false;
+            if (stickFigureGroup) stickFigureGroup.visible = false;
+
+            // Force Game State if in menu
+            if (gameState !== STATE.PLAYING) {
+                launchMission('easy', 2); // Default to Level 2 (Boss Level) logic
+            }
+
+            // Start Wave
+            currentWave = wave - 1; // startWave increments or sets logic based on input
+            // Actually startWave takes the wave number directly in this code
+            startWave(wave);
         }
 
         document.getElementById('start-hard-btn').addEventListener('click', showExpertSelect);
