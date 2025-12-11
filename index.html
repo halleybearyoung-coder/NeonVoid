@@ -810,7 +810,7 @@
         // --- UPGRADE CONFIGURATION ---
         const HEALTH_UPGRADES = {
             costs: [110, 150, 200, 600, 1100], 
-            bonuses: [5, 10, 15, 20, 50]       
+            bonuses: [5, 10, 15, 20, 50]        
         };
 
         const CANNON_UPGRADES = {
@@ -930,7 +930,7 @@
                     color: 0x00ffff, 
                     wireframe: false, 
                     transparent: true, 
-                    opacity: 0.4,     
+                    opacity: 0.4,      
                     side: THREE.DoubleSide,
                     depthWrite: false,
                     blending: THREE.AdditiveBlending // Glowy effect
@@ -1318,29 +1318,29 @@
             }
             draw() {
                 if (this.type === 'glitch_laser') {
-                     ctx.save();
-                     // Warning Phase
-                     if(this.warmup > 0) {
-                         ctx.strokeStyle = `rgba(255, 0, 255, ${0.5 + Math.sin(frames*0.5)*0.5})`;
-                         ctx.lineWidth = 2;
-                         ctx.setLineDash([5, 5]);
-                     } else {
-                         // Active Phase
-                         ctx.strokeStyle = '#ff00ff';
-                         ctx.lineWidth = 10 + Math.random()*5; // Glitch width
-                         ctx.shadowBlur = 20; ctx.shadowColor = '#ff00ff';
-                         ctx.setLineDash([]);
-                     }
+                      ctx.save();
+                      // Warning Phase
+                      if(this.warmup > 0) {
+                          ctx.strokeStyle = `rgba(255, 0, 255, ${0.5 + Math.sin(frames*0.5)*0.5})`;
+                          ctx.lineWidth = 2;
+                          ctx.setLineDash([5, 5]);
+                      } else {
+                          // Active Phase
+                          ctx.strokeStyle = '#ff00ff';
+                          ctx.lineWidth = 10 + Math.random()*5; // Glitch width
+                          ctx.shadowBlur = 20; ctx.shadowColor = '#ff00ff';
+                          ctx.setLineDash([]);
+                      }
 
-                     ctx.beginPath();
-                     if(this.isVertical) {
-                         ctx.moveTo(this.x, 0); ctx.lineTo(this.x, height);
-                     } else {
-                         ctx.moveTo(0, this.y); ctx.lineTo(width, this.y);
-                     }
-                     ctx.stroke();
-                     ctx.restore();
-                     return;
+                      ctx.beginPath();
+                      if(this.isVertical) {
+                          ctx.moveTo(this.x, 0); ctx.lineTo(this.x, height);
+                      } else {
+                          ctx.moveTo(0, this.y); ctx.lineTo(width, this.y);
+                      }
+                      ctx.stroke();
+                      ctx.restore();
+                      return;
                 }
 
                 ctx.shadowBlur = 10; ctx.shadowColor = this.color; ctx.fillStyle = this.color;
@@ -1639,7 +1639,7 @@
                 this.isTerminator = false;
                 this.isGlitch = true;
                 this.damageMultiplier = 2.0;
-                this.maxHp = (activeDifficultyMode === 'hard') ? 8000 : 4000;
+                this.maxHp = (activeDifficultyMode === 'hard') ? 4000 : 4000;
                 this.hp = this.maxHp;
                 bossName.innerText = "PHANTOM PROTOCOL";
                 bossName.style.color = "#ff00ff";
@@ -1696,7 +1696,14 @@
                 } 
                 // --- GLITCH BOSS PHASE LOGIC ---
                 else if (this.isGlitch) {
-                    // Glitch logic handled in attacks, minimal passive movement
+                    // Random teleport regardless of current attack (approx every ~3.3 sec)
+                    if (this.phase === 'fight' && Math.random() < 0.005) { 
+                        // Teleport FX
+                        for(let i=0; i<15; i++) particles.push(new Particle(this.x, this.y, '#00ffff', 4, 3, 20));
+                        // New Position
+                        this.x = 50 + Math.random() * (width - 100);
+                        this.y = 50 + Math.random() * (height / 2);
+                    }
                 }
                 // --- STANDARD BOSS LOGIC ---
                 else {
@@ -1813,14 +1820,25 @@
 
                     case 'glitch_clones':
                         if (this.attackTimer === 10) {
-                            // Spawn 2 clones
-                            this.clones.push({x: this.x - 150, y: this.y + 50});
-                            this.clones.push({x: this.x + 150, y: this.y + 50});
+                            // Spawn 2 random clones
+                            this.clones = []; 
+                            const count = 2;
+                            for(let i=0; i<count; i++) {
+                                const cx = 50 + Math.random() * (width - 100);
+                                const cy = 50 + Math.random() * (height / 2 + 100);
+                                this.clones.push({x: cx, y: cy});
+                            }
                         }
                         // Clones fire too
                         if (this.attackTimer > 40 && this.attackTimer % 30 === 0 && this.attackTimer < 200) {
+                            // Real boss shoots 5 bullets
                             let angle = Math.atan2(player.y - this.y, player.x - this.x);
-                            bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*5, Math.sin(angle)*5, 'boss_orb'));
+                            for(let i=-2; i<=2; i++) {
+                                let spread = angle + (i * 0.2);
+                                bullets.push(new Bullet(this.x, this.y, Math.cos(spread)*5, Math.sin(spread)*5, 'boss_orb'));
+                            }
+                            
+                            // Clones shoot normally
                             this.clones.forEach(c => {
                                 let cAngle = Math.atan2(player.y - c.y, player.x - c.x);
                                 bullets.push(new Bullet(c.x, c.y, Math.cos(cAngle)*5, Math.sin(cAngle)*5, 'boss_orb'));
@@ -1997,7 +2015,8 @@
                     this.clones.forEach(c => {
                         ctx.save();
                         ctx.translate(c.x, c.y);
-                        ctx.globalAlpha = 0.4 + Math.sin(frames*0.5)*0.2; // Ghostly
+                        // Make them less transparent (higher alpha)
+                        ctx.globalAlpha = 0.8 + Math.sin(frames*0.5)*0.1; // Range 0.7 - 0.9
                         ctx.strokeStyle = '#00ffff'; // Cyan clones
                         ctx.lineWidth = 2;
                         ctx.beginPath();
@@ -2076,16 +2095,16 @@
 
                 // 2D SHIELD BACKUP FOR SYSTEM CORE
                 if (this.shieldHp > 0) {
-                     ctx.save();
-                     ctx.beginPath();
-                     ctx.arc(0, 0, 90, 0, Math.PI*2); // 90px radius
-                     ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 + Math.sin(frames*0.2)*0.3})`;
-                     ctx.lineWidth = 3;
-                     ctx.shadowBlur = 15; ctx.shadowColor = "#00ffff";
-                     ctx.stroke();
-                     ctx.fillStyle = "rgba(0, 255, 255, 0.15)";
-                     ctx.fill();
-                     ctx.restore();
+                      ctx.save();
+                      ctx.beginPath();
+                      ctx.arc(0, 0, 90, 0, Math.PI*2); // 90px radius
+                      ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 + Math.sin(frames*0.2)*0.3})`;
+                      ctx.lineWidth = 3;
+                      ctx.shadowBlur = 15; ctx.shadowColor = "#00ffff";
+                      ctx.stroke();
+                      ctx.fillStyle = "rgba(0, 255, 255, 0.15)";
+                      ctx.fill();
+                      ctx.restore();
                 }
 
                 if (this.currentAttack === 'laser') {
@@ -2219,14 +2238,70 @@
         function spawnWaveEnemies(wave) {
             let maxDelay = 0;
             const countMult = currentSettings.enemyCountMult;
+            const isHard = (activeDifficultyMode === 'hard');
 
             // ===============================================
-            // STAGE 2 & STAGE 3 LOGIC 
+            // EXPERT STAGE 3 SPECIFIC LOGIC (THE GLITCH SECTOR)
             // ===============================================
-            if (currentLevelIndex === 2 || currentLevelIndex === 3) {
-                
-                let isHard = (activeDifficultyMode === 'hard');
-
+            if (currentLevelIndex === 3 && isHard) {
+                 if (wave === 1) {
+                     // "Welcome to Hell"
+                     enemies.push(new LaserEnemy(width*0.2, -100));
+                     enemies.push(new LaserEnemy(width*0.8, -100));
+                     setTimeout(() => enemies.push(new HeavyStriker(width*0.5, -200)), 800);
+                     let count = 10;
+                     for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*200);
+                     maxDelay = 2000;
+                 } else if (wave === 2) {
+                     // Laser Rain
+                     enemies.push(new LaserEnemy(width*0.1, -100));
+                     enemies.push(new LaserEnemy(width*0.3, -200));
+                     enemies.push(new LaserEnemy(width*0.5, -300));
+                     enemies.push(new LaserEnemy(width*0.7, -200));
+                     enemies.push(new LaserEnemy(width*0.9, -100));
+                     maxDelay = 2000;
+                 } else if (wave === 3) {
+                     // Heavy Assault
+                     enemies.push(new HeavyStriker(width*0.2, -100));
+                     enemies.push(new HeavyStriker(width*0.8, -100));
+                     enemies.push(new HeavyStriker(width*0.4, -250));
+                     enemies.push(new HeavyStriker(width*0.6, -250));
+                     maxDelay = 2500;
+                 } else if (wave >= 4 && wave <= 8) {
+                     // Chaos Rampup
+                     let density = wave * 3;
+                     for(let i=0; i<density; i++) {
+                         setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*100);
+                     }
+                     if(wave > 5) {
+                         enemies.push(new LaserEnemy(width*0.1, -100));
+                         enemies.push(new LaserEnemy(width*0.9, -100));
+                     }
+                     if(wave > 7) {
+                         enemies.push(new HeavyStriker(width*0.5, -200));
+                     }
+                     maxDelay = density * 100 + 1000;
+                 } else if (wave >= 9 && wave <= 14) {
+                     // The Gauntlet
+                     enemies.push(new HeavyStriker(width*0.2, -100));
+                     enemies.push(new HeavyStriker(width*0.8, -100));
+                     enemies.push(new LaserEnemy(width*0.5, -200));
+                     
+                     let fastSwarm = 20 + wave;
+                     for(let i=0; i<fastSwarm; i++) {
+                         // Faster spawn rate
+                         setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*80);
+                     }
+                     maxDelay = fastSwarm * 80 + 1000;
+                 } else if (wave === 15) {
+                     boss.activate();
+                     boss.initAsStage3();
+                 }
+            } 
+            // ===============================================
+            // STAGE 2 (Hard) & 2/3 (Easy) LOGIC 
+            // ===============================================
+            else if (currentLevelIndex === 2 || currentLevelIndex === 3) {
                 if (wave === 1) {
                     if(isHard) {
                         enemies.push(new HeavyStriker(width*0.25, -100));
