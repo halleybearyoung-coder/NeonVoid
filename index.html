@@ -135,8 +135,9 @@
         #menu-screen {
             pointer-events: auto;
             background: rgba(0,0,0,0.4);
+            opacity: 0; /* Hidden initially, managed by JS */
         }
-        #level-select-screen, #expert-level-select-screen, #hangar-screen, #intro-screen {
+        #level-select-screen, #expert-level-select-screen, #hangar-screen, #intro-screen, #welcome-screen {
             pointer-events: auto;
             background: rgba(0,0,0,0.9);
             opacity: 0; /* Hidden by default */
@@ -420,7 +421,7 @@
         .red-theme .btn { border-color: #ff4444; color: #ff4444; }
         .red-theme .btn:hover { background: #ff4444; color: white; }
 
-        /* INTRO / BRIEFING SCREEN */
+        /* INTRO / BRIEFING SCREEN - Reused for Welcome */
         .radio-box {
             width: 60%;
             max-width: 700px;
@@ -567,6 +568,7 @@
         </div>
 
         <button class="dev-btn" style="width: 100%; color: #ff4444; border-color: #ff4444; margin-top: 5px;" onclick="devKillAll()">KILL ALL ENEMIES</button>
+        <button class="dev-btn" style="width: 100%; color: #ffd700; border-color: #ffd700; margin-top: 10px;" onclick="devResetCookies()">RESET COOKIES</button>
     </div>
 
     <!-- Message Modal -->
@@ -596,6 +598,22 @@
         </div>
         <div class="phase-indicator" id="phase-debug">INIT</div>
         <div id="wave-announcement">WAVE 1</div>
+    </div>
+
+    <!-- NEW: WELCOME / COOKIE SCREEN -->
+    <div id="welcome-screen" class="screen-overlay">
+        <div class="radio-box" id="welcome-box">
+            <div class="radio-header">
+                <span id="welcome-header">UNIDENTIFIED SIGNAL</span>
+                <span class="blink">● LIVE</span>
+            </div>
+            <div id="welcome-content" class="radio-content">
+                <!-- Dynamic Content -->
+            </div>
+            <div class="radio-footer" id="welcome-footer">
+                <!-- Dynamic Buttons -->
+            </div>
+        </div>
     </div>
 
     <!-- INTRO / BRIEFING SCREEN -->
@@ -703,6 +721,7 @@
 
     <script>
         const STATE = { 
+            WELCOME: 'welcome',
             MENU: 'menu', 
             LEVEL_SELECT: 'level_select', 
             INTRO: 'intro',
@@ -718,6 +737,7 @@
         let currentHangarMode = 'easy'; // Tracks which hangar is open
         let introTimer = 30;
         let introInterval = null;
+        let cookiesAccepted = false; // Flag to track user consent
 
         // --- STAGE MESSAGES ---
         const STAGE_MESSAGES = {
@@ -727,17 +747,52 @@
             'hard_2': "This is it. The Elite Terminator unit has been deployed. <br><br>Survival probability is near zero. Good luck, Commander."
         };
 
+        // --- STORAGE HELPER FUNCTIONS (Switched to LocalStorage for reliability) ---
+        // Note: Real cookies often fail in iframe/preview sandboxes. 
+        // We use LocalStorage here to ensure your save works, but keep the "Cookie" UI theme.
+        
+        function setCookie(name, value, days) {
+            // Using LocalStorage to mimic cookie behavior for reliability
+            localStorage.setItem(name, value);
+        }
+
+        function getCookie(name) {
+            return localStorage.getItem(name);
+        }
+
+        function deleteCookie(name) {
+            localStorage.removeItem(name);
+        }
+
         // --- DATA PERSISTENCE ---
-        let gameData = JSON.parse(localStorage.getItem('neonVoidData_v3')) || {
-            easy: { stars: 0, healthLvl: 0, cannonLvl: 0, maxStage: 1 },
-            hard: { stars: 0, healthLvl: 0, cannonLvl: 0, maxStage: 1 }
-        };
-        // Ensure new properties exist for old saves
-        if (gameData.easy.cannonLvl === undefined) gameData.easy.cannonLvl = 0;
-        if (gameData.hard.cannonLvl === undefined) gameData.hard.cannonLvl = 0;
+        let gameData;
+        
+        function initData() {
+            const cookieData = getCookie('neonVoidData_v3');
+            if (cookieData) {
+                try {
+                    gameData = JSON.parse(cookieData);
+                } catch (e) {
+                    console.error("Corrupt game data, resetting.");
+                    gameData = null;
+                }
+            }
+
+            if (!gameData) {
+                // Default initial state
+                gameData = {
+                    easy: { stars: 0, healthLvl: 0, cannonLvl: 0, maxStage: 1 },
+                    hard: { stars: 0, healthLvl: 0, cannonLvl: 0, maxStage: 1 }
+                };
+            }
+            // Ensure new properties exist for old saves
+            if (gameData.easy.cannonLvl === undefined) gameData.easy.cannonLvl = 0;
+            if (gameData.hard.cannonLvl === undefined) gameData.hard.cannonLvl = 0;
+        }
 
         function saveData() {
-            localStorage.setItem('neonVoidData_v3', JSON.stringify(gameData));
+            if (!cookiesAccepted) return; // DON'T SAVE IF COOKIES DENIED
+            setCookie('neonVoidData_v3', JSON.stringify(gameData), 365);
         }
 
         // --- UPGRADE CONFIGURATION ---
@@ -760,6 +815,7 @@
         const gameOverScreen = document.getElementById('game-over-screen');
         const hangarScreen = document.getElementById('hangar-screen');
         const introScreen = document.getElementById('intro-screen');
+        const welcomeScreen = document.getElementById('welcome-screen');
         const msgModal = document.getElementById('msg-modal');
         
         function resizeGame() {
@@ -876,7 +932,7 @@
                 scene.add(supernovaMesh);
 
                 const pGeo = new THREE.BufferGeometry();
-                const pCount = 2000;
+                const pCount = 500; // REDUCED FROM 2000
                 const pPos = new Float32Array(pCount * 3);
                 supernovaVelocities = [];
                 for(let i=0; i<pCount; i++) {
@@ -929,7 +985,7 @@
             requestAnimationFrame(animateThree);
             
             // SHOW CORE IN MENU OR LEVEL SELECT OR HANGAR OR INTRO
-            if ((gameState === STATE.MENU || gameState === STATE.LEVEL_SELECT || gameState === STATE.HANGAR || gameState === STATE.INTRO) && menuCore) {
+            if ((gameState === STATE.MENU || gameState === STATE.LEVEL_SELECT || gameState === STATE.HANGAR || gameState === STATE.INTRO || gameState === STATE.WELCOME) && menuCore) {
                 menuCore.rotation.x += 0.005; menuCore.rotation.y += 0.01; menuCore.visible = true;
             } else if (menuCore) { menuCore.visible = false; }
 
@@ -2619,9 +2675,81 @@
             }
         }
 
+        function devResetCookies() {
+            deleteCookie('neonVoid_visited');
+            deleteCookie('neonVoidData_v3');
+            alert("Cookies Reset. Refresh page to see Welcome Sequence.");
+        }
+
+        // --- NEW WELCOME & COOKIE LOGIC ---
+        function checkFirstVisit() {
+            const visited = getCookie('neonVoid_visited');
+            if (visited) {
+                cookiesAccepted = true; // Assume true if they have the cookie
+                initData(); // Load existing game data
+                resetToMenu();
+            } else {
+                startWelcomeSequence();
+            }
+        }
+
+        function startWelcomeSequence() {
+            gameState = STATE.WELCOME;
+            // Hide other screens
+            menuScreen.style.opacity = '0';
+            menuScreen.style.pointerEvents = 'none';
+            // Show Welcome
+            const screen = document.getElementById('welcome-screen');
+            screen.style.opacity = '1';
+            screen.style.pointerEvents = 'auto';
+            
+            // Step 1 Content
+            document.getElementById('welcome-header').innerText = "SYSTEM BOOT";
+            document.getElementById('welcome-content').innerHTML = 
+                "Greetings, Pilot.<br><br>Welcome to the Neon Void. Your mission is to survive the sectors and neutralize the Rogue AI.<br><br>Are you ready to interface?";
+            
+            const footer = document.getElementById('welcome-footer');
+            footer.innerHTML = `<button class="btn" style="border-color: #00ff00; color: #00ff00;" onclick="showCookieStep()">INITIATE LINK</button>`;
+        }
+
+        function showCookieStep() {
+            document.getElementById('welcome-header').innerText = "PROTOCOL CHECK";
+            document.getElementById('welcome-content').innerHTML = 
+                "Systems initializing... <br><br>WARNING: Persistent Data Storage required.<br><br>But first... you gotta try these cookies. 🍪<br>They allow us to save your progress.";
+            
+            const footer = document.getElementById('welcome-footer');
+            footer.innerHTML = `
+                <div style="display:flex; gap:20px; width:100%; justify-content:space-between;">
+                    <button class="btn btn-hard" style="font-size:16px; padding:10px 20px;" onclick="handleCookies(false)">DENY (NO SAVE)</button>
+                    <button class="btn" style="border-color:#00ff00; color:#00ff00; font-size:16px; padding:10px 20px;" onclick="handleCookies(true)">ACCEPT COOKIES</button>
+                </div>
+            `;
+        }
+
+        function handleCookies(accepted) {
+            const screen = document.getElementById('welcome-screen');
+            screen.style.opacity = '0';
+            screen.style.pointerEvents = 'none';
+            
+            if (accepted) {
+                cookiesAccepted = true;
+                setCookie('neonVoid_visited', 'true', 365);
+                initData(); // Load or init save data
+                saveData(); // Save the fact that we inited
+            } else {
+                cookiesAccepted = false;
+                initData(); // Init fresh data but won't save
+            }
+            
+            resetToMenu();
+        }
+
         document.getElementById('start-hard-btn').addEventListener('click', showExpertSelect);
         document.getElementById('start-easy-btn').addEventListener('click', showRookieSelect);
         if (typeof THREE !== 'undefined') initThreeMenu();
+        
+        // Start check
+        checkFirstVisit();
         animateGame();
     </script>
 </body>
