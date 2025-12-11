@@ -67,6 +67,29 @@
             text-shadow: 0 0 10px #ff0000;
             margin-bottom: 5px;
         }
+        
+        /* NEW SHIELD BAR STYLES */
+        #boss-shield-container {
+            width: 60%;
+            max-width: 600px;
+            height: 6px;
+            background: rgba(0, 50, 50, 0.3);
+            border: 1px solid #00aaaa;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 4px; /* Space between shield and health */
+            position: relative;
+            display: none; /* Hidden by default until shield active */
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        }
+        #boss-shield-bar {
+            width: 100%;
+            height: 100%;
+            background: #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+            transition: width 0.1s;
+        }
+
         #boss-health-container {
             width: 60%;
             max-width: 600px;
@@ -84,16 +107,7 @@
             box-shadow: 0 0 15px #ff0000;
             transition: width 0.1s linear;
         }
-        #boss-shield-bar {
-            width: 0%;
-            height: 4px;
-            background: #00ffff;
-            box-shadow: 0 0 10px #00ffff;
-            position: absolute;
-            top: 0; left: 0;
-            transition: width 0.1s;
-            z-index: 2;
-        }
+        
         #player-hud {
             align-self: flex-start;
             opacity: 0;
@@ -472,6 +486,58 @@
             margin-top: 20px; font-size: 14px;
             color: rgba(255,255,255,0.5); font-family: monospace;
         }
+
+        /* DEV TOOLS */
+        #dev-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 2000;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid #ff00ff;
+            color: #ff00ff;
+            font-weight: bold;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: monospace;
+            pointer-events: auto;
+        }
+        #dev-panel {
+            position: fixed;
+            top: 40px;
+            right: 10px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid #ff00ff;
+            padding: 15px;
+            z-index: 2000;
+            width: 200px;
+            display: none;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+            font-family: monospace;
+            pointer-events: auto;
+        }
+        .dev-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .dev-input {
+            width: 60px;
+            background: #222;
+            border: 1px solid #555;
+            color: white;
+            padding: 2px 5px;
+        }
+        .dev-btn {
+            background: #333;
+            color: #ff00ff;
+            border: 1px solid #ff00ff;
+            cursor: pointer;
+            padding: 2px 10px;
+            font-size: 12px;
+        }
+        .dev-btn:hover { background: #ff00ff; color: black; }
     </style>
 </head>
 <body>
@@ -483,6 +549,26 @@
     <!-- White Flash Overlay -->
     <div id="flash-overlay"></div>
 
+    <!-- DEV TOOLS UI -->
+    <button id="dev-toggle" onclick="toggleDevPanel()">DEV</button>
+    <div id="dev-panel">
+        <div style="text-align: center; color: #ff00ff; margin-bottom: 10px; font-weight: bold;">DEV CONSOLE</div>
+        
+        <div class="dev-row">
+            <span style="font-size: 12px; color: #ccc;">STARS:</span>
+            <input type="number" id="dev-stars" class="dev-input" placeholder="Amount">
+            <button class="dev-btn" onclick="devSetStars()">SET</button>
+        </div>
+
+        <div class="dev-row">
+            <span style="font-size: 12px; color: #ccc;">WAVE:</span>
+            <input type="number" id="dev-wave" class="dev-input" placeholder="#">
+            <button class="dev-btn" onclick="devSkipWave()">GO</button>
+        </div>
+
+        <button class="dev-btn" style="width: 100%; color: #ff4444; border-color: #ff4444; margin-top: 5px;" onclick="devKillAll()">KILL ALL ENEMIES</button>
+    </div>
+
     <!-- Message Modal -->
     <div id="msg-modal">
         <div class="title-text" style="font-size: 30px; margin-bottom: 10px; color: #ff4444;">ACCESS DENIED</div>
@@ -493,8 +579,12 @@
     <div id="ui-layer">
         <div id="boss-hud">
             <div id="boss-name">System Core: Omega</div>
-            <div id="boss-health-container">
+            <!-- SEPARATE SHIELD CONTAINER -->
+            <div id="boss-shield-container">
                 <div id="boss-shield-bar"></div>
+            </div>
+            <!-- HEALTH CONTAINER -->
+            <div id="boss-health-container">
                 <div id="boss-health-bar"></div>
             </div>
         </div>
@@ -653,7 +743,7 @@
         // --- UPGRADE CONFIGURATION ---
         const HEALTH_UPGRADES = {
             costs: [110, 150, 200, 600, 1100], 
-            bonuses: [5, 10, 15, 20, 50]      
+            bonuses: [5, 10, 15, 20, 50]       
         };
 
         const CANNON_UPGRADES = {
@@ -684,6 +774,7 @@
         // UI
         const bossHud = document.getElementById('boss-hud');
         const bossHealthBar = document.getElementById('boss-health-bar');
+        const bossShieldContainer = document.getElementById('boss-shield-container');
         const bossShieldBar = document.getElementById('boss-shield-bar');
         const bossName = document.getElementById('boss-name');
         const playerHud = document.getElementById('player-hud');
@@ -761,9 +852,18 @@
                 const ring = new THREE.Mesh(ringGeo, ringMat);
                 bossPhase2Mesh.add(ring);
 
-                // 4. BOSS SHIELD
-                const shieldGeo = new THREE.SphereGeometry(25, 32, 32);
-                const shieldMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.3 });
+                // 4. BOSS SHIELD (UPDATED to Sphere surface, transparent)
+                // Radius reduced to 16 to prevent clipping when boss scales up
+                const shieldGeo = new THREE.SphereGeometry(16, 32, 32);
+                const shieldMat = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffff, 
+                    wireframe: false, 
+                    transparent: true, 
+                    opacity: 0.4,     
+                    side: THREE.DoubleSide,
+                    depthWrite: false,
+                    blending: THREE.AdditiveBlending // Glowy effect
+                });
                 bossShieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
                 bossShieldMesh.visible = false;
                 bossPhase2Mesh.add(bossShieldMesh); 
@@ -844,8 +944,11 @@
                     
                     if (bossShieldMesh) {
                         bossShieldMesh.visible = (boss.shieldHp > 0);
-                        bossShieldMesh.rotation.y -= 0.05;
-                        bossShieldMesh.material.opacity = 0.2 + Math.sin(Date.now() * 0.01) * 0.1;
+                        // Rotate Shield
+                        bossShieldMesh.rotation.y -= 0.02;
+                        // Pulse Shield Scale
+                        const pulse = 1 + Math.sin(Date.now() * 0.005) * 0.05;
+                        bossShieldMesh.scale.set(pulse, pulse, pulse);
                     }
                 }
 
@@ -1356,7 +1459,7 @@
                 
                 // Shield Props
                 this.shieldHp = 0;
-                this.maxShieldHp = 1000;
+                this.maxShieldHp = 2000;
             }
 
             // Called when starting Stage 2 specifically
@@ -1420,10 +1523,10 @@
                         bullets.push(new Bullet(this.x + 100, this.y, 5, 5, 'saw'));  // Right wing fire right-down
                     }
                 } else {
-                     // Standard Boss Phase 2 Logic
-                     if (!this.isPhaseTwo && this.hp < this.maxHp / 2) {
+                      // Standard Boss Phase 2 Logic
+                      if (!this.isPhaseTwo && this.hp < this.maxHp / 2) {
                         this.triggerPhaseTwo();
-                     }
+                      }
                 }
                 
                 if (!this.isDesperationMode && this.hp <= 1000 && this.isPhaseTwo && !this.isTerminator) {
@@ -1484,7 +1587,8 @@
                 isPhase2Active = true;
 
                 // TRIGGER SHIELD
-                this.shieldHp = 100;
+                this.shieldHp = 2000;
+                bossShieldContainer.style.display = "block";
                 bossShieldBar.style.width = "100%";
 
                 createShockwave(this.x, this.y);
@@ -1697,6 +1801,24 @@
                           ctx.rotate(-(this.laserAngle - Math.PI/2));
                       }
                       
+                      // 2D SHIELD FOR TERMINATOR
+                      if (this.shieldHp > 0) {
+                          ctx.save();
+                          // Rotate along with ship
+                          if(this.currentAttack === 'terminator_laser') ctx.rotate(this.laserAngle - Math.PI/2);
+                          else ctx.rotate(Math.PI); // Standard terminator orientation
+
+                          ctx.beginPath();
+                          ctx.arc(0, 10, 80, 0, Math.PI*2); // Adjust offset/radius for Terminator shape
+                          ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.sin(frames*0.1)*0.2})`;
+                          ctx.lineWidth = 5;
+                          ctx.shadowBlur = 20; ctx.shadowColor = "cyan";
+                          ctx.stroke();
+                          ctx.fillStyle = "rgba(0, 255, 255, 0.1)";
+                          ctx.fill();
+                          ctx.restore();
+                      }
+
                       // Scale up 4x
                       ctx.scale(4, 4);
                       
@@ -1728,6 +1850,20 @@
 
                 // --- STANDARD BOSS DRAWING ---
                 ctx.save(); ctx.translate(this.x, this.y);
+
+                // 2D SHIELD BACKUP FOR SYSTEM CORE
+                if (this.shieldHp > 0) {
+                     ctx.save();
+                     ctx.beginPath();
+                     ctx.arc(0, 0, 90, 0, Math.PI*2); // 90px radius
+                     ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 + Math.sin(frames*0.2)*0.3})`;
+                     ctx.lineWidth = 3;
+                     ctx.shadowBlur = 15; ctx.shadowColor = "#00ffff";
+                     ctx.stroke();
+                     ctx.fillStyle = "rgba(0, 255, 255, 0.15)";
+                     ctx.fill();
+                     ctx.restore();
+                }
 
                 if (this.currentAttack === 'laser') {
                     ctx.rotate(this.laserAngle - Math.PI / 2);
@@ -1793,6 +1929,7 @@
                     bossShieldBar.style.width = `${(this.shieldHp / this.maxShieldHp) * 100}%`;
                     if (this.shieldHp <= 0) {
                         bossShieldBar.style.width = "0%";
+                        bossShieldContainer.style.display = "none"; // Hide bar container when shield is gone
                         // Shield Break Effect
                         for(let i=0; i<30; i++) particles.push(new Particle(this.x, this.y, '#00ffff', 5, 5, 40));
                     }
@@ -1817,8 +1954,8 @@
                     flashOverlay.style.transition = 'opacity 2s ease-out';
                     flashOverlay.style.opacity = 0;
                     
-                    // BOSS DROP (15 STARS)
-                    let dropCount = 15;
+                    // BOSS DROP (50 STARS)
+                    let dropCount = 50;
                     for(let k=0; k<dropCount; k++) {
                         // Spread drops WIDELY (500px range)
                         drops.push(new Drop(this.x + (Math.random()-0.5)*500, this.y, 'star'));
@@ -2438,6 +2575,47 @@
             }
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        // --- DEV TOOL LOGIC ---
+        function toggleDevPanel() {
+            const panel = document.getElementById('dev-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function devSetStars() {
+            const val = parseInt(document.getElementById('dev-stars').value);
+            if (!isNaN(val)) {
+                if (activeDifficultyMode === 'easy') gameData.easy.stars = val;
+                else gameData.hard.stars = val;
+                saveData();
+                updateUI();
+                if (gameState === STATE.HANGAR) updateHangarUI();
+            }
+        }
+
+        function devSkipWave() {
+            const val = parseInt(document.getElementById('dev-wave').value);
+            if (!isNaN(val) && val > 0 && gameState === STATE.PLAYING) {
+                enemies = []; // Clear active enemies
+                bullets = [];
+                // If boss was active, deactivate it to prevent weird overlap
+                if(boss.active) boss.active = false;
+                startWave(val);
+            }
+        }
+
+        function devKillAll() {
+            if (gameState === STATE.PLAYING) {
+                // Kill standard enemies
+                enemies.forEach(e => e.hit(10000));
+                
+                // Kill boss (hit twice to bypass shield check if necessary)
+                if (boss && boss.active) {
+                    boss.hit(10000); 
+                    boss.hit(10000);
+                }
             }
         }
 
