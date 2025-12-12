@@ -752,11 +752,14 @@
         // --- STAGE MESSAGES ---
         const STAGE_MESSAGES = {
             'easy_1': "Pilot, we have lost contact with Outpost Omega. Sensors indicate the System Core has gone rogue. <br><br>Neutralize the threat before it spreads to the network.",
-            'easy_2': "Warning! Massive energy signature detected. It's the Terminator class dreadnought. <br><br> This won't be like the simulations. Stay sharp.",
-            'easy_3': "Entering deep sector. Signal interference high. \n\nThe core fragments have re-assembled. Expect heavy resistance.",
+            'easy_2': "Warning! Massive energy signature detected. The rouge system core has overidden one of our terminator class dreadnoughts.<br><br>This won't be like the simulations. Stay sharp.",
+            'easy_3': "Entering deep sector. Signal interference high. \n\nThe core is sending [ERROR CODE:1204] [SIGNAL FALIURE].",
+            'easy_4': "CAUTION: Biological signature detected in the mainframe. <br><br>It's the Cyber Serpent. Aim for the head, its scales are almost impervious to standard fire.",
+            'easy_5': "CORE BREACH IMMINENT. <br><br>You've reached the Hive Mother. She doesn't fight alone. Don't let them overwhelm you, Pilot.",
             'hard_1': "Veteran difficulty authorized. <br><br>The enemy AI has adapted to standard tactics. Expect aggressive maneuvers.",
             'hard_2': "This is it. The Elite Terminator unit has been deployed. <br><br>Survival probability is near zero. Good luck, Commander.",
-            'hard_3': "Elite Deep Sector. \n\nNo support available. You are on your own, Commander."
+            'hard_3': "Elite Deep Sector. \n\nNo support available. You are on your own, Commander.",
+            'hard_4': "THE VIPER'S NEST. <br><br>The source of the corruption has been found. The Crimson Serpent awaits. <br>Kill it."
         };
 
         // --- STORAGE HELPER FUNCTIONS (Switched to LocalStorage for reliability) ---
@@ -1152,6 +1155,8 @@
         const ATTACK_SEQUENCE = ['laser', 'swarm', 'missiles', 'laser', 'laser', 'redLines', 'missiles', 'rings', 'laser', 'laser', 'swarm'];
         const TERMINATOR_SEQUENCE = ['terminator_fireballs', 'terminator_rapid', 'terminator_laser'];
         const GLITCH_SEQUENCE = ['glitch_teleport_rapid', 'glitch_grid', 'glitch_clones', 'glitch_grid', 'glitch_teleport_fire'];
+        const SNAKE_SEQUENCE = ['snake_sine_fire', 'snake_orb_deploy', 'snake_sine_fire', 'snake_rush'];
+        const HIVE_SEQUENCE = ['hive_summon']; // Simple loop
 
         // --- DIFFICULTY SETTINGS ---
         const DIFFICULTY = {
@@ -1289,6 +1294,20 @@
                     this.isVertical = vx === 0;
                     this.warmup = 60; // 1 second warning
                     this.life = 80;
+                } else if (type === 'venom') {
+                    this.color = '#00ff00'; this.size = 8; this.damage = 12;
+                } else if (type === 'spine_laser') {
+                    this.color = '#00ff00'; this.size = 10; this.damage = 15;
+                } else if (type === 'snake_orb_turret') {
+                    this.color = '#00ff88'; this.size = 15; this.damage = 10;
+                    this.life = 140; // Reduced life for boomerang effect
+                    this.fireTimer = 0;
+                    this.initialVx = vx; // Store original direction
+                } else if (type === 'mine') {
+                    this.color = '#ff0000'; 
+                    this.size = 10; 
+                    this.damage = 25; 
+                    this.life = 600; // 10 seconds duration
                 }
             }
             update() {
@@ -1298,6 +1317,71 @@
                     if(this.life <= 0) this.active = false;
                     return; // Stationary
                 }
+                if (this.type === 'mine') {
+                    this.y += 0.5; // Mines fall slowly
+                    
+                    // Check if off screen (bottom)
+                    if (this.y > height + 50) this.active = false;
+
+                    // Check player collision
+                    if (player.active && Math.hypot(this.x - player.x, this.y - player.y) < 25) { 
+                        player.hit(this.damage);
+                        this.active = false;
+                        // Explosion FX
+                        // 1. Red/Orange fiery core (Bigger)
+                        for(let i=0; i<30; i++) {
+                            particles.push(new Particle(this.x, this.y, '#ff4400', 6, 5, 40));
+                        }
+                        // 2. Green debris/energy
+                        for(let i=0; i<20; i++) {
+                            particles.push(new Particle(this.x, this.y, '#00ff00', 8, 3, 50));
+                        }
+                        // 3. Puff of smoke (Slower, larger, grey)
+                        for(let i=0; i<15; i++) {
+                            particles.push(new Particle(this.x, this.y, '#bbbbbb', 3, 15 + Math.random()*10, 70));
+                        }
+                    }
+                    return; // Stationary
+                }
+
+                if (this.type === 'snake_orb_turret') {
+                    this.fireTimer++;
+                    
+                    // Phase 1: Move Out (0-40)
+                    if (this.fireTimer < 40) {
+                        this.x += this.vx;
+                        this.y += this.vy; // Minimal Y drift
+                    }
+                    // Phase 2: Stay & Fire (40-90)
+                    else if (this.fireTimer < 90) {
+                        // Fire ring at frame 60
+                        if (this.fireTimer === 60) { 
+                             for(let i=0; i<12; i++) {
+                                 let angle = (Math.PI*2/12)*i; 
+                                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*5, Math.sin(angle)*5, 'venom'));
+                             }
+                             // FX
+                             for(let i=0; i<10; i++) particles.push(new Particle(this.x, this.y, '#ffffff', 3, 2, 20));
+                        }
+                    }
+                    // Phase 3: Go Back (90-130)
+                    else if (this.fireTimer < 130) {
+                        this.x -= this.vx; // Reverse X
+                        this.y -= this.vy; // Reverse Y
+                    }
+                    // Phase 4: Despawn
+                    else {
+                        this.active = false;
+                    }
+                    
+                    // Simple collision with player
+                    if (player.active && Math.hypot(this.x - player.x, this.y - player.y) < 30) {
+                        player.hit(10);
+                        // Don't destroy on contact, it's a turret
+                    }
+                    return; 
+                }
+
                 if (this.type === 'missile' && player.active && this.guidanceTimer > 0) {
                     let dx = player.x - this.x; let dy = player.y - this.y;
                     let targetAngle = Math.atan2(dy, dx);
@@ -1312,6 +1396,9 @@
                 }
                 if (this.type === 'fireball') {
                       particles.push(new Particle(this.x, this.y, '#ffaa00', 1, 4, 10));
+                }
+                if (this.type === 'venom') {
+                      particles.push(new Particle(this.x, this.y, '#00ff00', 1, 3, 8));
                 }
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < -100 || this.x > width + 100 || this.y < -100 || this.y > height + 100) this.active = false;
@@ -1354,10 +1441,81 @@
                     ctx.fillStyle = "#888"; for(let i=0; i<8; i++) { ctx.rotate(Math.PI/4); ctx.fillRect(12, -4, 8, 8); }
                     ctx.fillStyle = "#ff0000"; ctx.beginPath(); ctx.arc(0,0, 5, 0, Math.PI*2); ctx.fill();
                     ctx.restore();
+                } else if (this.type === 'spine_laser') {
+                    ctx.save();
+                    ctx.shadowBlur = 15; ctx.shadowColor = '#00ff00';
+                    ctx.fillStyle = '#ccffcc';
+                    ctx.fillRect(this.x - 15, this.y - 3, 30, 6);
+                    ctx.restore();
+                } else if (this.type === 'snake_orb_turret') {
+                    ctx.save();
+                    ctx.shadowBlur = 15; ctx.shadowColor = '#00ff88';
+                    ctx.fillStyle = '#00ff88';
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
+                    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size + Math.sin(frames*0.2)*5, 0, Math.PI*2); ctx.stroke();
+                    ctx.restore();
+                } else if (this.type === 'mine') {
+                    ctx.save();
+                    ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000';
+                    // Green shell
+                    ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, 10, 0, Math.PI*2); ctx.stroke();
+                    // Red pulsing core
+                    ctx.fillStyle = `rgba(255, 0, 0, ${0.5 + Math.sin(frames*0.1)*0.5})`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, 6, 0, Math.PI*2); ctx.fill();
+                    ctx.restore();
                 } else {
                     ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
                 }
                 ctx.shadowBlur = 0;
+            }
+        }
+        
+        class MineLayer {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.active = true;
+                this.hp = 60; 
+                this.dropTimer = 60;
+                this.vx = (Math.random() - 0.5) * 1.5;
+            }
+            update() {
+                if (!this.active) return;
+                this.y += 0.3; // Very slow vertical
+                this.x += this.vx;
+                if (this.x < 50 || this.x > width - 50) this.vx *= -1;
+                
+                this.dropTimer--;
+                if (this.dropTimer <= 0) {
+                    bullets.push(new Bullet(this.x, this.y, 0, 0, 'mine')); // Stationary mine
+                    this.dropTimer = 180; // Drop every 3 seconds
+                }
+                if (this.y > height + 50) this.active = false;
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = '#006600'; // Dark Green
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 10; ctx.shadowColor = '#00ff00';
+                // Body
+                ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                // Icon
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(-5, -12, 10, 24);
+                ctx.fillRect(-12, -5, 24, 10);
+                ctx.restore();
+            }
+            hit(damage) {
+                this.hp -= damage;
+                if (this.hp <= 0) {
+                    this.active = false; score += 400; scoreEl.innerText = score;
+                    for(let i=0; i<10; i++) particles.push(new Particle(this.x, this.y, '#00ff00', 4, 4, 30));
+                    drops.push(new Drop(this.x, this.y, 'star'));
+                }
             }
         }
 
@@ -1609,11 +1767,18 @@
                 this.isDesperationMode = false;
                 this.isTerminator = false; // New Property for Terminator
                 this.isGlitch = false; // Stage 3 Boss
+                this.isSnake = false; // Stage 4 Boss
+                this.isHiveMother = false; // Stage 5 Boss
+                this.snakePath = []; // For snake movement history
                 this.clones = []; // For glitch boss
                 this.targetX = width / 2; 
                 this.shredderMode = false; // Phase 2 Terminator
                 this.sawRingTimer = 0; // Phase 3 Terminator
                 
+                // Stage 5 Props
+                this.hiveSummonCounter = 0;
+                this.miniHives = [];
+
                 // Shield Props
                 this.shieldHp = 0;
                 this.maxShieldHp = 2000;
@@ -1624,6 +1789,8 @@
                 this.isPhaseTwo = false; 
                 this.isTerminator = true;
                 this.isGlitch = false;
+                this.isSnake = false;
+                this.isHiveMother = false;
                 this.damageMultiplier = 1.5;
                 this.maxHp = (activeDifficultyMode === 'hard') ? 6000 : 3000;
                 this.hp = this.maxHp;
@@ -1638,6 +1805,8 @@
                 this.isPhaseTwo = false;
                 this.isTerminator = false;
                 this.isGlitch = true;
+                this.isSnake = false;
+                this.isHiveMother = false;
                 this.damageMultiplier = 2.0;
                 this.maxHp = (activeDifficultyMode === 'hard') ? 4000 : 4000;
                 this.hp = this.maxHp;
@@ -1645,6 +1814,55 @@
                 bossName.style.color = "#ff00ff";
                 isPhase2Active = false;
                 this.clones = [];
+            }
+
+            // Called when starting Stage 4 (Beginner OR Expert)
+            initAsStage4() {
+                this.isPhaseTwo = false;
+                this.isTerminator = false;
+                this.isGlitch = false;
+                this.isHiveMother = false;
+                this.isSnake = true;
+                
+                if (activeDifficultyMode === 'hard') {
+                    // Expert Snake
+                    this.damageMultiplier = 2.0;
+                    this.maxHp = 6000;
+                    bossName.innerText = "THE CRIMSON SERPENT";
+                    bossName.style.color = "#ff0000"; // Red for expert
+                } else {
+                    // Beginner Snake
+                    this.damageMultiplier = 1.2;
+                    this.maxHp = 2500;
+                    bossName.innerText = "THE CYBER SERPENT";
+                    bossName.style.color = "#00ff00"; // Green for beginner
+                }
+                
+                this.hp = this.maxHp;
+                isPhase2Active = false;
+                this.snakePath = [];
+                // Pre-fill snake path so body doesn't glitch on spawn
+                for(let i=0; i<300; i++) {
+                    this.snakePath.push({x: width/2, y: -100});
+                }
+            }
+
+            // Called when starting Stage 5 (Beginner)
+            initAsStage5() {
+                this.isPhaseTwo = false;
+                this.isTerminator = false;
+                this.isGlitch = false;
+                this.isSnake = false;
+                this.isHiveMother = true;
+                this.damageMultiplier = 1.0;
+                this.maxHp = 6000; // Tanky
+                this.hp = this.maxHp;
+                bossName.innerText = "THE HIVE MOTHER";
+                bossName.style.color = "#9900ff";
+                isPhase2Active = false;
+                this.targetY = height / 2 - 50; // Sit in middle
+                this.hiveSummonCounter = 0;
+                this.miniHives = [];
             }
 
             activate() {
@@ -1658,6 +1876,11 @@
 
                 if (this.phase === 'entry') {
                     this.y += (this.targetY - this.y) * 0.05;
+                    // If snake, also update path during entry
+                    if (this.isSnake) {
+                        this.snakePath.unshift({x: this.x, y: this.y});
+                        if (this.snakePath.length > 300) this.snakePath.pop();
+                    }
                     if (Math.abs(this.y - this.targetY) < 1) {
                         this.phase = 'fight';
                         this.startNextAttack();
@@ -1665,8 +1888,67 @@
                     return;
                 }
 
+                // --- HIVE MOTHER LOGIC ---
+                if (this.isHiveMother) {
+                    // Very slow hover
+                    this.y = this.targetY + Math.sin(frames * 0.02) * 20;
+                    this.x = width/2 + Math.cos(frames * 0.01) * 10;
+                    
+                    // Update Mini Hives
+                    if (this.miniHives) {
+                        this.miniHives.forEach(h => {
+                            if (!h.active) return;
+                            // Gentle hover relative to spawn position
+                            h.y += Math.sin(frames * 0.05 + h.x) * 0.5;
+                            h.timer++;
+                            // Spawn 5 minions every ~4 seconds (240 frames)
+                            if (h.timer % 240 === 0) {
+                                for(let i=0; i<5; i++) {
+                                     const angle = (Math.PI*2/5)*i;
+                                     const ex = h.x + Math.cos(angle)*40;
+                                     const ey = h.y + Math.sin(angle)*40;
+                                     const minion = new SwarmEnemy(ex, ey);
+                                     minion.hp = 8; // Slightly weaker
+                                     enemies.push(minion);
+                                }
+                            }
+                        });
+                        // Cleanup dead ones
+                        this.miniHives = this.miniHives.filter(h => h.active);
+                    }
+                }
+                // --- SNAKE BOSS LOGIC ---
+                else if (this.isSnake) {
+                    // Sine Wave Movement (Slower)
+                    const time = frames * 0.03; // Reduced from 0.05
+                    const ampX = (width / 2) - 100;
+                    
+                    // Move X in sine wave
+                    let targetX = (width / 2) + Math.sin(time) * ampX;
+                    
+                    // Move Y to track player, but keep some sine movement to look "snake-like"
+                    // Lerp towards player Y
+                    let targetY = player.y; 
+                    
+                    // Add "hover" feel so it doesn't just sit exactly on player Y
+                    targetY += Math.sin(time * 1.5) * 100; 
+
+                    // Rush overrides (Slower rush undulation)
+                    if (this.currentAttack === 'snake_rush') {
+                        targetY = player.y + Math.sin(frames * 0.05) * 150; 
+                        targetX = (width / 2) + Math.sin(frames * 0.04) * ampX; 
+                    }
+
+                    // Reduced lerp speeds for smoother, heavier movement
+                    this.x += (targetX - this.x) * 0.03; 
+                    this.y += (targetY - this.y) * 0.04; 
+
+                    // Record history for body segments
+                    this.snakePath.unshift({x: this.x, y: this.y});
+                    if (this.snakePath.length > 300) this.snakePath.pop();
+                }
                 // --- TERMINATOR SPECIFIC PHASE LOGIC ---
-                if (this.isTerminator) {
+                else if (this.isTerminator) {
                     if (!this.shredderMode && this.hp <= 1500) {
                         this.shredderMode = true;
                         this.triggerShredderMode();
@@ -1722,8 +2004,8 @@
                 
                 this.attackTimer++;
                 
-                // Passive Spawn (Disabled for Terminator & Glitch)
-                if (!this.isTerminator && !this.isGlitch && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
+                // Passive Spawn (Disabled for Terminator & Glitch & Snake & Hive)
+                if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isHiveMother && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
                       enemies.push(new SwarmEnemy(this.x - 40, this.y));
                       enemies.push(new SwarmEnemy(this.x + 40, this.y));
                 }
@@ -1767,6 +2049,8 @@
                 let seq = ATTACK_SEQUENCE;
                 if(this.isTerminator) seq = TERMINATOR_SEQUENCE;
                 if(this.isGlitch) seq = GLITCH_SEQUENCE;
+                if(this.isSnake) seq = SNAKE_SEQUENCE;
+                if(this.isHiveMother) seq = HIVE_SEQUENCE;
                 
                 if (this.sequenceIndex >= seq.length) this.sequenceIndex = 0;
                 this.currentAttack = seq[this.sequenceIndex];
@@ -1776,6 +2060,8 @@
                 let phaseName = this.currentAttack.toUpperCase();
                 if(phaseName.startsWith("TERMINATOR_")) phaseName = phaseName.replace("TERMINATOR_", "");
                 if(phaseName.startsWith("GLITCH_")) phaseName = phaseName.replace("GLITCH_", "");
+                if(phaseName.startsWith("SNAKE_")) phaseName = phaseName.replace("SNAKE_", "");
+                if(phaseName.startsWith("HIVE_")) phaseName = phaseName.replace("HIVE_", "");
                 
                 phaseDebug.innerText = `PHASE: ${phaseName}`;
                 
@@ -1787,6 +2073,134 @@
 
             handleAttack() {
                 switch(this.currentAttack) {
+                    // --- HIVE MOTHER ATTACKS ---
+                    case 'hive_summon':
+                        // Trigger every 5 seconds (300 frames)
+                        if (this.attackTimer % 300 === 0) {
+                             // Check pattern: 2 Normal, then 1 Special
+                             if (this.hiveSummonCounter < 2) {
+                                 // Normal Summon (15 minions)
+                                 const count = 15;
+                                 for(let i=0; i<count; i++) {
+                                     const angle = (Math.PI * 2 / count) * i;
+                                     const dist = 100;
+                                     const ex = this.x + Math.cos(angle) * dist;
+                                     const ey = this.y + Math.sin(angle) * dist;
+                                     
+                                     const enemy = new SwarmEnemy(ex, ey);
+                                     enemy.hp = 10; 
+                                     enemies.push(enemy);
+                                     
+                                     for(let j=0; j<5; j++) particles.push(new Particle(ex, ey, '#9900ff', 2, 2, 15));
+                                 }
+                                 this.hiveSummonCounter++;
+                             } else {
+                                 // Special Summon: Try to spawn 2 Mini Hives without stacking
+                                 let spawnedCount = 0;
+                                 // Define potential slots: [Primary Left, Primary Right, Secondary Left, Secondary Right]
+                                 const spawnOffsets = [
+                                     {dx: -200, dy: 50},
+                                     {dx: 200, dy: 50},
+                                     {dx: -280, dy: 120},
+                                     {dx: 280, dy: 120}
+                                 ];
+
+                                 for (let offset of spawnOffsets) {
+                                     if (spawnedCount >= 2) break; // Only summon max 2 per cycle
+
+                                     let targetX = this.x + offset.dx;
+                                     let targetY = this.y + offset.dy;
+
+                                     // Check if spot is occupied by an existing active mini hive
+                                     let isOccupied = false;
+                                     if (this.miniHives) {
+                                         isOccupied = this.miniHives.some(h => h.active && Math.hypot(h.x - targetX, h.y - targetY) < 100);
+                                     }
+
+                                     if (!isOccupied) {
+                                         this.miniHives.push({
+                                             x: targetX, 
+                                             y: targetY, 
+                                             hp: 500, 
+                                             maxHp: 500, 
+                                             active: true, 
+                                             timer: 0
+                                         });
+                                         spawnedCount++;
+                                     }
+                                 }
+                                 
+                                 // FX
+                                 if (spawnedCount > 0) {
+                                     for(let j=0; j<20; j++) particles.push(new Particle(this.x, this.y, '#ffffff', 4, 4, 30));
+                                 }
+                                 
+                                 // Reset counter
+                                 this.hiveSummonCounter = 0;
+                             }
+                        }
+                        // Loop indefinitely
+                        if (this.attackTimer > 1000) this.startNextAttack();
+                        break;
+
+                    // --- SNAKE BOSS ATTACKS ---
+                    case 'snake_sine_fire':
+                        // Head shoots green venom spread (Slower fire rate)
+                        if (this.attackTimer % 45 === 0 && this.attackTimer < 200) { // Was 25
+                            let angle = Math.atan2(player.y - this.y, player.x - this.x);
+                            bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*6, Math.sin(angle)*6, 'venom'));
+                            bullets.push(new Bullet(this.x, this.y, Math.cos(angle - 0.3)*6, Math.sin(angle - 0.3)*6, 'venom'));
+                            bullets.push(new Bullet(this.x, this.y, Math.cos(angle + 0.3)*6, Math.sin(angle + 0.3)*6, 'venom'));
+                        }
+                        if (this.attackTimer > 250) this.startNextAttack();
+                        break;
+
+                    case 'snake_orb_deploy':
+                        if (this.attackTimer === 20) {
+                            // Deploy 2 orbs from BODY segments (approx segment 15 and 30)
+                            // pathIndex = index * spacing (2) -> 30 and 60
+                            if (this.snakePath.length > 60) {
+                                let p1 = this.snakePath[30];
+                                let p2 = this.snakePath[60];
+                                
+                                // Spawn moving OUTWARDS from the snake
+                                // Left Orb
+                                bullets.push(new Bullet(p1.x, p1.y, -4, 0.5, 'snake_orb_turret'));
+                                // Right Orb
+                                bullets.push(new Bullet(p2.x, p2.y, 4, 0.5, 'snake_orb_turret'));
+                            }
+                        }
+                        if (this.attackTimer > 100) this.startNextAttack();
+                        break;
+
+                    case 'snake_segment_laser':
+                        // Middle segments shoot sideways (Slower fire rate)
+                        if (this.attackTimer % 50 === 0 && this.attackTimer < 240) { // Was 30
+                            // Fire from segments 10, 20, 30 approx
+                            let indices = [10, 20, 30]; 
+                            // Since we changed spacing to 2, index 10 = 20 frames back, etc.
+                            indices.forEach(idx => {
+                                let pathIdx = idx * 2; 
+                                if (pathIdx < this.snakePath.length) {
+                                    let pos = this.snakePath[pathIdx];
+                                    // Fire Left
+                                    bullets.push(new Bullet(pos.x, pos.y, -6, 0, 'spine_laser'));
+                                    // Fire Right
+                                    bullets.push(new Bullet(pos.x, pos.y, 6, 0, 'spine_laser'));
+                                }
+                            });
+                        }
+                        if (this.attackTimer > 260) this.startNextAttack();
+                        break;
+
+                    case 'snake_rush':
+                        // Movement speed is increased in update(), just do minor firing here
+                        if (this.attackTimer % 20 === 0) { // Was 10
+                             bullets.push(new Bullet(this.x, this.y, 0, 8, 'venom'));
+                        }
+                        if (this.attackTimer > 200) this.startNextAttack();
+                        break;
+
                     // --- GLITCH ATTACKS ---
                     case 'glitch_teleport_rapid':
                         // Teleport every 40 frames and shoot
@@ -1989,6 +2403,168 @@
             draw() {
                 if (!this.active) return;
                 
+                // --- HIVE MOTHER DRAWING ---
+                if (this.isHiveMother) {
+                    ctx.save();
+                    
+                    // Draw Mini Hives first (behind boss?) or on top
+                    if (this.miniHives) {
+                        this.miniHives.forEach(h => {
+                            if (!h.active) return;
+                            ctx.save();
+                            ctx.translate(h.x, h.y);
+                            
+                            // Mini Hexagon
+                            ctx.fillStyle = "#9370db"; // Medium Purple
+                            ctx.shadowBlur = 10; ctx.shadowColor = "#9370db";
+                            ctx.beginPath();
+                            for (let i = 0; i < 6; i++) {
+                                ctx.lineTo(35 * Math.cos(i * Math.PI / 3), 35 * Math.sin(i * Math.PI / 3));
+                            }
+                            ctx.fill();
+                            
+                            // Mini Core
+                            ctx.fillStyle = "#fff";
+                            ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
+
+                            // Health Bar
+                            ctx.fillStyle = "red";
+                            ctx.fillRect(-25, -45, 50, 4);
+                            ctx.fillStyle = "#00ff00";
+                            ctx.fillRect(-25, -45, 50 * (h.hp / h.maxHp), 4);
+                            
+                            ctx.restore();
+                        });
+                    }
+
+                    ctx.translate(this.x, this.y);
+                    
+                    // INVULNERABILITY SHIELD VISUAL
+                    if (this.miniHives.length > 0) {
+                        ctx.save();
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            ctx.lineTo(120 * Math.cos(i * Math.PI / 3), 120 * Math.sin(i * Math.PI / 3));
+                        }
+                        ctx.closePath();
+                        ctx.strokeStyle = `rgba(200, 200, 200, ${0.5 + Math.sin(frames*0.1)*0.3})`;
+                        ctx.lineWidth = 5;
+                        ctx.shadowBlur = 15; ctx.shadowColor = "#ffffff";
+                        ctx.stroke();
+                        ctx.fillStyle = `rgba(200, 200, 200, 0.1)`;
+                        ctx.fill();
+                        ctx.restore();
+                    }
+
+                    // Pulsing effect
+                    const pulse = 1 + Math.sin(frames * 0.05) * 0.05;
+                    ctx.scale(pulse, pulse);
+
+                    // Outer Hexagon
+                    ctx.fillStyle = "#4b0082"; // Dark Indigo/Purple
+                    ctx.shadowBlur = 20; ctx.shadowColor = "#9400d3";
+                    ctx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        ctx.lineTo(100 * Math.cos(i * Math.PI / 3), 100 * Math.sin(i * Math.PI / 3));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Inner Hexagon (Lighter)
+                    ctx.fillStyle = "#8a2be2"; // BlueViolet
+                    ctx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        ctx.lineTo(60 * Math.cos(i * Math.PI / 3), 60 * Math.sin(i * Math.PI / 3));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Core
+                    ctx.fillStyle = "#ffffff";
+                    ctx.shadowBlur = 30; ctx.shadowColor = "#ffffff";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 20, 0, Math.PI*2);
+                    ctx.fill();
+
+                    if (this.flashTimer > 0) {
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.fillStyle = "white";
+                        ctx.fill();
+                    }
+                    
+                    ctx.restore();
+                    return;
+                }
+
+                // --- SNAKE BOSS DRAWING ---
+                if (this.isSnake) {
+                    // Increased segment count and reduced spacing for "connected" look
+                    const segmentCount = 50; 
+                    const spacing = 2; // Frames apart - very close
+                    
+                    // Color based on difficulty
+                    const mainColor = (activeDifficultyMode === 'hard') ? '#ff0000' : '#00ff00';
+                    const altColor = (activeDifficultyMode === 'hard') ? '#880000' : '#008800';
+                    const detailColor = (activeDifficultyMode === 'hard') ? '#ff4444' : '#00aa00';
+
+                    for (let i = segmentCount; i > 0; i--) {
+                        let pathIndex = i * spacing;
+                        if (pathIndex < this.snakePath.length) {
+                            let pos = this.snakePath[pathIndex];
+                            
+                            // Check for tail whip collision (simple proximity)
+                            if (this.currentAttack === 'snake_rush' && player.active) {
+                                let d = Math.hypot(pos.x - player.x, pos.y - player.y);
+                                if (d < 30) player.hit(2);
+                            }
+
+                            ctx.save();
+                            ctx.translate(pos.x, pos.y);
+                            ctx.fillStyle = (i % 4 === 0) ? altColor : detailColor;
+                            ctx.shadowBlur = 10; ctx.shadowColor = mainColor;
+                            
+                            // Taper size from head to tail
+                            let size = 30 * (1 - i/(segmentCount + 10)) + 8;
+
+                            // Segment Shape
+                            ctx.beginPath();
+                            ctx.arc(0, 0, size, 0, Math.PI * 2);
+                            ctx.fill();
+                            
+                            ctx.restore();
+                        }
+                    }
+
+                    // Draw Head
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.shadowBlur = 20; ctx.shadowColor = mainColor;
+                    
+                    // Head Shape (Bigger 1.5x)
+                    ctx.fillStyle = mainColor;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 30); // Nose
+                    ctx.lineTo(30, -15);
+                    ctx.lineTo(15, -30);
+                    ctx.lineTo(-15, -30);
+                    ctx.lineTo(-30, -15);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Eyes (Bigger)
+                    ctx.fillStyle = (activeDifficultyMode === 'hard') ? '#ffff00' : '#ff0000';
+                    ctx.beginPath(); ctx.arc(-15, 0, 6, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(15, 0, 6, 0, Math.PI*2); ctx.fill();
+
+                    if (this.flashTimer > 0) {
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.fillStyle = "white";
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                    return;
+                }
+
                 // --- GLITCH DRAWING ---
                 if (this.isGlitch) {
                     ctx.save();
@@ -2165,6 +2741,15 @@
             hit(damage) {
                 if (this.phase !== 'fight') return;
                 
+                // HIVE MOTHER INVULNERABILITY
+                if (this.isHiveMother && this.miniHives.length > 0) {
+                    // Deflect Effect (Grey/White sparks)
+                    for(let i=0; i<5; i++) {
+                        particles.push(new Particle(this.x + (Math.random()-0.5)*100, this.y + (Math.random()-0.5)*100, '#cccccc', 3, 3, 20));
+                    }
+                    return; // No damage taken
+                }
+
                 // SHIELD MECHANIC
                 if (this.shieldHp > 0) {
                     this.shieldHp -= damage;
@@ -2241,17 +2826,56 @@
             const isHard = (activeDifficultyMode === 'hard');
 
             // ===============================================
+            // EXPERT STAGE 4 (THE VIPER'S NEST)
+            // ===============================================
+            if (currentLevelIndex === 4 && isHard) {
+                if (wave === 1) {
+                    // Immediate Heavy Assault
+                    enemies.push(new HeavyStriker(width*0.2, -100));
+                    enemies.push(new HeavyStriker(width*0.5, -200));
+                    enemies.push(new HeavyStriker(width*0.8, -100));
+                    maxDelay = 1000;
+                } else if (wave >= 2 && wave <= 5) {
+                    // High Density Swarm
+                    let count = 20 + (wave * 2);
+                    for(let i=0; i<count; i++) {
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*100);
+                    }
+                    if (wave > 3) enemies.push(new LaserEnemy(width*0.5, -300));
+                } else if (wave >= 6 && wave <= 9) {
+                    // Agile Heavy Strikers (Expert Only behavior)
+                    let count = 4;
+                    for(let i=0; i<count; i++) {
+                        setTimeout(() => enemies.push(new HeavyStriker(Math.random()*width, -100)), i*500);
+                    }
+                    // Background noise
+                    for(let i=0; i<10; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*300);
+                } else if (wave >= 10 && wave <= 14) {
+                    // The Gauntlet
+                    enemies.push(new LaserEnemy(width*0.1, -100));
+                    enemies.push(new LaserEnemy(width*0.9, -100));
+                    enemies.push(new HeavyStriker(width*0.5, -200));
+                    let count = 30; // Massive swarm
+                    for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*80);
+                } else if (wave === 15) {
+                    boss.activate();
+                    boss.initAsStage4();
+                }
+            }
+            // ===============================================
             // EXPERT STAGE 3 SPECIFIC LOGIC (THE GLITCH SECTOR)
             // ===============================================
-            if (currentLevelIndex === 3 && isHard) {
+            else if (currentLevelIndex === 3 && isHard) {
                  if (wave === 1) {
                      // "Welcome to Hell"
                      enemies.push(new LaserEnemy(width*0.2, -100));
                      enemies.push(new LaserEnemy(width*0.8, -100));
                      setTimeout(() => enemies.push(new HeavyStriker(width*0.5, -200)), 800);
                      let count = 10;
-                     for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*200);
-                     maxDelay = 2000;
+                     for(let i=0; i<count; i++) {
+                         let d = i*200; if(d>maxDelay) maxDelay=d;
+                         setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), d);
+                     }
                  } else if (wave === 2) {
                      // Laser Rain
                      enemies.push(new LaserEnemy(width*0.1, -100));
@@ -2271,7 +2895,8 @@
                      // Chaos Rampup
                      let density = wave * 3;
                      for(let i=0; i<density; i++) {
-                         setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*100);
+                         let d = i*100; if(d>maxDelay) maxDelay=d;
+                         setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), d);
                      }
                      if(wave > 5) {
                          enemies.push(new LaserEnemy(width*0.1, -100));
@@ -2280,7 +2905,6 @@
                      if(wave > 7) {
                          enemies.push(new HeavyStriker(width*0.5, -200));
                      }
-                     maxDelay = density * 100 + 1000;
                  } else if (wave >= 9 && wave <= 14) {
                      // The Gauntlet
                      enemies.push(new HeavyStriker(width*0.2, -100));
@@ -2290,14 +2914,108 @@
                      let fastSwarm = 20 + wave;
                      for(let i=0; i<fastSwarm; i++) {
                          // Faster spawn rate
-                         setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*80);
+                         let d = i*80; if(d>maxDelay) maxDelay=d;
+                         setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), d);
                      }
-                     maxDelay = fastSwarm * 80 + 1000;
                  } else if (wave === 15) {
                      boss.activate();
                      boss.initAsStage3();
                  }
             } 
+            // ===============================================
+            // STAGE 5 (BEGINNER) - THE HIVE
+            // ===============================================
+            else if (currentLevelIndex === 5 && !isHard) {
+                if (wave === 1) {
+                    let count = 12;
+                    for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*200);
+                } else if (wave === 5) {
+                    // MINE LAYER WAVE INTRO (3 Ships)
+                    enemies.push(new MineLayer(width * 0.2, -50));
+                    enemies.push(new MineLayer(width * 0.5, -150));
+                    enemies.push(new MineLayer(width * 0.8, -50));
+                    
+                    // Support Swarm
+                    let count = 8;
+                    for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*300);
+                    maxDelay = 1000;
+                } else if (wave >= 2 && wave <= 14) { 
+                    // Combined logic for remaining waves
+                    
+                    // Standard Swarm scaling
+                    let count = 15 + wave;
+                    let delay = 150;
+                    
+                    // Ramping up density for late waves (9+)
+                    if (wave >= 9) {
+                        count = 30;
+                        delay = 100;
+                    }
+
+                    for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*delay);
+                    
+                    // Recurring Mine Layers (Waves 7, 9, 11, 13)
+                    if (wave === 7) {
+                        enemies.push(new MineLayer(width/2, -100));
+                    }
+                    if (wave === 9) {
+                        enemies.push(new MineLayer(width*0.3, -100));
+                        enemies.push(new MineLayer(width*0.7, -100));
+                    }
+                    if (wave === 11) {
+                        enemies.push(new MineLayer(width*0.2, -100));
+                        enemies.push(new MineLayer(width*0.8, -100));
+                    }
+                    if (wave === 13) {
+                        enemies.push(new MineLayer(width*0.25, -100));
+                        enemies.push(new MineLayer(width*0.5, -200));
+                        enemies.push(new MineLayer(width*0.75, -100));
+                    }
+
+                } else if (wave === 15) {
+                    boss.activate();
+                    boss.initAsStage5();
+                }
+            }
+            // ===============================================
+            // STAGE 4 (BEGINNER) - THE SNAKE PIT
+            // ===============================================
+            else if (currentLevelIndex === 4 && !isHard) {
+                if (wave === 1) {
+                    let count = 8;
+                    for(let i=0; i<count; i++) {
+                        let d = i*300; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), d);
+                    }
+                } else if (wave >= 2 && wave <= 5) {
+                    // Swarm ramp up
+                    let count = 12 + wave;
+                    for(let i=0; i<count; i++) {
+                        let d = i*200; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), d);
+                    }
+                } else if (wave >= 6 && wave <= 10) {
+                    // Introduce Lasers
+                    enemies.push(new LaserEnemy(width*0.2, -100));
+                    enemies.push(new LaserEnemy(width*0.8, -100));
+                    let count = 15;
+                    for(let i=0; i<count; i++) {
+                        let d = i*200; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), d);
+                    }
+                } else if (wave >= 11 && wave <= 14) {
+                    // Pre-Boss Chaos
+                    enemies.push(new HeavyStriker(width*0.5, -200));
+                    let count = 20;
+                    for(let i=0; i<count; i++) {
+                        let d = i*150; if(d>maxDelay) maxDelay=d;
+                        setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), d);
+                    }
+                } else if (wave === 15) {
+                    boss.activate();
+                    boss.initAsStage4();
+                }
+            }
             // ===============================================
             // STAGE 2 (Hard) & 2/3 (Easy) LOGIC 
             // ===============================================
@@ -2464,7 +3182,10 @@
             
             gridEl.innerHTML = ''; // Clear existing
 
-            for(let i = 1; i <= 3; i++) { // Changed 2 to 3
+            // Loop 1 to 5 for EASY, 1 to 4 for HARD
+            let maxLevels = (mode === 'easy') ? 5 : 4; 
+
+            for(let i = 1; i <= maxLevels; i++) { 
                 const btn = document.createElement('button');
                 btn.className = 'level-btn';
                 
@@ -2734,8 +3455,8 @@
             // STAGE PROGRESSION LOGIC
             if (win) {
                 const stats = (activeDifficultyMode === 'easy') ? gameData.easy : gameData.hard;
-                // If we beat current max stage, unlock next (capped at 3 now)
-                if (currentLevelIndex === stats.maxStage && stats.maxStage < 3) {
+                let cap = (activeDifficultyMode === 'easy') ? 5 : 4; 
+                if (currentLevelIndex === stats.maxStage && stats.maxStage < cap) {
                     stats.maxStage++;
                     saveData();
                 }
@@ -2751,8 +3472,8 @@
             frames++;
             if (gameState === STATE.PLAYING || gameState === STATE.GAMEOVER || gameState === STATE.VICTORY_SEQUENCE) {
                 
-                let maxWaves = (activeDifficultyMode === 'easy' && currentLevelIndex === 2) ? 15 : 10;
-                if(currentLevelIndex === 3) maxWaves = 15; // Ensure Stage 3 has same wave cap
+                // FIXED MAX WAVES LOGIC: Stage 1 = 10, All others = 15
+                let maxWaves = (currentLevelIndex === 1) ? 10 : 15;
 
                 if (gameState === STATE.PLAYING && currentWave < maxWaves && enemies.length === 0 && waveClearCheckReady) {
                     if (frames % 60 === 0) { 
@@ -2781,10 +3502,78 @@
                             if (b.type === 'player') {
                                 let hit = false;
                                 if (boss.active) {
-                                    let dx = b.x - boss.x; let dy = b.y - boss.y;
-                                    if (Math.sqrt(dx*dx + dy*dy) < 60) { 
-                                         boss.hit(b.damage); b.active = false; hit = true;
-                                         particles.push(new Particle(b.x, b.y, '#ffaa00', 2, 2, 10));
+                                    if (boss.isSnake) {
+                                        // 1. Check Snake Head (Normal Damage)
+                                        let distHead = Math.hypot(b.x - boss.x, b.y - boss.y);
+                                        if (distHead < 40) {
+                                            boss.hit(b.damage); 
+                                            b.active = false; 
+                                            hit = true;
+                                            particles.push(new Particle(b.x, b.y, '#ffaa00', 2, 2, 10));
+                                        } 
+                                        // 2. Check Snake Body (Half Damage)
+                                        else {
+                                            const segmentCount = 50; 
+                                            const spacing = 2; 
+                                            // Iterate segments (skip every 2nd for performance optimization)
+                                            for (let i = 1; i <= segmentCount; i+=2) {
+                                                let pathIndex = i * spacing;
+                                                if (pathIndex < boss.snakePath.length) {
+                                                    let pos = boss.snakePath[pathIndex];
+                                                    // Approx size based on draw logic
+                                                    let size = 30 * (1 - i/(segmentCount + 10)) + 8;
+                                                    
+                                                    if (Math.hypot(b.x - pos.x, b.y - pos.y) < size + 5) {
+                                                        boss.hit(b.damage * 0.5); // Half Damage
+                                                        b.active = false; 
+                                                        hit = true;
+                                                        // Green/Grey armored sparks
+                                                        particles.push(new Particle(b.x, b.y, '#88ff88', 1, 2, 5));
+                                                        break; 
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else if (boss.isHiveMother) {
+                                        // Check Mini Hives First
+                                        let hitMini = false;
+                                        if (boss.miniHives) {
+                                            for(let m of boss.miniHives) {
+                                                if (!m.active) continue;
+                                                if (Math.hypot(b.x - m.x, b.y - m.y) < 35) {
+                                                    m.hp -= b.damage;
+                                                    if(m.hp <= 0) {
+                                                        m.active = false;
+                                                        // FX
+                                                        for(let k=0; k<15; k++) particles.push(new Particle(m.x, m.y, '#9370db', 3, 3, 20));
+                                                    } else {
+                                                        // Hit FX
+                                                        particles.push(new Particle(b.x, b.y, '#d8bfd8', 1, 2, 5));
+                                                    }
+                                                    b.active = false;
+                                                    hitMini = true;
+                                                    hit = true; // Count as hit so enemies don't check
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // If didn't hit mini, check main boss
+                                        if (!hitMini) {
+                                            let dx = b.x - boss.x; let dy = b.y - boss.y;
+                                            // Hexagon hit approx circle radius 90
+                                            if (Math.sqrt(dx*dx + dy*dy) < 90) { 
+                                                 boss.hit(b.damage); b.active = false; hit = true;
+                                                 particles.push(new Particle(b.x, b.y, '#9900ff', 2, 2, 10));
+                                            }
+                                        }
+                                    } else {
+                                        // Standard Boss Hitbox
+                                        let dx = b.x - boss.x; let dy = b.y - boss.y;
+                                        if (Math.sqrt(dx*dx + dy*dy) < 60) { 
+                                             boss.hit(b.damage); b.active = false; hit = true;
+                                             particles.push(new Particle(b.x, b.y, '#ffaa00', 2, 2, 10));
+                                        }
                                     }
                                 }
                                 if (!hit) {
@@ -2901,8 +3690,8 @@
         }
 
         function devUnlockStages() {
-            gameData.easy.maxStage = 3;
-            gameData.hard.maxStage = 3;
+            gameData.easy.maxStage = 5; // Updated to 5 for easy
+            gameData.hard.maxStage = 4; 
             saveData();
             if (gameState === STATE.LEVEL_SELECT) {
                 const isExpert = document.getElementById('expert-level-select-screen').style.opacity === '1';
@@ -2912,10 +3701,6 @@
         }
 
         function devGlobalWipe() {
-            // "Global Data Wipe" - Nuclear option
-            // 1. Clear Game Data
-            // 2. Clear Visited Cookie
-            // 3. Reload Page
             if(confirm("WARNING: This will wipe ALL progress (Stars, Upgrades, Levels) and reset the game to factory state (Welcome Screen). Continue?")) {
                 localStorage.removeItem('neonVoidData_v3');
                 localStorage.removeItem('neonVoid_visited');
@@ -2963,7 +3748,7 @@
         function showCookieStep() {
             document.getElementById('welcome-header').innerText = "PROTOCOL CHECK";
             document.getElementById('welcome-content').innerHTML = 
-                "Systems initializing... <br><br>WARNING: Persistent Data Storage required.<br><br>But first... you gotta try these cookies. 🍪<br>They allow us to save your progress.";
+                "Systems initializing... <br><br>WARNING: Persistent Data Storage required.<br><br>But first... you gotta try these cookies. 🍪<br>They have tiny micro sensors that will scan you so we can save your progress.";
             
             const footer = document.getElementById('welcome-footer');
             footer.innerHTML = `
