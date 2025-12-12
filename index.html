@@ -698,7 +698,7 @@
                     <span style="color: #ff4444;">AVOID THE RED ZONES. DO NOT TOUCH THE MINES.</span>
                 </div>
             </div>
-            <div class="radio-footer" style="justify-content: center; align-items: center; gap: 20px;">
+            <div class="radio-footer" style="justify-coxntent: center; align-items: center; gap: 20px;">
                 <canvas id="briefingCanvas" width="80" height="80" style="background: rgba(0,0,0,0.5); border: 1px solid #ffaa00; border-radius: 50%;"></canvas>
                 <button class="btn" type="button" style="border-color: #ffaa00; color: #ffaa00; font-family: inherit; padding: 10px 30px;" onclick="closeMidGameBriefing(event)">ACKNOWLEDGE</button>
             </div>
@@ -1290,6 +1290,21 @@
                 if (this.y > height + 20) this.active = false;
 
                 if (player && player.active) {
+                    // MAGNET LOGIC: Gently pull stars towards player
+                    if (this.type === 'star') {
+                         let dx = player.x - this.x;
+                         let dy = player.y - this.y;
+                         let dist = Math.hypot(dx, dy);
+                         
+                         // "Really slow" pull speed
+                         const pullSpeed = 0.8; 
+                         
+                         if (dist > 0) {
+                             this.x += (dx / dist) * pullSpeed;
+                             this.y += (dy / dist) * pullSpeed;
+                         }
+                    }
+
                     let dist = Math.hypot(this.x - player.x, this.y - player.y);
                     if (dist < 40) this.collect();
                 }
@@ -2023,7 +2038,7 @@
 
                 // Shield Props
                 this.shieldHp = 0;
-                this.maxShieldHp = 2000;
+                this.maxShieldHp = 500;
             }
 
             // Called when starting Stage 2 specifically
@@ -2281,7 +2296,7 @@
                 isPhase2Active = true;
 
                 // TRIGGER SHIELD
-                this.shieldHp = 2000;
+                this.shieldHp = 1000;
                 bossShieldContainer.style.display = "block";
                 bossShieldBar.style.width = "100%";
 
@@ -3439,11 +3454,29 @@
             const hCanvas = document.getElementById('hangarShipCanvas');
             const hCtx = hCanvas.getContext('2d');
             hCtx.clearRect(0,0,200,200);
-            hCtx.save(); hCtx.translate(100, 100); hCtx.scale(2, 2); 
-            hCtx.shadowBlur = 20; hCtx.shadowColor = '#00ffff'; hCtx.fillStyle = '#fff';
-            hCtx.beginPath(); hCtx.moveTo(0, -20); hCtx.lineTo(15, 15); hCtx.lineTo(0, 10); hCtx.lineTo(-15, 15); hCtx.fill();
-            hCtx.fillStyle = '#00aaaa'; hCtx.beginPath(); hCtx.moveTo(0, 0); hCtx.lineTo(20, 10); hCtx.lineTo(20, 25); hCtx.lineTo(5, 15); hCtx.fill();
-            hCtx.beginPath(); hCtx.moveTo(0, 0); hCtx.lineTo(-20, 10); hCtx.lineTo(-20, 25); hCtx.lineTo(-5, 15); hCtx.fill();
+            hCtx.save(); hCtx.translate(100, 100); hCtx.scale(3, 3); // Scaled up to 3x for detail
+
+            // --- DETAILED SHIP GRAPHICS ---
+            const bodyGrad = hCtx.createLinearGradient(0, -20, 0, 20);
+            bodyGrad.addColorStop(0, '#ffffff');
+            bodyGrad.addColorStop(0.5, '#00aaaa');
+            bodyGrad.addColorStop(1, '#005555');
+            
+            hCtx.fillStyle = bodyGrad;
+            hCtx.shadowBlur = 15; hCtx.shadowColor = '#00ffff';
+            
+            // Fuselage
+            hCtx.beginPath(); hCtx.moveTo(0, -25); hCtx.lineTo(8, -5); hCtx.lineTo(8, 15); hCtx.lineTo(0, 25); hCtx.lineTo(-8, 15); hCtx.lineTo(-8, -5); hCtx.closePath(); hCtx.fill();
+
+            // Wings
+            hCtx.fillStyle = '#008888';
+            hCtx.beginPath(); hCtx.moveTo(8, 0); hCtx.lineTo(25, 15); hCtx.lineTo(25, 25); hCtx.lineTo(8, 15); hCtx.closePath(); hCtx.fill();
+            hCtx.beginPath(); hCtx.moveTo(-8, 0); hCtx.lineTo(-25, 15); hCtx.lineTo(-25, 25); hCtx.lineTo(-8, 15); hCtx.closePath(); hCtx.fill();
+
+            // Cockpit
+            hCtx.fillStyle = '#000';
+            hCtx.beginPath(); hCtx.moveTo(0, -10); hCtx.lineTo(3, 0); hCtx.lineTo(0, 5); hCtx.lineTo(-3, 0); hCtx.fill();
+            
             hCtx.restore();
         }
 
@@ -3906,6 +3939,98 @@
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1);
             }
+        }
+
+        // --- DEV TOOL LOGIC ---
+        function toggleDevPanel() {
+            const panel = document.getElementById('dev-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function devSetStars() {
+            const val = parseInt(document.getElementById('dev-stars').value);
+            if (!isNaN(val)) {
+                if (activeDifficultyMode === 'easy') gameData.easy.stars = val;
+                else gameData.hard.stars = val;
+                saveData();
+                updateUI();
+                if (gameState === STATE.HANGAR) updateHangarUI();
+            }
+        }
+
+        function devSkipWave() {
+            const val = parseInt(document.getElementById('dev-wave').value);
+            if (!isNaN(val) && val > 0 && gameState === STATE.PLAYING) {
+                enemies = []; 
+                bullets = [];
+                if(boss.active) boss.active = false;
+                startWave(val);
+            }
+        }
+
+        function devKillAll() {
+            if (gameState === STATE.PLAYING) {
+                enemies.forEach(e => e.hit(10000));
+                if (boss && boss.active) {
+                    boss.hit(10000); 
+                    boss.hit(10000);
+                }
+            }
+        }
+
+        function devResetStarsOnly() {
+            gameData.easy.stars = 0;
+            gameData.hard.stars = 0;
+            saveData();
+            updateUI();
+            if (gameState === STATE.HANGAR) updateHangarUI();
+            alert("Stars Reset!");
+        }
+
+        function devResetUpgradesOnly() {
+            gameData.easy.healthLvl = 0;
+            gameData.easy.cannonLvl = 0;
+            gameData.hard.healthLvl = 0;
+            gameData.hard.cannonLvl = 0;
+            saveData();
+            updateUI();
+            if (gameState === STATE.HANGAR) updateHangarUI();
+            alert("Upgrades Reset!");
+        }
+
+        function devResetLevelsOnly() {
+            gameData.easy.maxStage = 1;
+            gameData.hard.maxStage = 1;
+            saveData();
+            if (gameState === STATE.LEVEL_SELECT) {
+               const isExpert = document.getElementById('expert-level-select-screen').style.opacity === '1';
+               updateLevelGrid(isExpert ? 'hard' : 'easy');
+            }
+            alert("Levels Reset to 1!");
+        }
+
+        function devUnlockStages() {
+            gameData.easy.maxStage = 5;
+            gameData.hard.maxStage = 4; 
+            saveData();
+            if (gameState === STATE.LEVEL_SELECT) {
+                const isExpert = document.getElementById('expert-level-select-screen').style.opacity === '1';
+                updateLevelGrid(isExpert ? 'hard' : 'easy');
+            }
+            alert("All Stages Unlocked!");
+        }
+
+        function devGlobalWipe() {
+            if(confirm("WARNING: This will wipe ALL progress (Stars, Upgrades, Levels) and reset the game to factory state (Welcome Screen). Continue?")) {
+                localStorage.removeItem('neonVoidData_v3');
+                localStorage.removeItem('neonVoid_visited');
+                location.reload();
+            }
+        }
+        
+        function devResetCookies() {
+            localStorage.removeItem('neonVoid_visited');
+            alert("Intro Cookie Cleared. Refresh to see Welcome.");
         }
 
         // --- NEW WELCOME & COOKIE LOGIC ---
