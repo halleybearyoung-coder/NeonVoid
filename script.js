@@ -3005,7 +3005,7 @@ function startIntro(mode, levelIndex) {
     document.getElementById('radio-content').innerHTML = msg;
 
     // AUDIO BRIEFING
-    playBriefingAudio(msg);
+    playBriefingAudio(key, msg);
 
     introTimer = 30;
     document.getElementById('intro-countdown').innerText = introTimer;
@@ -3404,8 +3404,28 @@ if (typeof THREE !== 'undefined') initThreeMenu();
 
 // --- AUDIO BRIEFING SYSTEM ---
 let briefingUtterance = null;
+let briefingAudio = null; // For MP3 files
 
-function playBriefingAudio(text) {
+function playBriefingAudio(key, text) {
+    // 1. Try to play MP3 file
+    const audioPath = `audio/${key}.mp3`;
+
+    if (briefingAudio) {
+        briefingAudio.pause();
+        briefingAudio = null;
+    }
+
+    briefingAudio = new Audio(audioPath);
+    briefingAudio.volume = 1.0;
+
+    briefingAudio.play().catch(e => {
+        // File not found or playback failed -> Fallback to TTS
+        console.log("Audio file not found, falling back to TTS:", e);
+        playTTS(text);
+    });
+}
+
+function playTTS(text) {
     if (!window.speechSynthesis) return;
 
     // Stop any existing speech
@@ -3432,7 +3452,7 @@ function playBriefingAudio(text) {
 
     // Wait for voices if needed (simple retry)
     if (voices.length === 0) {
-        setTimeout(() => playBriefingAudio(text), 100);
+        setTimeout(() => playTTS(text), 100);
         return;
     }
 
@@ -3440,6 +3460,12 @@ function playBriefingAudio(text) {
 }
 
 function stopBriefingAudio() {
+    // Stop MP3
+    if (briefingAudio) {
+        briefingAudio.pause();
+        briefingAudio.currentTime = 0;
+    }
+    // Stop TTS
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
     }
