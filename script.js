@@ -3402,6 +3402,50 @@ document.getElementById('start-hard-btn').addEventListener('click', showExpertSe
 document.getElementById('start-easy-btn').addEventListener('click', showRookieSelect);
 if (typeof THREE !== 'undefined') initThreeMenu();
 
+// --- AUDIO BRIEFING SYSTEM ---
+let briefingUtterance = null;
+
+function playBriefingAudio(text) {
+    if (!window.speechSynthesis) return;
+
+    // Stop any existing speech
+    window.speechSynthesis.cancel();
+
+    // Clean text (remove HTML tags)
+    const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    briefingUtterance = new SpeechSynthesisUtterance(cleanText);
+
+    // Voice Selection (English Commander Style)
+    const voices = window.speechSynthesis.getVoices();
+    // Prefer "Google UK English Male" or any "en-GB" voice
+    const commanderVoice = voices.find(v => v.name.includes('Google UK English Male')) ||
+        voices.find(v => v.lang === 'en-GB' && v.name.includes('Male')) ||
+        voices.find(v => v.lang === 'en-GB') ||
+        voices.find(v => v.lang.startsWith('en'));
+
+    if (commanderVoice) briefingUtterance.voice = commanderVoice;
+
+    briefingUtterance.pitch = 0.9; // Slightly deeper
+    briefingUtterance.rate = 0.9;  // Deliberate pace
+    briefingUtterance.volume = 1.0;
+
+    window.speechSynthesis.speak(briefingUtterance);
+}
+
+function stopBriefingAudio() {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+}
+
+// Ensure voices are loaded
+if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = () => {
+        // Voices loaded
+    };
+}
+
 // Start check
 checkFirstVisit();
 animateGame();
