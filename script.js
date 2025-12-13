@@ -3003,6 +3003,10 @@ function startIntro(mode, levelIndex) {
     const key = `${mode}_${levelIndex}`;
     const msg = STAGE_MESSAGES[key] || "Transmission unclear. Proceed with caution.";
     document.getElementById('radio-content').innerHTML = msg;
+
+    // AUDIO BRIEFING
+    playBriefingAudio(msg);
+
     introTimer = 30;
     document.getElementById('intro-countdown').innerText = introTimer;
     if (introInterval) clearInterval(introInterval);
@@ -3013,6 +3017,7 @@ function startIntro(mode, levelIndex) {
     }, 1000);
 }
 function skipIntro() {
+    stopBriefingAudio();
     if (introInterval) clearInterval(introInterval);
     introScreen.style.opacity = '0'; introScreen.style.pointerEvents = 'none';
     startActualGameplay();
