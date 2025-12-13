@@ -67,7 +67,6 @@
             text-shadow: 0 0 10px #ff0000;
             margin-bottom: 5px;
         }
-        
         /* NEW SHIELD BAR STYLES */
         #boss-shield-container {
             width: 60%;
@@ -89,7 +88,6 @@
             box-shadow: 0 0 15px #00ffff;
             transition: width 0.1s;
         }
-
         #boss-health-container {
             width: 60%;
             max-width: 600px;
@@ -107,7 +105,6 @@
             box-shadow: 0 0 15px #ff0000;
             transition: width 0.1s linear;
         }
-        
         #player-hud {
             align-self: flex-start;
             opacity: 0;
@@ -149,7 +146,6 @@
             background: #00ffff;
             color: #000;
         }
-
         .hud-text {
             font-size: 18px;
             color: #00ffff;
@@ -301,7 +297,6 @@
             border: 1px solid transparent;
             pointer-events: none;
         }
-
         .hologram-container {
             position: relative;
             margin-bottom: 30px;
@@ -323,7 +318,6 @@
         .hb-tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
         .hb-bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
         .hb-br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
-        
         /* Scanline Animation */
         .scanline {
             position: absolute; top: 0; left: 0; width: 100%; height: 2px;
@@ -333,7 +327,6 @@
             pointer-events: none;
         }
         @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-
         .upgrade-row {
             display: flex;
             gap: 30px;
@@ -359,7 +352,6 @@
         .card-hp { border-top-color: #00ff00; }
         .card-cannon { border-top-color: #00ffff; }
         .card-special { border-top-color: #ff4444; }
-
         .upgrade-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
@@ -368,7 +360,6 @@
         .card-hp:hover { border-color: #00ff00; box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
         .card-cannon:hover { border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
         .card-special:hover:not(.locked) { border-color: #ff4444; box-shadow: 0 0 15px rgba(255, 68, 68, 0.2); }
-
         .upgrade-title {
             font-family: 'Courier New', monospace;
             font-size: 16px;
@@ -385,7 +376,6 @@
             font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 10px;
             text-shadow: 0 0 5px rgba(255,255,255,0.3);
         }
-
         /* Segmented Level Bar */
         .level-bar-container {
             display: flex;
@@ -404,10 +394,8 @@
         .card-hp .level-segment.active { background: #00ff00; box-shadow: 0 0 5px #00ff00; border-color: #00ff00; }
         .card-cannon .level-segment.active { background: #00ffff; box-shadow: 0 0 5px #00ffff; border-color: #00ffff; }
         .card-special .level-segment.active { background: #ff4444; box-shadow: 0 0 5px #ff4444; border-color: #ff4444; }
-
         .locked { border-color: #333; color: #555; opacity: 0.6; pointer-events: none; border-top-color: #333; }
         .locked:hover { transform: none; box-shadow: none; border-color: #333; }
-        
         /* LEVEL SELECT GRID */
         .level-grid {
             display: flex;
@@ -449,7 +437,6 @@
             background: rgba(0, 0, 0, 0.7);
             font-size: 24px;
         }
-        
         /* RED THEME FOR EXPERT */
         .red-theme .title-text { color: #ff4444 !important; text-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
         .red-theme .level-btn.active { border-color: #ff4444; color: #ff4444; background: rgba(50, 0, 0, 0.5); box-shadow: 0 0 15px rgba(255, 0, 0, 0.3); }
@@ -457,7 +444,6 @@
         .red-theme .level-btn.locked { border-color: rgba(255, 68, 68, 0.3); color: rgba(255, 68, 68, 0.3); }
         .red-theme .btn { border-color: #ff4444; color: #ff4444; }
         .red-theme .btn:hover { background: #ff4444; color: white; }
-
         /* INTRO / BRIEFING SCREEN - Reused for Welcome */
         .radio-box {
             width: 60%;
@@ -496,7 +482,6 @@
             align-items: center;
         }
         @keyframes blink { 50% { opacity: 0.3; } }
-
         /* CUSTOM MESSAGE MODAL */
         #msg-modal {
             position: absolute; top: 50%; left: 50%;
@@ -506,7 +491,6 @@
             box-shadow: 0 0 30px rgba(255,0,0,0.3); pointer-events: auto;
         }
         #msg-text { font-size: 20px; color: white; margin-bottom: 20px; }
-
         /* Wave Announcement Text */
         #wave-announcement {
             position: absolute; top: 40%; width: 100%; text-align: center;
@@ -524,7 +508,6 @@
             margin-top: 20px; font-size: 14px;
             color: rgba(255,255,255,0.5); font-family: monospace;
         }
-
         /* DEV TOOLS */
         #dev-toggle {
             position: fixed;
@@ -580,14 +563,11 @@
     </style>
 </head>
 <body>
-
     <!-- 3D Background -->
     <div id="three-container"></div>
     <canvas id="gameCanvas"></canvas>
-
     <!-- White Flash Overlay -->
     <div id="flash-overlay"></div>
-
     <!-- DEV TOOLS UI -->
     <button id="dev-toggle" onclick="toggleDevPanel()">DEV</button>
     <div id="dev-panel">
@@ -598,13 +578,11 @@
             <input type="number" id="dev-stars" class="dev-input" placeholder="Amount">
             <button class="dev-btn" onclick="devSetStars()">SET</button>
         </div>
-
         <div class="dev-row">
             <span style="font-size: 12px; color: #ccc;">WAVE:</span>
             <input type="number" id="dev-wave" class="dev-input" placeholder="#">
             <button class="dev-btn" onclick="devSkipWave()">GO</button>
         </div>
-
         <button class="dev-btn" style="width: 100%; color: #ff4444; border-color: #ff4444;" onclick="devKillAll()">KILL ALL ENEMIES</button>
         
         <div style="margin-top: 10px; border-top: 1px solid #555; padding-top: 10px; text-align: center;">
@@ -617,14 +595,12 @@
             <button class="dev-btn" style="width: 100%; color: #888; border-color: #888;" onclick="devResetCookies()">CLEAR COOKIES (INTRO)</button>
         </div>
     </div>
-
     <!-- Message Modal -->
     <div id="msg-modal">
         <div class="title-text" style="font-size: 30px; margin-bottom: 10px; color: #ff4444;">ACCESS DENIED</div>
         <div id="msg-text">Level Locked. Complete previous sector.</div>
         <button class="btn" onclick="closeMsgModal()" style="font-size: 16px; padding: 10px 30px;">OK</button>
     </div>
-
     <div id="ui-layer">
         <div id="boss-hud">
             <div id="boss-name">System Core: Omega</div>
@@ -649,7 +625,6 @@
         <!-- ABILITY BUTTON -->
         <div id="ability-btn" onclick="activateLaser(event)">BEAM<br>READY</div>
     </div>
-
     <!-- NEW: WELCOME / COOKIE SCREEN -->
     <div id="welcome-screen" class="screen-overlay">
         <div class="radio-box" id="welcome-box">
@@ -665,7 +640,6 @@
             </div>
         </div>
     </div>
-
     <!-- INTRO / BRIEFING SCREEN -->
     <div id="intro-screen" class="screen-overlay">
         <div class="radio-box">
@@ -681,7 +655,6 @@
             </div>
         </div>
     </div>
-
     <!-- NEW: MID-GAME BRIEFING SCREEN -->
     <div id="mid-game-screen" class="screen-overlay" style="opacity: 0; pointer-events: none; background: rgba(50, 0, 0, 0.8);">
         <div class="radio-box" style="border-color: #ffaa00; color: #ffaa00;">
@@ -704,7 +677,6 @@
             </div>
         </div>
     </div>
-
     <!-- MAIN MENU -->
     <div id="menu-screen" class="screen-overlay">
         <div class="title-text" style="color: #00ffff;">NEON VOID</div>
@@ -715,7 +687,6 @@
         </div>
         <div class="controls-hint">ARROWS / WASD to Move &nbsp;|&nbsp; MOUSE to Follow</div>
     </div>
-
     <!-- ROOKIE LEVEL SELECT -->
     <div id="level-select-screen" class="screen-overlay">
         <button class="hangar-toggle-btn" onclick="openHangar('easy')">🛠️ HANGAR</button>
@@ -725,7 +696,6 @@
         </div>
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
-
     <!-- EXPERT LEVEL SELECT -->
     <div id="expert-level-select-screen" class="screen-overlay red-theme">
         <button class="hangar-toggle-btn" onclick="openHangar('hard')">🛠️ HANGAR</button>
@@ -735,7 +705,6 @@
         </div>
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
-
     <!-- HANGAR SCREEN (REFINED) -->
     <div id="hangar-screen" class="screen-overlay">
         <div id="hangar-content">
@@ -762,7 +731,6 @@
                     <div class="highlight-val" id="hp-bonus" style="color: #0f0;">+0 HP</div>
                     <button id="btn-upg-hp" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #0f0; color: #0f0;" onclick="upgradeHealth()">UPGRADE</button>
                 </div>
-
                 <!-- CANNON CARD -->
                 <div class="upgrade-card card-cannon">
                     <div class="upgrade-title">MAIN CANNON</div>
@@ -772,7 +740,6 @@
                     <div class="highlight-val" id="cannon-bonus" style="color: #00ffff;">+0 DMG</div>
                     <button id="btn-upg-cannon" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #00ffff; color: #00ffff;" onclick="upgradeCannon()">UPGRADE</button>
                 </div>
-
                 <!-- LASER CARD (UPDATED) -->
                 <div class="upgrade-card card-special" id="card-laser">
                     <div class="upgrade-title">ION BEAM</div>
@@ -785,12 +752,10 @@
             <button class="btn" style="margin-top: 10px; border-color: #fff; color: #fff;" onclick="closeHangar()">EXIT HANGAR</button>
         </div>
     </div>
-
     <div id="game-over-screen" class="screen-overlay">
         <div class="title-text" id="game-over-title">Mission Failed</div>
         <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
     </div>
-
     <script>
         const STATE = { 
             WELCOME: 'welcome',
@@ -811,7 +776,6 @@
         let introTimer = 30;
         let introInterval = null;
         let cookiesAccepted = false; // Flag to track user consent
-
         // --- STAGE MESSAGES ---
         const STAGE_MESSAGES = {
             'easy_1': "Pilot, we have lost contact with Outpost Omega. Sensors indicate the System Core has gone rogue. <br><br>Neutralize the threat before it spreads to the network.",
@@ -819,12 +783,12 @@
             'easy_3': "Entering deep sector. Signal interference high. \n\nThe core is sending [ERROR CODE:1204] [SIGNAL FALIURE].",
             'easy_4': "CAUTION: Biological signature detected in the mainframe. <br><br>It's the Cyber Serpent. Aim for the head, its scales are almost impervious to standard fire.",
             'easy_5': "BINARY STAR SYSTEM DETECTED. <br><br>Two hostile signatures orbiting in sync. Focus fire to eliminate them, but beware... the survivor will seek vengeance.",
+            'easy_6': "CRITICAL ERROR. REALITY INTEGRITY: 0%. <br><br>The source code itself is collapsing. <br>It's The Syntax Error. <br><br>Do not trust your senses. Do not trust your controls.",
             'hard_1': "Veteran difficulty authorized. <br><br>The enemy AI has adapted to standard tactics. Expect aggressive maneuvers.",
             'hard_2': "This is it. The Elite Terminator unit has been deployed. <br><br>Survival probability is near zero. Good luck, Commander.",
             'hard_3': "Elite Deep Sector. \n\nNo support available. You are on your own, Commander.",
             'hard_4': "THE VIPER'S NEST. <br><br>The source of the corruption has been found. The Crimson Serpent awaits. <br>Kill it."
         };
-
         // --- STORAGE HELPER FUNCTIONS (Switched to LocalStorage for reliability) ---
         // Note: Real cookies often fail in iframe/preview sandboxes. 
         // We use LocalStorage here to ensure your save works, but keep the "Cookie" UI theme.
@@ -833,15 +797,12 @@
             // Using LocalStorage to mimic cookie behavior for reliability
             localStorage.setItem(name, value);
         }
-
         function getCookie(name) {
             return localStorage.getItem(name);
         }
-
         function deleteCookie(name) {
             localStorage.removeItem(name);
         }
-
         // --- DATA PERSISTENCE ---
         let gameData;
         
@@ -855,7 +816,6 @@
                     gameData = null;
                 }
             }
-
             if (!gameData) {
                 // Default initial state
                 gameData = {
@@ -869,23 +829,19 @@
             if (gameData.easy.laserUnlocked === undefined) gameData.easy.laserUnlocked = false;
             if (gameData.hard.laserUnlocked === undefined) gameData.hard.laserUnlocked = false;
         }
-
         function saveData() {
             if (!cookiesAccepted) return; // DON'T SAVE IF COOKIES DENIED
             setCookie('neonVoidData_v3', JSON.stringify(gameData), 365);
         }
-
         // --- UPGRADE CONFIGURATION ---
         const HEALTH_UPGRADES = {
             costs: [110, 150, 200, 600, 1100], 
             bonuses: [5, 10, 15, 20, 50]        
         };
-
         const CANNON_UPGRADES = {
             costs: [150, 200, 500, 1000, 10000],
             bonuses: [1, 2, 3, 4, 5] 
         };
-
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const flashOverlay = document.getElementById('flash-overlay');
@@ -906,7 +862,6 @@
         }
         resizeGame();
         window.addEventListener('resize', resizeGame);
-
         // UI
         const bossHud = document.getElementById('boss-hud');
         const bossHealthBar = document.getElementById('boss-health-bar');
@@ -921,7 +876,6 @@
         const gameOverTitle = document.getElementById('game-over-title');
         const phaseDebug = document.getElementById('phase-debug');
         const waveText = document.getElementById('wave-announcement');
-
         // Input
         const keys = {
             ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
@@ -929,7 +883,6 @@
         };
         const mouse = { x: width / 2, y: height - 150, down: false, targetX: width / 2, targetY: height - 150 };
         let isTouch = false;
-
         /**
          * THREE.JS BACKGROUND & EFFECTS
          */
@@ -939,35 +892,27 @@
         let supernovaMesh, supernovaParticles;
         let supernovaVelocities = [];
         let isSupernovaExploding = false;
-
         // 3D GLITCH ASSETS (Stage 3)
         let glitchBossMesh;
-
         // 2D DROPS
         let dropMeshes = []; 
-
         function initThreeMenu() {
             if (typeof THREE === 'undefined') return;
-
             try {
                 const container = document.getElementById('three-container');
                 scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(0x050505, 0.002);
-
                 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 camera.position.z = 50;
-
                 renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 renderer.domElement.id = 'menuCanvas';
                 container.appendChild(renderer.domElement);
-
                 // 1. Menu Core
                 const geometry = new THREE.IcosahedronGeometry(10, 1);
                 const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, transparent: true, opacity: 0.8 });
                 menuCore = new THREE.Mesh(geometry, material);
                 scene.add(menuCore);
-
                 // 2. Stars
                 const starGeo = new THREE.BufferGeometry();
                 const starCount = 2000;
@@ -977,7 +922,6 @@
                 const starMat = new THREE.PointsMaterial({ size: 0.5, color: 0xffffff });
                 stars = new THREE.Points(starGeo, starMat);
                 scene.add(stars);
-
                 // 3. PHASE 2 BOSS MESH (System Core)
                 const bossGeo = new THREE.TorusKnotGeometry(12, 3, 100, 16);
                 const bossMat = new THREE.MeshBasicMaterial({ color: 0xff3300, wireframe: true });
@@ -990,7 +934,6 @@
                 const ringMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
                 const ring = new THREE.Mesh(ringGeo, ringMat);
                 bossPhase2Mesh.add(ring);
-
                 // 4. BOSS SHIELD (UPDATED to Sphere surface, transparent)
                 // Radius reduced to 16 to prevent clipping when boss scales up
                 const shieldGeo = new THREE.SphereGeometry(16, 32, 32);
@@ -1006,7 +949,6 @@
                 bossShieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
                 bossShieldMesh.visible = false;
                 bossPhase2Mesh.add(bossShieldMesh); 
-
                 // 5. GLITCH BOSS MESH (Octahedron)
                 const glitchGeo = new THREE.OctahedronGeometry(15, 0);
                 const glitchMat = new THREE.MeshBasicMaterial({ 
@@ -1019,14 +961,12 @@
                 glitchBossMesh.visible = false;
                 glitchBossMesh.position.z = -20;
                 scene.add(glitchBossMesh);
-
                 // 6. SUPERNOVA ASSETS
                 const snGeo = new THREE.SphereGeometry(1, 32, 32);
                 const snMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0, wireframe: true });
                 supernovaMesh = new THREE.Mesh(snGeo, snMat);
                 supernovaMesh.visible = false;
                 scene.add(supernovaMesh);
-
                 const pGeo = new THREE.BufferGeometry();
                 const pCount = 500; // REDUCED FROM 2000
                 const pPos = new Float32Array(pCount * 3);
@@ -1047,17 +987,14 @@
                 supernovaParticles = new THREE.Points(pGeo, pMat);
                 supernovaParticles.visible = false;
                 scene.add(supernovaParticles);
-
                 animateThree();
             } catch (e) { console.warn("Error initializing 3D:", e); }
         }
-
         function triggerSupernova() {
             if(!supernovaMesh || !supernovaParticles) return;
             isSupernovaExploding = true;
             
             let posToCopy = {x:0, y:20, z:-20};
-
             if(boss && boss.isGlitch && glitchBossMesh) {
                 posToCopy.x = (boss.x / width) * 120 - 60;
                 posToCopy.y = (boss.y / height) * -60 + 30; // Approx
@@ -1065,24 +1002,20 @@
             else if(bossPhase2Mesh && isPhase2Active) {
                 posToCopy = bossPhase2Mesh.position;
             } 
-
             supernovaMesh.position.copy(posToCopy);
             supernovaParticles.position.copy(posToCopy);
-
             if(bossPhase2Mesh) bossPhase2Mesh.visible = false;
             if(glitchBossMesh) glitchBossMesh.visible = false;
             
             supernovaMesh.scale.set(1,1,1);
             supernovaMesh.material.opacity = 1;
             supernovaMesh.visible = true;
-
             const positions = supernovaParticles.geometry.attributes.position.array;
             positions.fill(0);
             supernovaParticles.geometry.attributes.position.needsUpdate = true;
             supernovaParticles.material.opacity = 1;
             supernovaParticles.visible = true;
         }
-
         function animateThree() {
             requestAnimationFrame(animateThree);
             
@@ -1091,7 +1024,6 @@
                 menuCore.rotation.x += 0.005; menuCore.rotation.y += 0.01; menuCore.visible = true;
                 if(glitchBossMesh) glitchBossMesh.visible = false;
             } else if (menuCore) { menuCore.visible = false; }
-
             // GLITCH BOSS UPDATE
             if (boss && boss.active && boss.isGlitch && glitchBossMesh && !isSupernovaExploding) {
                 glitchBossMesh.visible = true;
@@ -1113,11 +1045,9 @@
                 // Color Pulse
                 const hue = (Date.now() % 2000) / 2000;
                 glitchBossMesh.material.color.setHSL(hue, 1, 0.5);
-
             } else if (glitchBossMesh) {
                 glitchBossMesh.visible = false;
             }
-
             // BOSS UPDATES (Original Boss)
             if (isPhase2Active && bossPhase2Mesh && !isSupernovaExploding && (!boss || !boss.isGlitch)) {
                 bossPhase2Mesh.visible = true;
@@ -1136,7 +1066,6 @@
                         bossShieldMesh.scale.set(pulse, pulse, pulse);
                     }
                 }
-
                 const baseScale = 4 + Math.sin(Date.now() * 0.01) * 0.5; 
                 bossPhase2Mesh.scale.set(baseScale, baseScale, baseScale);
                 bossPhase2Mesh.position.x += (targetX - bossPhase2Mesh.position.x) * 0.2;
@@ -1144,13 +1073,11 @@
                 if(bossPhase2Mesh.material) bossPhase2Mesh.material.color.setHex(0xff3300);
                 bossPhase2Mesh.rotation.z = 0;
             } else if (bossPhase2Mesh && !isSupernovaExploding) { bossPhase2Mesh.visible = false; }
-
             if (isSupernovaExploding) {
                 const scale = supernovaMesh.scale.x + 3;
                 supernovaMesh.scale.set(scale, scale, scale);
                 supernovaMesh.rotation.y += 0.1;
                 supernovaMesh.material.opacity -= 0.015;
-
                 const positions = supernovaParticles.geometry.attributes.position.array;
                 for(let i=0; i<supernovaVelocities.length/3; i++) {
                     positions[i*3] += supernovaVelocities[i*3];
@@ -1159,18 +1086,15 @@
                 }
                 supernovaParticles.geometry.attributes.position.needsUpdate = true;
                 supernovaParticles.material.opacity -= 0.01;
-
                 if (supernovaMesh.material.opacity <= 0) {
                     isSupernovaExploding = false;
                     supernovaMesh.visible = false;
                     supernovaParticles.visible = false;
                 }
             }
-
             if (stars) { stars.rotation.y += 0.0005; stars.rotation.x += 0.0002; }
             if (renderer && scene && camera) renderer.render(scene, camera);
         }
-
         window.addEventListener('resize', () => {
             if(camera && renderer) {
                 camera.aspect = window.innerWidth / window.innerHeight;
@@ -1178,7 +1102,6 @@
                 renderer.setSize(window.innerWidth, window.innerHeight);
             }
         });
-
         // --- UPDATED INPUT HANDLING ---
         window.addEventListener('keydown', e => {
             if (gameState === STATE.PLAYING) {
@@ -1190,13 +1113,11 @@
                 }
             }
         });
-
         window.addEventListener('keyup', e => {
             const k = e.key.toLowerCase();
             if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
             if (keys.hasOwnProperty(k)) keys[k] = false;
         });
-
         function updateInput(e) {
             if (gameState === STATE.PLAYING) e.preventDefault();
             let cx, cy;
@@ -1213,7 +1134,6 @@
         window.addEventListener('touchstart', updateInput, {passive: false});
         window.addEventListener('touchmove', updateInput, {passive: false});
         window.addEventListener('touchend', () => mouse.down = false);
-
         /**
          * GAME LOGIC
          */
@@ -1222,7 +1142,7 @@
         const GLITCH_SEQUENCE = ['glitch_teleport_rapid', 'glitch_grid', 'glitch_clones', 'glitch_grid', 'glitch_teleport_fire'];
         const SNAKE_SEQUENCE = ['snake_sine_fire', 'snake_orb_deploy', 'snake_sine_fire', 'snake_rush'];
         const BINARY_SEQUENCE = ['binary_assault'];
-
+        const SYNTAX_SEQUENCE = ['syntax_ram', 'syntax_shift', 'syntax_lag', 'syntax_shift', 'syntax_laser', 'syntax_ram'];
         // --- DIFFICULTY SETTINGS ---
         const DIFFICULTY = {
             NORMAL: {
@@ -1251,7 +1171,6 @@
             }
         };
         let currentSettings = DIFFICULTY.NORMAL;
-
         class Particle {
             constructor(x, y, color, speed, size, life) {
                 this.x = x; this.y = y; this.color = color;
@@ -1276,7 +1195,6 @@
                 ctx.globalAlpha = 1;
             }
         }
-
         class Drop {
             constructor(x, y, type) {
                 this.x = x; this.y = y;
@@ -1288,7 +1206,6 @@
                 this.y += 1.0; 
                 this.rot += 0.05;
                 if (this.y > height + 20) this.active = false;
-
                 if (player && player.active) {
                     // MAGNET LOGIC: Gently pull stars towards player
                     if (this.type === 'star') {
@@ -1304,7 +1221,6 @@
                              this.y += (dy / dist) * pullSpeed;
                          }
                     }
-
                     let dist = Math.hypot(this.x - player.x, this.y - player.y);
                     if (dist < 40) this.collect();
                 }
@@ -1349,7 +1265,6 @@
                 ctx.restore();
             }
         }
-
         class Bullet {
             constructor(x, y, vx, vy, type, damage) {
                 this.x = x; this.y = y; this.vx = vx; this.vy = vy;
@@ -1392,6 +1307,9 @@
                     this.color = '#0088ff'; this.size = 12; this.damage = 15;
                 } else if (type === 'spinner_shot') {
                     this.color = '#aa00ff'; this.size = 6; this.damage = 10;
+                } else if (type === 'digit_ball') {
+                    this.color = '#00ff00'; this.size = 10; this.damage = 15;
+                    this.digit = Math.random() > 0.5 ? '1' : '0';
                 }
             }
             update() {
@@ -1413,7 +1331,6 @@
                     }
                     return; // Stationary
                 }
-
                 if (this.type === 'snake_orb_turret') {
                    this.fireTimer++;
                    if (this.fireTimer < 40) { this.x += this.vx; this.y += this.vy; }
@@ -1432,7 +1349,6 @@
                    if (player.active && Math.hypot(this.x - player.x, this.y - player.y) < 30) { player.hit(10); }
                    return; 
                 }
-
                 if (this.type === 'missile' && player.active && this.guidanceTimer > 0) {
                     let dx = player.x - this.x; let dy = player.y - this.y;
                     let targetAngle = Math.atan2(dy, dx);
@@ -1460,7 +1376,6 @@
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < -100 || this.x > width + 100 || this.y < -100 || this.y > height + 100) this.active = false;
             }
-
             draw() {
                 if (this.type === 'player') {
                     ctx.save();
@@ -1473,7 +1388,6 @@
                     ctx.restore();
                     return;
                 }
-
                 if (this.type === 'glitch_laser') {
                       ctx.save();
                       if(this.warmup > 0) {
@@ -1493,10 +1407,16 @@
                       ctx.restore();
                       return;
                 }
-
+                if (this.type === 'digit_ball') {
+                    ctx.save();
+                    ctx.fillStyle = '#00ff00';
+                    ctx.font = '20px monospace';
+                    ctx.fillText(this.digit, this.x, this.y);
+                    ctx.restore();
+                    return;
+                }
                 ctx.shadowBlur = 10; ctx.shadowColor = this.color; 
                 ctx.fillStyle = this.color;
-
                 if (this.type === 'missile') {
                     ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
                     ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-5, 5); ctx.lineTo(-5, -5); ctx.fill();
@@ -1615,7 +1535,6 @@
                 }
             }
         }
-
         class MineLayer {
             constructor(x, y) {
                 this.x = x; this.y = y;
@@ -1660,7 +1579,6 @@
                 }
             }
         }
-
         class Player {
             constructor() {
                 this.x = width / 2; this.y = height - 100;
@@ -1674,7 +1592,6 @@
                 this.maxHp = baseHp + bonusHp;
                 this.hp = this.maxHp;
                 playerHpEl.innerText = Math.floor(this.hp);
-
                 let bonusDamage = 0;
                 const cannonLevel = stats.cannonLvl;
                 for(let i=0; i < cannonLevel; i++) { bonusDamage += CANNON_UPGRADES.bonuses[i]; }
@@ -1683,6 +1600,8 @@
                 // Status Effects
                 this.frozenTimer = 0;
                 this.burnTimer = 0;
+                this.controlsReversedTimer = 0;
+                this.lagSlowTimer = 0;
                 
                 // Ability
                 this.hasLaser = stats.laserUnlocked;
@@ -1701,6 +1620,25 @@
             }
             update() {
                 if (!this.active) return;
+                
+                // Control Reversal Logic
+                if (this.controlsReversedTimer > 0) {
+                    this.controlsReversedTimer--;
+                    if (this.controlsReversedTimer % 10 === 0) {
+                        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                        ctx.fillRect(0,0,width,height);
+                    }
+                    if (this.controlsReversedTimer === 0) {
+                        waveText.style.opacity = 0; // Hide warning
+                    }
+                }
+                
+                // Lag Spike Logic (Slow Motion)
+                let currentSpeed = this.speed;
+                if (this.lagSlowTimer > 0) {
+                    this.lagSlowTimer--;
+                    currentSpeed = 2; // Super slow
+                }
                 
                 // Ability Cooldown
                 if (this.abilityCooldown > 0) {
@@ -1722,7 +1660,6 @@
                     // FX
                     particles.push(new Particle(this.x + (Math.random()-0.5)*20, this.y, '#00ffff', 2, 4, 10));
                 }
-
                 // Handle Freeze Status
                 if (this.frozenTimer > 0) {
                     this.frozenTimer--;
@@ -1735,29 +1672,51 @@
                         particles.push(new Particle(this.x + (Math.random()-0.5)*30, this.y + (Math.random()-0.5)*30, '#ff4400', 1, 3, 20));
                     }
                 }
-
                 if (gameState === STATE.PLAYING) {
                     // Only move if not frozen
                     if (this.frozenTimer <= 0) {
                         let dx = 0, dy = 0;
-                        if (keys.ArrowUp || keys.w) dy -= this.speed;
-                        if (keys.ArrowDown || keys.s) dy += this.speed;
-                        if (keys.ArrowLeft || keys.a) dx -= this.speed;
-                        if (keys.ArrowRight || keys.d) dx += this.speed;
+                        
+                        // KEYBOARD INPUT
+                        if (keys.ArrowUp || keys.w) dy -= currentSpeed;
+                        if (keys.ArrowDown || keys.s) dy += currentSpeed;
+                        if (keys.ArrowLeft || keys.a) dx -= currentSpeed;
+                        if (keys.ArrowRight || keys.d) dx += currentSpeed;
+                        
+                        // Apply Control Reversal
+                        if (this.controlsReversedTimer > 0) {
+                            dx = -dx;
+                            dy = -dy;
+                        }
+                        
                         if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
+                        
                         if (dx !== 0 || dy !== 0) {
                             this.x += dx; this.y += dy;
+                            // Sync mouse target so it doesn't snap back when you release keys
                             mouse.targetX = this.x; mouse.targetY = this.y;
                         } else if (mouse.targetX !== undefined) {
-                            this.x += (mouse.targetX - this.x) * 0.15;
-                            this.y += (mouse.targetY - this.y) * 0.15;
+                            // MOUSE FOLLOW LOGIC
+                            // Calculate vector to mouse
+                            let vmx = mouse.targetX - this.x;
+                            let vmy = mouse.targetY - this.y;
+                            
+                            // Apply Reversal to Vector (Push AWAY from mouse)
+                            if (this.controlsReversedTimer > 0) {
+                                vmx = -vmx;
+                                vmy = -vmy;
+                            }
+                            
+                            // Apply speed/drag
+                            this.x += vmx * 0.15;
+                            this.y += vmy * 0.15;
                         }
                         this.x = Math.max(20, Math.min(width - 20, this.x));
                         this.y = Math.max(20, Math.min(height - 20, this.y));
                     }
-
                     // SHOOTING (SINGLE SHOT)
-                    if (frames % 6 === 0) {
+                    let fireRate = (this.lagSlowTimer > 0) ? 12 : 6; // Slower fire in lag
+                    if (frames % fireRate === 0) {
                         bullets.push(new Bullet(this.x, this.y - 20, 0, -15, 'player', this.damage));
                     }
                 }
@@ -1787,23 +1746,19 @@
                 
                 // Fuselage
                 ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(8, -5); ctx.lineTo(8, 15); ctx.lineTo(0, 25); ctx.lineTo(-8, 15); ctx.lineTo(-8, -5); ctx.closePath(); ctx.fill();
-
                 // Wings
                 ctx.fillStyle = '#008888';
                 ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(25, 15); ctx.lineTo(25, 25); ctx.lineTo(8, 15); ctx.closePath(); ctx.fill();
                 ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(-25, 15); ctx.lineTo(-25, 25); ctx.lineTo(-8, 15); ctx.closePath(); ctx.fill();
-
                 // Cockpit
                 ctx.fillStyle = '#000';
                 ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(3, 0); ctx.lineTo(0, 5); ctx.lineTo(-3, 0); ctx.fill();
-
                 // Ice Overlay
                 if (this.frozenTimer > 0) {
                     ctx.fillStyle = 'rgba(0, 200, 255, 0.6)';
                     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
                     ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(30, 0); ctx.lineTo(0, 35); ctx.lineTo(-30, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
                 }
-
                 ctx.restore();
                 
                 // Draw BEAM
@@ -1847,8 +1802,21 @@
                      for(let i=0; i<10; i++) particles.push(new Particle(this.x, this.y, '#ffaa00', 4, 4, 30));
                  }
             }
+            reverseControls() {
+                this.controlsReversedTimer = 120; // 2 Seconds
+                waveText.innerText = "CONTROLS REVERSED";
+                waveText.style.color = "#ff0000";
+                waveText.style.opacity = 1;
+                waveText.style.transform = "scale(1)";
+                waveText.style.textShadow = "0 0 10px red";
+                
+                // Random Teleport
+                this.x = Math.random() * (width - 40) + 20;
+                this.y = Math.random() * (height - 40) + 20;
+                
+                for(let i=0; i<20; i++) particles.push(new Particle(this.x, this.y, '#00ff00', 5, 5, 30));
+            }
         }
-
         class SwarmEnemy {
             constructor(x, y) {
                 this.x = x; this.y = y; this.origX = x; this.origY = y;
@@ -1886,7 +1854,6 @@
                 }
             }
         }
-
         class HeavyStriker {
             constructor(x, y) {
                 this.x = x; this.y = y; this.vx = (Math.random() < 0.5 ? -1 : 1) * 2;
@@ -1934,7 +1901,6 @@
                 }
             }
         }
-
         class LaserEnemy {
             constructor(x, y) {
                 this.x = x; this.y = y;
@@ -2005,7 +1971,7 @@
                 }
             }
         }
-
+        
         class Boss {
             constructor() {
                 this.x = width / 2; this.y = -100; this.targetY = 150;
@@ -2025,6 +1991,7 @@
                 this.isGlitch = false; // Stage 3 Boss
                 this.isSnake = false; // Stage 4 Boss
                 this.isBinaryStars = false; // Stage 5 Boss (Replaces Hive Mother)
+                this.isSyntaxError = false; // Stage 6 Boss
                 this.snakePath = []; // For snake movement history
                 this.clones = []; // For glitch boss
                 this.targetX = width / 2; 
@@ -2035,12 +2002,13 @@
                 this.twinRed = null;
                 this.twinBlue = null;
                 this.binaryAngle = 0;
-
+                // Stage 6 Props (Syntax Error)
+                this.currentShape = 'mess'; // 'mess', 'dragon', 'ball', 'ship'
+                this.lagSpikeActive = false;
                 // Shield Props
                 this.shieldHp = 0;
                 this.maxShieldHp = 500;
             }
-
             // Called when starting Stage 2 specifically
             initAsStage2() {
                 this.isPhaseTwo = false; 
@@ -2048,6 +2016,7 @@
                 this.isGlitch = false;
                 this.isSnake = false;
                 this.isBinaryStars = false;
+                this.isSyntaxError = false;
                 this.damageMultiplier = 1.5;
                 this.maxHp = (activeDifficultyMode === 'hard') ? 6000 : 3000;
                 this.hp = this.maxHp;
@@ -2056,7 +2025,6 @@
                 bossName.style.color = "#ff0000";
                 isPhase2Active = false; 
             }
-
             // Called when starting Stage 3 specifically
             initAsStage3() {
                 this.isPhaseTwo = false;
@@ -2064,6 +2032,7 @@
                 this.isGlitch = true;
                 this.isSnake = false;
                 this.isBinaryStars = false;
+                this.isSyntaxError = false;
                 this.damageMultiplier = 2.0;
                 this.maxHp = (activeDifficultyMode === 'hard') ? 4000 : 4000;
                 this.hp = this.maxHp;
@@ -2072,13 +2041,13 @@
                 isPhase2Active = false;
                 this.clones = [];
             }
-
             // Called when starting Stage 4 (Beginner OR Expert)
             initAsStage4() {
                 this.isPhaseTwo = false;
                 this.isTerminator = false;
                 this.isGlitch = false;
                 this.isBinaryStars = false;
+                this.isSyntaxError = false;
                 this.isSnake = true;
                 
                 if (activeDifficultyMode === 'hard') {
@@ -2103,7 +2072,6 @@
                     this.snakePath.push({x: width/2, y: -100});
                 }
             }
-
             // Called when starting Stage 5 (Beginner)
             initAsStage5() {
                 this.isPhaseTwo = false;
@@ -2111,6 +2079,7 @@
                 this.isGlitch = false;
                 this.isSnake = false;
                 this.isBinaryStars = true;
+                this.isSyntaxError = false;
                 this.damageMultiplier = 1.0;
                 
                 // Each twin has 2500 HP
@@ -2126,16 +2095,31 @@
                 this.targetY = 150; 
                 this.binaryAngle = 0;
             }
-
+            // Called when starting Stage 6 (Beginner)
+            initAsStage6() {
+                this.isPhaseTwo = false;
+                this.isTerminator = false;
+                this.isGlitch = false;
+                this.isSnake = false;
+                this.isBinaryStars = false;
+                this.isSyntaxError = true;
+                this.damageMultiplier = 1.5;
+                this.maxHp = 6000;
+                this.hp = this.maxHp;
+                bossName.innerText = "THE SYNTAX ERROR";
+                bossName.style.fontFamily = "Courier New, monospace";
+                bossName.style.color = "#00ff00";
+                bossName.style.textShadow = "0 0 5px #00ff00";
+                isPhase2Active = false;
+                this.currentShape = 'mess';
+            }
             activate() {
                 this.active = true;
                 bossHud.style.opacity = 1;
             }
-
             update() {
                 if (!this.active) return;
                 if (this.flashTimer > 0) this.flashTimer--;
-
                 if (this.phase === 'entry') {
                     this.y += (this.targetY - this.y) * 0.05;
                     // If snake, also update path during entry
@@ -2149,13 +2133,54 @@
                     }
                     return;
                 }
+                // --- SYNTAX ERROR LOGIC ---
+                if (this.isSyntaxError) {
+                    // True Form Trigger
+                    if (!this.isPhaseTwo && this.hp < this.maxHp / 2) {
+                        this.isPhaseTwo = true;
+                        bossName.innerText = "FATAL EXCEPTION";
+                        bossName.style.color = "#ff0000";
+                        waveText.innerText = "TRUE FORM REVEALED";
+                        waveText.style.color = "#ff0000";
+                        waveText.style.opacity = 1;
+                        waveText.style.transform = "scale(1)";
+                        setTimeout(() => { waveText.style.opacity = 0; }, 2000);
+                        for(let i=0; i<50; i++) particles.push(new Particle(this.x, this.y, '#00ff00', 8, 5, 60));
+                    }
+                    
+                    // True Form Passive Attack (Digit Balls)
+                    if (this.isPhaseTwo && frames % 60 === 0) {
+                        let angle = Math.atan2(player.y - this.y, player.x - this.x);
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*6, Math.sin(angle)*6, 'digit_ball'));
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.5)*6, Math.sin(angle-0.5)*6, 'digit_ball'));
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.5)*6, Math.sin(angle+0.5)*6, 'digit_ball'));
+                    }
 
+                    // Lag Spike Movement (Boss moves fast, Player is slow)
+                    if (this.lagSpikeActive) {
+                         // Teleporting chaotically
+                         if (frames % 10 === 0) {
+                             this.x = Math.max(50, Math.min(width-50, this.x + (Math.random()-0.5)*300));
+                             this.y = Math.max(50, Math.min(300, this.y + (Math.random()-0.5)*100));
+                         }
+                    } else if (this.currentAttack === 'syntax_ram') {
+                         // Ram movement
+                         this.y += 15;
+                         if(this.y > height + 100) {
+                             this.y = -100;
+                             this.x = player.x; // Re-target
+                         }
+                    } else {
+                        // Standard hover
+                        this.x = width/2 + Math.sin(frames * 0.05) * 200;
+                        this.y = 150 + Math.cos(frames * 0.03) * 50;
+                    }
+                }
                 // --- BINARY STARS LOGIC ---
-                if (this.isBinaryStars) {
+                else if (this.isBinaryStars) {
                     // Center hover
                     this.y = this.targetY + Math.sin(frames * 0.02) * 20;
                     this.x = width/2 + Math.cos(frames * 0.01) * 50;
-
                     // Orbit logic
                     this.binaryAngle += 0.03;
                     const radius = 100;
@@ -2196,17 +2221,14 @@
                     
                     // Add "hover" feel so it doesn't just sit exactly on player Y
                     targetY += Math.sin(time * 1.5) * 100; 
-
                     // Rush overrides (Slower rush undulation)
                     if (this.currentAttack === 'snake_rush') {
                         targetY = player.y + Math.sin(frames * 0.05) * 150; 
                         targetX = (width / 2) + Math.sin(frames * 0.04) * ampX; 
                     }
-
                     // Reduced lerp speeds for smoother, heavier movement
                     this.x += (targetX - this.x) * 0.03; 
                     this.y += (targetY - this.y) * 0.04; 
-
                     // Record history for body segments
                     this.snakePath.unshift({x: this.x, y: this.y});
                     if (this.snakePath.length > 300) this.snakePath.pop();
@@ -2268,14 +2290,13 @@
                 
                 this.attackTimer++;
                 
-                // Passive Spawn (Disabled for Terminator & Glitch & Snake & Binary)
-                if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isBinaryStars && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
+                // Passive Spawn (Disabled for special bosses)
+                if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isBinaryStars && !this.isSyntaxError && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
                       enemies.push(new SwarmEnemy(this.x - 40, this.y));
                       enemies.push(new SwarmEnemy(this.x + 40, this.y));
                 }
                 this.handleAttack();
             }
-
             triggerShredderMode() {
                 waveText.innerText = "OPERATION SHREDDER";
                 waveText.style.color = "#ff0000";
@@ -2284,7 +2305,6 @@
                 setTimeout(() => { waveText.style.opacity = 0; }, 2000);
                 for(let i=0; i<50; i++) particles.push(new Particle(this.x, this.y, '#ff0000', 8, 5, 60));
             }
-
             triggerPhaseTwo() {
                 this.isPhaseTwo = true;
                 this.damageMultiplier = 2; 
@@ -2294,12 +2314,10 @@
                 bossName.innerText = "System Core: OMEGA UNLEASHED";
                 bossName.style.color = "#ffaa00";
                 isPhase2Active = true;
-
                 // TRIGGER SHIELD
                 this.shieldHp = 1000;
                 bossShieldContainer.style.display = "block";
                 bossShieldBar.style.width = "100%";
-
                 createShockwave(this.x, this.y);
                 
                 flashOverlay.style.transition = 'none';
@@ -2308,13 +2326,13 @@
                 flashOverlay.style.transition = 'opacity 2s ease-out';
                 flashOverlay.style.opacity = 0;
             }
-
             startNextAttack() {
                 let seq = ATTACK_SEQUENCE;
                 if(this.isTerminator) seq = TERMINATOR_SEQUENCE;
                 if(this.isGlitch) seq = GLITCH_SEQUENCE;
                 if(this.isSnake) seq = SNAKE_SEQUENCE;
                 if(this.isBinaryStars) seq = BINARY_SEQUENCE;
+                if(this.isSyntaxError) seq = SYNTAX_SEQUENCE;
                 
                 if (this.sequenceIndex >= seq.length) this.sequenceIndex = 0;
                 this.currentAttack = seq[this.sequenceIndex];
@@ -2322,10 +2340,7 @@
                 this.sequenceIndex++;
                 
                 let phaseName = this.currentAttack.toUpperCase();
-                if(phaseName.startsWith("TERMINATOR_")) phaseName = phaseName.replace("TERMINATOR_", "");
-                if(phaseName.startsWith("GLITCH_")) phaseName = phaseName.replace("GLITCH_", "");
-                if(phaseName.startsWith("SNAKE_")) phaseName = phaseName.replace("SNAKE_", "");
-                if(phaseName.startsWith("BINARY_")) phaseName = phaseName.replace("BINARY_", "");
+                phaseName = phaseName.replace(/^(TERMINATOR|GLITCH|SNAKE|BINARY|SYNTAX)_/, "");
                 
                 phaseDebug.innerText = `PHASE: ${phaseName}`;
                 
@@ -2333,16 +2348,53 @@
                 this.laserAngle = Math.PI / 2;
                 this.lockTarget = false; 
                 this.clones = []; // Reset clones
+                this.lagSpikeActive = false; // Reset Lag Spike
             }
-
             handleAttack() {
                 switch(this.currentAttack) {
+                    // --- SYNTAX ERROR ATTACKS ---
+                    case 'syntax_ram':
+                        this.currentShape = 'ball';
+                        // Movement handled in update()
+                        if (this.attackTimer > 150) this.startNextAttack();
+                        break;
+                    case 'syntax_shift':
+                         if (this.attackTimer === 1) {
+                             const shapes = ['mess', 'dragon', 'ball', 'ship'];
+                             this.currentShape = shapes[Math.floor(Math.random() * shapes.length)];
+                             for(let i=0; i<20; i++) particles.push(new Particle(this.x, this.y, '#00ff00', 5, 5, 30));
+                         }
+                         if (this.attackTimer > 50) this.startNextAttack();
+                         break;
+                    case 'syntax_lag':
+                         this.currentShape = 'mess';
+                         this.lagSpikeActive = true;
+                         player.lagSlowTimer = 2; // Keep refreshing it
+                         if (this.attackTimer > 200) {
+                             this.lagSpikeActive = false;
+                             this.startNextAttack();
+                         }
+                         break;
+                    case 'syntax_laser':
+                         this.currentShape = 'ship';
+                         if (this.attackTimer < 60) {
+                             // Charge
+                             this.laserCharge = this.attackTimer/60;
+                         } else if (this.attackTimer < 140) {
+                             // Fire
+                             this.laserActive = true;
+                             if(Math.abs(player.x - this.x) < 40) player.hit(2);
+                         } else {
+                             this.laserActive = false;
+                             this.startNextAttack();
+                         }
+                         break;
+                        
                     // --- BINARY STARS ATTACK ---
                     case 'binary_assault':
                         // If one dies, the other rages (double fire rate)
                         let redRate = this.twinBlue.active ? 60 : 30; // 60 normally, 30 if blue dead
                         let blueRate = this.twinRed.active ? 80 : 40; // 80 normally, 40 if red dead
-
                         // Red Fires (Fireballs - Spread of 3)
                         if (this.twinRed.active && this.attackTimer % redRate === 0) {
                             let angle = Math.atan2(player.y - this.twinRed.y, player.x - this.twinRed.x);
@@ -2364,7 +2416,6 @@
                         // Loop indefinite
                         if(this.attackTimer > 1000) this.startNextAttack();
                         break;
-
                     // --- SNAKE BOSS ATTACKS ---
                     case 'snake_sine_fire':
                         // Head shoots green venom spread (Slower fire rate)
@@ -2376,7 +2427,6 @@
                         }
                         if (this.attackTimer > 250) this.startNextAttack();
                         break;
-
                     case 'snake_orb_deploy':
                         if (this.attackTimer === 20) {
                             // Deploy 2 orbs from BODY segments (approx segment 15 and 30)
@@ -2394,7 +2444,6 @@
                         }
                         if (this.attackTimer > 100) this.startNextAttack();
                         break;
-
                     case 'snake_segment_laser':
                         // Middle segments shoot sideways (Slower fire rate)
                         if (this.attackTimer % 50 === 0 && this.attackTimer < 240) { // Was 30
@@ -2414,7 +2463,6 @@
                         }
                         if (this.attackTimer > 260) this.startNextAttack();
                         break;
-
                     case 'snake_rush':
                         // Movement speed is increased in update(), just do minor firing here
                         if (this.attackTimer % 20 === 0) { // Was 10
@@ -2422,7 +2470,6 @@
                         }
                         if (this.attackTimer > 200) this.startNextAttack();
                         break;
-
                     // --- GLITCH ATTACKS ---
                     case 'glitch_teleport_rapid':
                         // Teleport every 40 frames and shoot
@@ -2453,7 +2500,6 @@
                         }
                         if (this.attackTimer > 150) this.startNextAttack();
                         break;
-
                     case 'glitch_clones':
                         if (this.attackTimer === 10) {
                             // Spawn 2 random clones
@@ -2507,14 +2553,12 @@
                         }
                         if (this.attackTimer > 250) this.startNextAttack();
                         break;
-
                     case 'terminator_rapid':
                          if (this.attackTimer % 10 === 0 && this.attackTimer < 150) {
                             bullets.push(new Bullet(this.x, this.y + 40, (Math.random()-0.5)*2, 8, 'fireball'));
                          }
                          if (this.attackTimer > 200) this.startNextAttack();
                          break;
-
                     case 'terminator_laser':
                         if (this.attackTimer < 60) {
                             this.laserCharge = this.attackTimer / 60;
@@ -2536,7 +2580,6 @@
                             if (this.attackTimer > 200) this.startNextAttack();
                         }
                         break;
-
                     // --- STANDARD BOSS ATTACKS ---
                     case 'laser':
                         if (this.attackTimer < 60) {
@@ -2571,7 +2614,6 @@
                             if (this.attackTimer > 200) this.startNextAttack();
                         }
                         break;
-
                     case 'swarm':
                          if (this.attackTimer === 1) {
                             let count = this.isPhaseTwo ? 15 : 10;
@@ -2621,10 +2663,71 @@
                         break;
                 }
             }
-
             draw() {
                 if (!this.active) return;
                 
+                // --- SYNTAX ERROR DRAWING ---
+                if (this.isSyntaxError) {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    
+                    // Flash Colors
+                    const colors = ['#00ff00', '#ffffff', '#ff00ff', '#000000'];
+                    ctx.fillStyle = colors[Math.floor(Math.random()*colors.length)];
+                    ctx.font = '24px monospace';
+                    
+                    // LAG SPIKE VISUAL
+                    if (this.lagSpikeActive) {
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillText("BUFFERING...", -50, -60);
+                    }
+                    
+                    // Draw based on Shape
+                    if (this.currentShape === 'mess') {
+                        // Random characters cloud
+                        for(let i=0; i<10; i++) {
+                             let char = String.fromCharCode(33 + Math.random() * 90);
+                             ctx.fillText(char, (Math.random()-0.5)*100, (Math.random()-0.5)*100);
+                        }
+                    } else if (this.currentShape === 'ball') {
+                         // Clump
+                         for(let i=0; i<30; i++) {
+                             let char = String.fromCharCode(48 + Math.floor(Math.random() * 10)); // Numbers
+                             let angle = Math.random() * Math.PI * 2;
+                             let r = Math.random() * 40;
+                             ctx.fillText(char, Math.cos(angle)*r, Math.sin(angle)*r);
+                        }
+                        // Spikes
+                        ctx.strokeStyle = '#00ff00';
+                        for(let i=0; i<8; i++) {
+                            ctx.beginPath(); ctx.moveTo(0,0); 
+                            let a = (Math.PI*2/8)*i + frames*0.1;
+                            ctx.lineTo(Math.cos(a)*60, Math.sin(a)*60);
+                            ctx.stroke();
+                        }
+                    } else if (this.currentShape === 'dragon') {
+                         // Trail
+                         for(let i=0; i<10; i++) {
+                             let char = "ERROR";
+                             ctx.fillText(char, Math.sin(frames*0.1 + i)*30, i*20);
+                         }
+                    } else if (this.currentShape === 'ship') {
+                         // ASCII Ship
+                         ctx.fillStyle = '#00ff00';
+                         ctx.fillText("  /\\  ", -20, -20);
+                         ctx.fillText(" /  \\ ", -20, 0);
+                         ctx.fillText("/____\\", -20, 20);
+                         
+                         // Laser
+                         if(this.laserActive) {
+                             ctx.fillStyle = '#00ff00';
+                             ctx.fillRect(-10, 30, 20, 1000);
+                         }
+                    }
+                    
+                    ctx.restore();
+                    return;
+                }
                 // --- BINARY STARS DRAWING ---
                 if (this.isBinaryStars) {
                     const rageMode = (!this.twinRed.active || !this.twinBlue.active);
@@ -2655,7 +2758,6 @@
                         ctx.closePath();
                         ctx.fill();
                         ctx.restore();
-
                         // Inner Core
                         const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 30);
                         grad.addColorStop(0, '#ffff00');
@@ -2666,7 +2768,6 @@
                         
                         ctx.restore();
                     }
-
                     // Draw BLUE Twin (The Moon/Crystal)
                     if (this.twinBlue.active) {
                         ctx.save();
@@ -2679,7 +2780,6 @@
                         } else {
                             ctx.shadowBlur = 20; ctx.shadowColor = '#0088ff';
                         }
-
                         // Rotating Crystal Rings
                         ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
                         ctx.lineWidth = 3;
@@ -2689,13 +2789,11 @@
                         ctx.rotate(-frames * (rageMode ? 0.1 : 0.03));
                         ctx.strokeRect(-45, -45, 90, 90);
                         ctx.restore();
-
                         // Ring 2
                         ctx.save();
                         ctx.rotate(frames * (rageMode ? 0.08 : 0.02) + Math.PI/4);
                         ctx.strokeRect(-35, -35, 70, 70);
                         ctx.restore();
-
                         // Core
                         const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 25);
                         grad.addColorStop(0, '#ffffff');
@@ -2713,7 +2811,6 @@
                     }
                     return;
                 }
-
                 // --- SNAKE BOSS DRAWING ---
                 if (this.isSnake) {
                     // Increased segment count and reduced spacing for "connected" look
@@ -2724,7 +2821,6 @@
                     const mainColor = (activeDifficultyMode === 'hard') ? '#ff0000' : '#00ff00';
                     const altColor = (activeDifficultyMode === 'hard') ? '#880000' : '#008800';
                     const detailColor = (activeDifficultyMode === 'hard') ? '#ff4444' : '#00aa00';
-
                     for (let i = segmentCount; i > 0; i--) {
                         let pathIndex = i * spacing;
                         if (pathIndex < this.snakePath.length) {
@@ -2735,7 +2831,6 @@
                                 let d = Math.hypot(pos.x - player.x, pos.y - player.y);
                                 if (d < 30) player.hit(2);
                             }
-
                             ctx.save();
                             ctx.translate(pos.x, pos.y);
                             ctx.fillStyle = (i % 4 === 0) ? altColor : detailColor;
@@ -2743,7 +2838,6 @@
                             
                             // Taper size from head to tail
                             let size = 30 * (1 - i/(segmentCount + 10)) + 8;
-
                             // Segment Shape
                             ctx.beginPath();
                             ctx.arc(0, 0, size, 0, Math.PI * 2);
@@ -2752,7 +2846,6 @@
                             ctx.restore();
                         }
                     }
-
                     // Draw Head
                     ctx.save();
                     ctx.translate(this.x, this.y);
@@ -2768,12 +2861,10 @@
                     ctx.lineTo(-30, -15);
                     ctx.closePath();
                     ctx.fill();
-
                     // Eyes (Bigger)
                     ctx.fillStyle = (activeDifficultyMode === 'hard') ? '#ffff00' : '#ff0000';
                     ctx.beginPath(); ctx.arc(-15, 0, 6, 0, Math.PI*2); ctx.fill();
                     ctx.beginPath(); ctx.arc(15, 0, 6, 0, Math.PI*2); ctx.fill();
-
                     if (this.flashTimer > 0) {
                         ctx.globalCompositeOperation = 'source-over';
                         ctx.fillStyle = "white";
@@ -2782,7 +2873,6 @@
                     ctx.restore();
                     return;
                 }
-
                 // --- GLITCH DRAWING ---
                 if (this.isGlitch) {
                     ctx.save();
@@ -2802,9 +2892,7 @@
                     // Inner Fill
                     ctx.fillStyle = `rgba(255, 0, 255, ${0.2 + Math.sin(frames*0.1)*0.2})`;
                     ctx.fill();
-
                     ctx.restore();
-
                     // Draw Clones
                     this.clones.forEach(c => {
                         ctx.save();
@@ -2821,7 +2909,6 @@
                     
                     return;
                 }
-
                 // --- TERMINATOR DRAWING (GIANT RED SHIP) ---
                 if (this.isTerminator) {
                       ctx.save(); ctx.translate(this.x, this.y);
@@ -2863,7 +2950,6 @@
                           ctx.fill();
                           ctx.restore();
                       }
-
                       ctx.scale(4, 4);
                       ctx.shadowBlur = 20; ctx.shadowColor = '#ff0000'; ctx.fillStyle = '#ffcccc';
                       ctx.rotate(Math.PI);
@@ -2873,20 +2959,16 @@
                       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-20, 10); ctx.lineTo(-20, 25); ctx.lineTo(-5, 15); ctx.fill();
                       ctx.fillStyle = "#ffaa00";
                       ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI*2); ctx.fill();
-
                       if (this.flashTimer > 0) {
                           ctx.globalCompositeOperation = 'source-over';
                           ctx.fillStyle = "white";
                           ctx.fill();
                       }
-
                       ctx.restore();
                       return; 
                 }
-
                 // --- STANDARD BOSS DRAWING ---
                 ctx.save(); ctx.translate(this.x, this.y);
-
                 // 2D SHIELD BACKUP FOR SYSTEM CORE
                 if (this.shieldHp > 0) {
                       ctx.save();
@@ -2900,10 +2982,8 @@
                       ctx.fill();
                       ctx.restore();
                 }
-
                 if (this.currentAttack === 'laser') {
                     ctx.rotate(this.laserAngle - Math.PI / 2);
-
                     if (this.attackTimer < 60) {
                         ctx.strokeStyle = `rgba(255, 0, 0, ${Math.random()})`; ctx.lineWidth = 1;
                         for(let i=0; i<5; i++) {
@@ -2915,21 +2995,18 @@
                         ctx.save(); ctx.shadowBlur = 40; ctx.shadowColor = "red";
                         const beamWidth = 60 + Math.sin(frames * 0.5) * 5;
                         ctx.fillStyle = this.isPhaseTwo ? "rgba(255, 50, 0, 0.9)" : "rgba(255, 0, 0, 0.7)";
-                        ctx.fillRect(-beamWidth/2, 0, beamWidth, height * 1.5); 
+                        ctx.fillRect(-beamWidth/2, 0, beamWidth, height * 1.5); 
                         ctx.fillStyle = "white"; ctx.fillRect(-beamWidth/4, 0, beamWidth/2, height * 1.5);
                         ctx.restore();
                         
                         if (Math.random() > 0.5) particles.push(new Particle(this.x, this.y + 50, '#ff5500', 5, 8, 30));
                     }
                 }
-
                 if (this.isPhaseTwo) ctx.globalAlpha = 0.5;
-
                 if (this.flashTimer > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffffff'; }
                 else { ctx.shadowBlur = 30; ctx.shadowColor = '#ff3300'; ctx.fillStyle = '#880000'; }
                 
-                ctx.rotate(-(this.laserAngle - Math.PI / 2)); 
-
+                ctx.rotate(-(this.laserAngle - Math.PI / 2)); 
                 ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.fill();
                 if (this.flashTimer > 0) ctx.globalCompositeOperation = 'source-over';
                 
@@ -2939,7 +3016,6 @@
                 ctx.beginPath(); ctx.arc(0, 0, 70, -frames * 0.1, -frames * 0.1 + 4); ctx.stroke();
                 ctx.restore();
                 ctx.globalAlpha = 1.0;
-
                 if (this.currentAttack === 'redLines') {
                     this.redLines.forEach(l => {
                         ctx.save();
@@ -2976,7 +3052,6 @@
                     // This method is awkward for multi-part bosses without passing coordinates.
                     // I will update the collision logic in the bullet loop instead.
                 }
-
                 // SHIELD MECHANIC
                 if (this.shieldHp > 0) {
                     this.shieldHp -= damage;
@@ -2986,9 +3061,8 @@
                         bossShieldContainer.style.display = "none"; // Hide bar container when shield is gone
                         for(let i=0; i<30; i++) particles.push(new Particle(this.x, this.y, '#00ffff', 5, 5, 40));
                     }
-                    return; 
+                    return; 
                 }
-
                 this.hp -= damage;
                 this.flashTimer = 4;
                 bossHealthBar.style.width = `${(this.hp / this.maxHp) * 100}%`;
@@ -3011,24 +3085,20 @@
                     for(let k=0; k<dropCount; k++) {
                         drops.push(new Drop(this.x + (Math.random()-0.5)*500, this.y, 'star'));
                     }
-
                     triggerSupernova();
                     startVictorySequence();
                 }
             }
         }
-
         function createShockwave(x, y) {
              for(let i=0; i<360; i+=10) {
                  let angle = i * Math.PI / 180;
                  particles.push(new Particle(x, y, '#ffffff', 10, 3, 20));
              }
         }
-
         let currentWave = 0;
         let waveClearCheckReady = false; 
         let midGameBriefingShown = false; // Flag to prevent loop
-
         function startWave(wave) {
             // Check for Stage 5 Wave 5 Interruption (Mine Layer)
             if (currentLevelIndex === 5 && wave === 5 && !midGameBriefingShown) {
@@ -3040,13 +3110,11 @@
                 showMidGameBriefing();
                 return;
             }
-
             currentWave = wave;
             waveClearCheckReady = false; 
             
             // Cap logic
             let maxWaves = (currentLevelIndex === 1) ? 10 : 15;
-
             waveText.innerText = currentWave === maxWaves ? "BOSS WARNING" : `WAVE ${currentWave}`;
             waveText.style.color = "#fff"; 
             waveText.style.opacity = 1;
@@ -3058,7 +3126,6 @@
                 spawnWaveEnemies(wave);
             }, 2000);
         }
-
         function showMidGameBriefing() {
             gameState = STATE.BRIEFING;
             const screen = document.getElementById('mid-game-screen');
@@ -3069,7 +3136,6 @@
             // Customize Briefing Text based on Level
             const contentDiv = screen.querySelector('.radio-content');
             const descDiv = screen.querySelectorAll('div')[2]; // The description text div
-
             if (currentLevelIndex === 5) {
                 contentDiv.innerHTML = 'NEW THREAT IDENTIFIED: <span style="color: #fff; font-weight: bold;">THE MINE LAYER</span>';
                 descDiv.innerHTML = 'Heavily armored transport dropping high-yield proximity mines. <br><span style="color: #ff4444;">AVOID THE RED ZONES. DO NOT TOUCH THE MINES.</span>';
@@ -3077,11 +3143,9 @@
                 contentDiv.innerHTML = 'NEW THREAT IDENTIFIED: <span style="color: #fff; font-weight: bold;">THE SPINNER</span>';
                 descDiv.innerHTML = 'Rotational defense unit. Fires a suppression web in all cardinal directions. <br><span style="color: #ff00ff;">TIMING IS KEY. WEAVE THROUGH THE PATTERN.</span>';
             }
-
             // Start preview animation
             animateBriefingPreview();
         }
-
         function closeMidGameBriefing(e) {
             if(e) e.preventDefault();
             const screen = document.getElementById('mid-game-screen');
@@ -3091,11 +3155,16 @@
             // Resume wave start
             startWave(5);
         }
-
         let briefingFrame = 0;
         function animateBriefingPreview() {
             if (gameState !== STATE.BRIEFING) return;
             requestAnimationFrame(animateBriefingPreview);
+            
+            const canvas = document.getElementById('briefingCanvas');
+            const bCtx = canvas.getContext('2d');
+            bCtx.clearRect(0, 0, 80, 80);
+            bCtx.save();
+            bCtx.translate(40, 40);
             
             if (currentLevelIndex === 5) {
                 // --- DRAW MINE LAYER ---
@@ -3126,7 +3195,6 @@
                 // Core
                 bCtx.fillStyle = '#ffffff';
                 bCtx.fillRect(-5, -5, 10, 10);
-
                 // Preview shots moving out
                 if (briefingFrame % 60 < 20) {
                      bCtx.fillStyle = '#ff00ff';
@@ -3140,13 +3208,12 @@
             }
             
             bCtx.restore();
+            briefingFrame++;
         }
-
         function spawnWaveEnemies(wave) {
             let maxDelay = 0;
             const countMult = currentSettings.enemyCountMult;
             const isHard = (activeDifficultyMode === 'hard');
-
             // ===============================================
             // EXPERT STAGE 4 (THE VIPER'S NEST)
             // ===============================================
@@ -3213,6 +3280,28 @@
                      boss.initAsStage3();
                  }
             } 
+            // ===============================================
+            // STAGE 6 (BEGINNER) - THE SYNTAX ERROR
+            // ===============================================
+            else if (currentLevelIndex === 6 && !isHard) {
+                if (wave >= 1 && wave <= 14) {
+                     let count = 10 + wave * 2;
+                     for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*200);
+                     if (wave % 3 === 0) {
+                         enemies.push(new HeavyStriker(width/2, -100));
+                         enemies.push(new LaserEnemy(width/4, -200));
+                         enemies.push(new LaserEnemy(width*0.75, -200));
+                     }
+                     if (wave === 10) {
+                         enemies.push(new MineLayer(width/2, -100));
+                         enemies.push(new Spinner(width*0.2, -200));
+                         enemies.push(new Spinner(width*0.8, -200));
+                     }
+                } else if (wave === 15) {
+                    boss.activate();
+                    boss.initAsStage6();
+                }
+            }
             // ===============================================
             // STAGE 5 (BEGINNER) - THE HIVE
             // ===============================================
@@ -3374,19 +3463,15 @@
                     boss.activate();
                 }
             }
-
             setTimeout(() => {
                 waveClearCheckReady = true;
             }, maxDelay + 500);
         }
-
         let player, boss;
         let particles = [], bullets = [], enemies = [], drops = [];
         let score = 0, frames = 0;
         let victoryTimer = 0;
-
         // --- RESTORING MISSING UI & GAMEPLAY FUNCTIONS ---
-
         function showExpertSelect() {
             gameState = STATE.LEVEL_SELECT;
             menuScreen.style.opacity = '0';
@@ -3395,7 +3480,6 @@
             expertSelectScreen.style.pointerEvents = 'auto';
             updateLevelGrid('hard');
         }
-
         function showRookieSelect() {
             gameState = STATE.LEVEL_SELECT;
             menuScreen.style.opacity = '0';
@@ -3404,16 +3488,13 @@
             levelSelectScreen.style.pointerEvents = 'auto';
             updateLevelGrid('easy');
         }
-
         function updateLevelGrid(mode) {
             const stats = (mode === 'easy') ? gameData.easy : gameData.hard;
             const gridId = (mode === 'easy') ? 'easy-grid' : 'hard-grid';
             const gridEl = document.getElementById(gridId);
             
             gridEl.innerHTML = ''; 
-
-            let maxLevels = (mode === 'easy') ? 5 : 4; 
-
+            let maxLevels = (mode === 'easy') ? 6 : 4; 
             for(let i = 1; i <= maxLevels; i++) { 
                 const btn = document.createElement('button');
                 btn.className = 'level-btn';
@@ -3430,15 +3511,12 @@
                 gridEl.appendChild(btn);
             }
         }
-
         function showLockedMessage() {
             msgModal.style.display = 'block';
         }
-
         function closeMsgModal() {
             msgModal.style.display = 'none';
         }
-
         function openHangar(mode) {
             gameState = STATE.HANGAR;
             currentHangarMode = mode; 
@@ -3455,7 +3533,6 @@
             const hCtx = hCanvas.getContext('2d');
             hCtx.clearRect(0,0,200,200);
             hCtx.save(); hCtx.translate(100, 100); hCtx.scale(3, 3); // Scaled up to 3x for detail
-
             // --- DETAILED SHIP GRAPHICS ---
             const bodyGrad = hCtx.createLinearGradient(0, -20, 0, 20);
             bodyGrad.addColorStop(0, '#ffffff');
@@ -3467,19 +3544,16 @@
             
             // Fuselage
             hCtx.beginPath(); hCtx.moveTo(0, -25); hCtx.lineTo(8, -5); hCtx.lineTo(8, 15); hCtx.lineTo(0, 25); hCtx.lineTo(-8, 15); hCtx.lineTo(-8, -5); hCtx.closePath(); hCtx.fill();
-
             // Wings
             hCtx.fillStyle = '#008888';
             hCtx.beginPath(); hCtx.moveTo(8, 0); hCtx.lineTo(25, 15); hCtx.lineTo(25, 25); hCtx.lineTo(8, 15); hCtx.closePath(); hCtx.fill();
             hCtx.beginPath(); hCtx.moveTo(-8, 0); hCtx.lineTo(-25, 15); hCtx.lineTo(-25, 25); hCtx.lineTo(-8, 15); hCtx.closePath(); hCtx.fill();
-
             // Cockpit
             hCtx.fillStyle = '#000';
             hCtx.beginPath(); hCtx.moveTo(0, -10); hCtx.lineTo(3, 0); hCtx.lineTo(0, 5); hCtx.lineTo(-3, 0); hCtx.fill();
             
             hCtx.restore();
         }
-
         function closeHangar() {
             gameState = STATE.LEVEL_SELECT; 
             hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
@@ -3492,7 +3566,6 @@
                 updateLevelGrid('easy');
             }
         }
-
         function updateHangarUI() {
             const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
             document.getElementById('hangar-stars').innerText = stats.stars;
@@ -3509,7 +3582,6 @@
                 if (index < hpLvl) seg.classList.add('active');
                 else seg.classList.remove('active');
             });
-
             hpBonusEl.innerText = "+" + totalBonusHp + " HP";
             if (hpLvl >= 5) {
                 hpBtn.innerText = "MAXED";
@@ -3523,20 +3595,17 @@
                 hpBtn.style.cursor = "pointer";
                 hpBtn.onclick = upgradeHealth; 
             }
-
             // --- UPDATE CANNON CARD ---
             const cannonLvl = stats.cannonLvl;
             const cannonBtn = document.getElementById('btn-upg-cannon');
             const cannonBonusEl = document.getElementById('cannon-bonus');
             let totalBonusDmg = 0;
             for(let i=0; i<cannonLvl; i++) totalBonusDmg += CANNON_UPGRADES.bonuses[i];
-
             const cannonSegments = document.querySelectorAll('#cannon-bar-container .level-segment');
             cannonSegments.forEach((seg, index) => {
                 if (index < cannonLvl) seg.classList.add('active');
                 else seg.classList.remove('active');
             });
-
             cannonBonusEl.innerText = "+" + totalBonusDmg + " DMG";
             if (cannonLvl >= 5) {
                 cannonBtn.innerText = "MAXED";
@@ -3576,7 +3645,6 @@
                 cardLaser.style.borderTopColor = "#ff00ff";
             }
         }
-
         function upgradeHealth() {
             const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
             const currentLvl = stats.healthLvl;
@@ -3591,7 +3659,6 @@
                 alert("Not enough stars!"); 
             }
         }
-
         function upgradeCannon() {
             const stats = (currentHangarMode === 'easy') ? gameData.easy : gameData.hard;
             const currentLvl = stats.cannonLvl;
@@ -3634,12 +3701,10 @@
                 setTimeout(()=>ctx.setTransform(1,0,0,1,0,0), 500);
             }
         }
-
         function updateUI() {
             if(activeDifficultyMode === 'easy') starsDisplayEl.innerText = gameData.easy.stars;
             else starsDisplayEl.innerText = gameData.hard.stars;
         }
-
         function launchMission(mode, levelIndex) {
             currentSettings = mode === 'hard' ? DIFFICULTY.NORMAL : DIFFICULTY.EASY;
             activeDifficultyMode = mode;
@@ -3651,7 +3716,6 @@
             hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
             startIntro(mode, levelIndex);
         }
-
         function startIntro(mode, levelIndex) {
             gameState = STATE.INTRO;
             introScreen.style.opacity = '1'; introScreen.style.pointerEvents = 'auto';
@@ -3667,13 +3731,11 @@
                 if(introTimer <= 0) skipIntro();
             }, 1000);
         }
-
         function skipIntro() {
             if(introInterval) clearInterval(introInterval);
             introScreen.style.opacity = '0'; introScreen.style.pointerEvents = 'none';
             startActualGameplay();
         }
-
         function startActualGameplay() {
             document.activeElement.blur();
             player = new Player();
@@ -3696,7 +3758,6 @@
             midGameBriefingShown = false; // Reset briefing flag
             startWave(1);
         }
-
         function startVictorySequence() {
             gameState = STATE.VICTORY_SEQUENCE;
             victoryTimer = 0;
@@ -3709,7 +3770,6 @@
             waveText.style.color = "#00ff00";
             waveText.style.textShadow = "0 0 20px #00ff00";
         }
-
         function resetToMenu() {
             gameState = STATE.MENU;
             menuScreen.style.opacity = '1'; menuScreen.style.pointerEvents = 'auto';
@@ -3729,43 +3789,37 @@
             dropMeshes.forEach(d => { if(d.mesh) { scene.remove(d.mesh); d.mesh.geometry.dispose(); d.mesh.material.dispose(); } });
             dropMeshes = [];
         }
-
         function gameOver(win) {
             gameState = STATE.GAMEOVER;
             gameOverScreen.style.opacity = '1'; gameOverScreen.style.pointerEvents = 'auto';
             gameOverTitle.innerText = win ? "STAGE CLEARED" : "MISSION FAILED";
             gameOverTitle.style.color = win ? "#00ff00" : "#ff0000";
             waveText.style.opacity = 0;
-
             // STAGE PROGRESSION LOGIC
             if (win) {
                 const stats = (activeDifficultyMode === 'easy') ? gameData.easy : gameData.hard;
-                let cap = (activeDifficultyMode === 'easy') ? 5 : 4; 
+                let cap = (activeDifficultyMode === 'easy') ? 6 : 4; 
                 if (currentLevelIndex === stats.maxStage && stats.maxStage < cap) {
                     stats.maxStage++;
                     saveData();
                 }
             }
         }
-
         function animateGame() {
             requestAnimationFrame(animateGame);
             ctx.fillStyle = 'rgba(5, 5, 5, 0.4)'; ctx.fillRect(0, 0, width, height);
             if (frames % 2 === 0) { ctx.fillStyle = `rgba(255, 255, 255, ${Math.random()})`; ctx.fillRect(Math.random() * width, 0, 2, 2); }
             if (gameState === STATE.MENU) return;
-
             frames++;
             if (gameState === STATE.PLAYING || gameState === STATE.GAMEOVER || gameState === STATE.VICTORY_SEQUENCE) {
                 
                 // FIXED MAX WAVES LOGIC: Stage 1 = 10, All others = 15
                 let maxWaves = (currentLevelIndex === 1) ? 10 : 15;
-
                 if (gameState === STATE.PLAYING && currentWave < maxWaves && enemies.length === 0 && waveClearCheckReady) {
                     if (frames % 60 === 0) { 
                         startWave(currentWave + 1);
                     }
                 }
-
                 if (boss && boss.active) { 
                     boss.update(); 
                     boss.draw(); 
@@ -3792,13 +3846,11 @@
                             }
                             if (!e.active) enemies.splice(i, 1);
                         }
-
                         // Drops Loop
                         for (let i = drops.length - 1; i >= 0; i--) {
                             let d = drops[i]; d.update(); d.draw();
                             if (!d.active) drops.splice(i, 1);
                         }
-
                         // Bullets Loop
                         for (let i = bullets.length - 1; i >= 0; i--) {
                             let b = bullets[i]; b.update(); b.draw();
@@ -3852,32 +3904,6 @@
                                             }
                                             b.active = false; hit = true;
                                         }
-                                    } else if (boss.isHiveMother) {
-                                        // Check Mini Hives
-                                        let hitMini = false;
-                                        if (boss.miniHives) {
-                                            for(let m of boss.miniHives) {
-                                                if (!m.active) continue;
-                                                if (Math.hypot(b.x - m.x, b.y - m.y) < 35) {
-                                                    m.hp -= b.damage;
-                                                    if(m.hp <= 0) {
-                                                        m.active = false;
-                                                        for(let k=0; k<15; k++) particles.push(new Particle(m.x, m.y, '#9370db', 3, 3, 20));
-                                                    } else {
-                                                        particles.push(new Particle(b.x, b.y, '#d8bfd8', 1, 2, 5));
-                                                    }
-                                                    b.active = false; hitMini = true; hit = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        if (!hitMini) {
-                                            let dx = b.x - boss.x; let dy = b.y - boss.y;
-                                            if (Math.sqrt(dx*dx + dy*dy) < 90) { 
-                                                 boss.hit(b.damage); b.active = false; hit = true;
-                                                 particles.push(new Particle(b.x, b.y, '#9900ff', 2, 2, 10));
-                                            }
-                                        }
                                     } else {
                                         // Standard Boss Hit
                                         let dx = b.x - boss.x; let dy = b.y - boss.y;
@@ -3887,7 +3913,6 @@
                                         }
                                     }
                                 } // End Boss Hit
-
                                 // Enemy Hit
                                 if (!hit) {
                                     enemies.forEach(e => {
@@ -3908,6 +3933,11 @@
                             else {
                                 let dx = b.x - player.x; let dy = b.y - player.y;
                                 if (Math.sqrt(dx*dx + dy*dy) < 15) { 
+                                    // Special bullet hit effects
+                                    if (b.type === 'digit_ball') {
+                                        player.reverseControls();
+                                    }
+                                    
                                     player.hit(b.damage); b.active = false;
                                     
                                     // Status Effects
@@ -3940,13 +3970,11 @@
                 let p = particles[i]; p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1);
             }
         }
-
         // --- DEV TOOL LOGIC ---
         function toggleDevPanel() {
             const panel = document.getElementById('dev-panel');
             panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         }
-
         function devSetStars() {
             const val = parseInt(document.getElementById('dev-stars').value);
             if (!isNaN(val)) {
@@ -3957,7 +3985,6 @@
                 if (gameState === STATE.HANGAR) updateHangarUI();
             }
         }
-
         function devSkipWave() {
             const val = parseInt(document.getElementById('dev-wave').value);
             if (!isNaN(val) && val > 0 && gameState === STATE.PLAYING) {
@@ -3967,7 +3994,6 @@
                 startWave(val);
             }
         }
-
         function devKillAll() {
             if (gameState === STATE.PLAYING) {
                 enemies.forEach(e => e.hit(10000));
@@ -3977,7 +4003,6 @@
                 }
             }
         }
-
         function devResetStarsOnly() {
             gameData.easy.stars = 0;
             gameData.hard.stars = 0;
@@ -3986,7 +4011,6 @@
             if (gameState === STATE.HANGAR) updateHangarUI();
             alert("Stars Reset!");
         }
-
         function devResetUpgradesOnly() {
             gameData.easy.healthLvl = 0;
             gameData.easy.cannonLvl = 0;
@@ -3997,7 +4021,6 @@
             if (gameState === STATE.HANGAR) updateHangarUI();
             alert("Upgrades Reset!");
         }
-
         function devResetLevelsOnly() {
             gameData.easy.maxStage = 1;
             gameData.hard.maxStage = 1;
@@ -4008,9 +4031,8 @@
             }
             alert("Levels Reset to 1!");
         }
-
         function devUnlockStages() {
-            gameData.easy.maxStage = 5;
+            gameData.easy.maxStage = 6;
             gameData.hard.maxStage = 4; 
             saveData();
             if (gameState === STATE.LEVEL_SELECT) {
@@ -4019,7 +4041,6 @@
             }
             alert("All Stages Unlocked!");
         }
-
         function devGlobalWipe() {
             if(confirm("WARNING: This will wipe ALL progress (Stars, Upgrades, Levels) and reset the game to factory state (Welcome Screen). Continue?")) {
                 localStorage.removeItem('neonVoidData_v3');
@@ -4032,7 +4053,6 @@
             localStorage.removeItem('neonVoid_visited');
             alert("Intro Cookie Cleared. Refresh to see Welcome.");
         }
-
         // --- NEW WELCOME & COOKIE LOGIC ---
         function checkFirstVisit() {
             const visited = getCookie('neonVoid_visited');
@@ -4044,7 +4064,6 @@
                 startWelcomeSequence();
             }
         }
-
         function startWelcomeSequence() {
             gameState = STATE.WELCOME;
             // Hide other screens
@@ -4063,7 +4082,6 @@
             const footer = document.getElementById('welcome-footer');
             footer.innerHTML = `<button class="btn" style="border-color: #00ff00; color: #00ff00;" onclick="showCookieStep()">INITIATE LINK</button>`;
         }
-
         function showCookieStep() {
             document.getElementById('welcome-header').innerText = "PROTOCOL CHECK";
             document.getElementById('welcome-content').innerHTML = 
@@ -4077,7 +4095,6 @@
                 </div>
             `;
         }
-
         function handleCookies(accepted) {
             const screen = document.getElementById('welcome-screen');
             screen.style.opacity = '0';
@@ -4095,7 +4112,6 @@
             
             resetToMenu();
         }
-
         document.getElementById('start-hard-btn').addEventListener('click', showExpertSelect);
         document.getElementById('start-easy-btn').addEventListener('click', showRookieSelect);
         if (typeof THREE !== 'undefined') initThreeMenu();
