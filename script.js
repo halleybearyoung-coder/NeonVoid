@@ -3418,10 +3418,10 @@ function playBriefingAudio(text) {
 
     // Voice Selection (English Commander Style)
     const voices = window.speechSynthesis.getVoices();
-    // Prefer "Google UK English Male" or any "en-GB" voice
-    const commanderVoice = voices.find(v => v.name.includes('Google UK English Male')) ||
-        voices.find(v => v.lang === 'en-GB' && v.name.includes('Male')) ||
-        voices.find(v => v.lang === 'en-GB') ||
+    // Prefer "Google US English" or "en-US" male voice
+    const commanderVoice = voices.find(v => v.name.includes('Google US English')) ||
+        voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('male')) ||
+        voices.find(v => v.lang === 'en-US') ||
         voices.find(v => v.lang.startsWith('en'));
 
     if (commanderVoice) briefingUtterance.voice = commanderVoice;
