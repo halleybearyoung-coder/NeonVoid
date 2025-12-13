@@ -2775,7 +2775,7 @@ function updateLevelGrid(mode) {
     const gridEl = document.getElementById(gridId);
 
     gridEl.innerHTML = '';
-    let maxLevels = (mode === 'easy') ? 6 : 4;
+    let maxLevels = (mode === 'easy') ? 6 : 5;
     for (let i = 1; i <= maxLevels; i++) {
         const btn = document.createElement('button');
         btn.className = 'level-btn';
@@ -3430,6 +3430,12 @@ function playBriefingAudio(text) {
     briefingUtterance.rate = 0.9;  // Deliberate pace
     briefingUtterance.volume = 1.0;
 
+    // Wait for voices if needed (simple retry)
+    if (voices.length === 0) {
+        setTimeout(() => playBriefingAudio(text), 100);
+        return;
+    }
+
     window.speechSynthesis.speak(briefingUtterance);
 }
 
@@ -3442,7 +3448,9 @@ function stopBriefingAudio() {
 // Ensure voices are loaded
 if (window.speechSynthesis) {
     window.speechSynthesis.onvoiceschanged = () => {
-        // Voices loaded
+        // If we are in intro state and audio hasn't played (or we want to retry), we could.
+        // But simpler: just ensure voices are ready for next time.
+        console.log("Voices loaded");
     };
 }
 
