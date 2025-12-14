@@ -2641,10 +2641,21 @@ function spawnWaveEnemies(wave) {
             for (let i = 0; i < density; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), i * 100);
             if (wave > 5) { enemies.push(new LaserEnemy(width * 0.1, -100)); enemies.push(new LaserEnemy(width * 0.9, -100)); }
             if (wave > 7) { enemies.push(new HeavyStriker(width * 0.5, -200)); }
+
+            // MISSILITE SPAWN (Wave 5)
+            if (wave === 5) {
+                enemies.push(new Missilite(width * 0.5, 100));
+            }
         } else if (wave >= 9 && wave <= 14) {
             enemies.push(new HeavyStriker(width * 0.2, -100));
             enemies.push(new HeavyStriker(width * 0.8, -100));
             enemies.push(new LaserEnemy(width * 0.5, -200));
+
+            // MISSILITE SPAWN (Wave 9 & 12)
+            if (wave === 9 || wave === 12) {
+                enemies.push(new Missilite(Math.random() * (width - 100) + 50, 120));
+            }
+
             let fastSwarm = 20 + wave;
             for (let i = 0; i < fastSwarm; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random() * width, -50)), i * 80);
         } else if (wave === 15) {
