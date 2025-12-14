@@ -745,25 +745,35 @@ class Spinner {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
-        ctx.fillStyle = '#4b0082'; // Indigo/Purple
-        ctx.strokeStyle = '#ff00ff';
-        ctx.lineWidth = 3;
+
+        // SAWBLADE DESIGN
         ctx.shadowBlur = 15; ctx.shadowColor = '#ff00ff';
+        ctx.fillStyle = '#2a002a';
+        ctx.strokeStyle = '#ff00ff';
+        ctx.lineWidth = 2;
 
-        // Square Body
-        ctx.fillRect(-20, -20, 40, 40);
-        ctx.strokeRect(-20, -20, 40, 40);
+        // Central Hub
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
 
-        // Core
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(-5, -5, 10, 10);
+        // Blades
+        const teeth = 8;
+        ctx.beginPath();
+        for (let i = 0; i < teeth * 2; i++) {
+            const r = (i % 2 === 0) ? 15 : 35;
+            const a = (Math.PI * 2 * i) / (teeth * 2);
+            ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+        ctx.closePath();
+        ctx.stroke();
 
-        // Gun ports
+        // Inner detail
         ctx.fillStyle = '#ff00ff';
-        ctx.fillRect(-5, -25, 10, 5); // Top
-        ctx.fillRect(-5, 20, 10, 5);  // Bottom
-        ctx.fillRect(-25, -5, 5, 10); // Left
-        ctx.fillRect(20, -5, 5, 10);  // Right
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
 
         ctx.restore();
     }
@@ -802,14 +812,34 @@ class MineLayer {
         if (!this.active) return;
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#006600';
+
+        // BIO-POD DESIGN
+        ctx.shadowBlur = 10; ctx.shadowColor = '#00ff00';
+
+        // Outer Shell
+        ctx.fillStyle = '#003300';
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 2;
-        ctx.shadowBlur = 10; ctx.shadowColor = '#00ff00';
-        ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#00ff00';
-        ctx.fillRect(-5, -12, 10, 24);
-        ctx.fillRect(-12, -5, 24, 10);
+        ctx.beginPath();
+        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Pulsing Core
+        const pulse = Math.sin(frames * 0.1) * 5;
+        ctx.fillStyle = `rgba(0, 255, 0, ${0.5 + Math.sin(frames * 0.1) * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, 12 + pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tech Lines
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-25, 0); ctx.lineTo(25, 0);
+        ctx.moveTo(0, -25); ctx.lineTo(0, 25);
+        ctx.stroke();
+
         ctx.restore();
     }
     hit(damage) {
@@ -1082,10 +1112,32 @@ class SwarmEnemy {
     }
     draw() {
         if (!this.active) return;
-        ctx.fillStyle = '#aa00aa'; ctx.shadowBlur = 5; ctx.shadowColor = '#ff00ff';
-        ctx.beginPath(); ctx.moveTo(this.x, this.y - 10); ctx.lineTo(this.x + 10, this.y);
-        ctx.lineTo(this.x, this.y + 10); ctx.lineTo(this.x - 10, this.y); ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // ARROWHEAD DRONE DESIGN
+        ctx.shadowBlur = 5; ctx.shadowColor = '#ff00ff';
+
+        // Main Body
+        ctx.fillStyle = '#220022';
+        ctx.strokeStyle = '#ff00ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 15);   // Nose
+        ctx.lineTo(12, -10); // Right Wing
+        ctx.lineTo(0, -5);   // Rear Center
+        ctx.lineTo(-12, -10);// Left Wing
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Engine Glow
+        ctx.fillStyle = '#ff00ff';
+        ctx.beginPath();
+        ctx.arc(0, -5, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
     }
     hit(damage) {
         this.hp -= damage;
@@ -1123,16 +1175,44 @@ class HeavyStriker {
     }
     draw() {
         if (!this.active) return;
-        ctx.fillStyle = '#ff4400';
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // HEAVY ARMOR DESIGN
         ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000';
+
+        // Main Hull
+        ctx.fillStyle = '#440000';
+        ctx.strokeStyle = '#ff4400';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(this.x, this.y + 20);
-        ctx.lineTo(this.x + 20, this.y - 10);
-        ctx.lineTo(this.x - 20, this.y - 10);
+        ctx.moveTo(0, 25);
+        ctx.lineTo(20, 10);
+        ctx.lineTo(20, -15);
+        ctx.lineTo(10, -25);
+        ctx.lineTo(-10, -25);
+        ctx.lineTo(-20, -15);
+        ctx.lineTo(-20, 10);
+        ctx.closePath();
         ctx.fill();
+        ctx.stroke();
+
+        // Cockpit/Core
         ctx.fillStyle = '#ffff00';
-        ctx.fillRect(this.x - 5, this.y - 5, 10, 10);
-        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(0, 5);
+        ctx.lineTo(5, -5);
+        ctx.lineTo(0, -10);
+        ctx.lineTo(-5, -5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Weapon Mounts
+        ctx.fillStyle = '#ff4400';
+        ctx.fillRect(-22, 0, 4, 15);
+        ctx.fillRect(18, 0, 4, 15);
+
+        ctx.restore();
     }
     hit(damage) {
         this.hp -= damage;
@@ -1195,14 +1275,36 @@ class LaserEnemy {
             ctx.lineTo(this.x, height);
             ctx.stroke();
         }
-        ctx.fillStyle = '#00aaaa';
+
+        // FLOATING CANNON DESIGN
+        ctx.save();
+        ctx.translate(this.x, this.y);
         ctx.shadowBlur = 10; ctx.shadowColor = '#00ffff';
+
+        // Main Body (Crescent)
+        ctx.fillStyle = '#004444';
+        ctx.strokeStyle = '#00aaaa';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(this.x, this.y + 15);
-        ctx.lineTo(this.x + 15, this.y - 15);
-        ctx.lineTo(this.x - 15, this.y - 15);
+        ctx.arc(0, 0, 20, Math.PI, 0); // Top half circle
+        ctx.lineTo(0, 25); // Point down
+        ctx.closePath();
         ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.stroke();
+
+        // Focusing Lens
+        ctx.fillStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Energy Rings
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
     }
     hit(damage) {
         this.hp -= damage;
