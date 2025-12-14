@@ -818,8 +818,12 @@ class Missilite {
 
         this.fireTimer--;
         if (this.fireTimer <= 0) {
-            // Fire Missile
-            bullets.push(new Bullet(this.x, this.y + 20, Math.cos(this.angle) * 4, Math.sin(this.angle) * 4, 'missile'));
+            // Fire 10 Missiles with spread
+            for (let i = 0; i < 10; i++) {
+                const spread = (Math.random() - 0.5) * 1.5; // Spread +/- 0.75 radians (~45 degrees)
+                const missileAngle = this.angle + spread;
+                bullets.push(new Bullet(this.x, this.y + 20, Math.cos(missileAngle) * 4, Math.sin(missileAngle) * 4, 'missile'));
+            }
             this.fireTimer = 180; // 3 seconds
         }
     }
@@ -1411,7 +1415,28 @@ class LaserEnemy {
             }
         } else if (this.state === 'fire') {
             if (this.timer > 30) {
-                if (Math.abs(player.x - this.x) < 20) player.hit(2);
+                // Rotated Laser Collision Logic
+                // Vector to player
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                // Laser direction vector
+                const lx = Math.cos(this.angle);
+                const ly = Math.sin(this.angle);
+
+                // Project player position onto laser vector
+                const dot = dx * lx + dy * ly;
+
+                // Check if player is "in front" (dot > 0) and close enough to the line
+                if (dot > 0) {
+                    // Perpendicular distance
+                    // Cross product in 2D is (dx*ly - dy*lx)
+                    const dist = Math.abs(dx * ly - dy * lx);
+
+                    if (dist < 20) { // Beam width approx 20
+                        player.hit(2);
+                    }
+                }
+
                 if (this.timer > 80) {
                     this.state = 'leave';
                 }
@@ -1423,33 +1448,27 @@ class LaserEnemy {
     }
     draw() {
         if (!this.active) return;
-        if (this.state === 'fire' && this.timer > 30) {
-            ctx.save();
-            // Laser beam should also rotate? For now, keep beam vertical as it's a "LaserEnemy" mechanic often implying vertical beams.
-            // But user asked for pointing. If we rotate the beam, it becomes a tracking laser.
-            // The original logic was a vertical beam: ctx.fillRect(this.x - 10, this.y, 20, height);
-            // Let's keep the beam vertical for gameplay consistency (it's a zone denial weapon), 
-            // BUT rotate the ship body to look like it's aiming.
 
-            ctx.shadowBlur = 20; ctx.shadowColor = 'cyan';
-            ctx.fillStyle = 'rgba(0, 255, 255, 0.6)';
-            ctx.fillRect(this.x - 10, this.y, 20, height);
-            ctx.fillStyle = 'white';
-            ctx.fillRect(this.x - 4, this.y, 8, height);
-            ctx.restore();
-        } else if (this.state === 'charge') {
-            ctx.strokeStyle = `rgba(0, 255, 255, ${Math.random()})`;
-            ctx.beginPath();
-            ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x, height);
-            ctx.stroke();
-        }
-
-        // FLOATING CANNON DESIGN
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle - Math.PI / 2);
 
+        if (this.state === 'fire' && this.timer > 30) {
+            // Draw Rotated Laser
+            ctx.shadowBlur = 20; ctx.shadowColor = 'cyan';
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.6)';
+            ctx.fillRect(-10, 0, 20, 1000); // Draw downwards in local space (which is rotated)
+            ctx.fillStyle = 'white';
+            ctx.fillRect(-4, 0, 8, 1000);
+        } else if (this.state === 'charge') {
+            ctx.strokeStyle = `rgba(0, 255, 255, ${Math.random()})`;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, 1000);
+            ctx.stroke();
+        }
+
+        // FLOATING CANNON DESIGN
         ctx.shadowBlur = 10; ctx.shadowColor = '#00ffff';
 
         // Main Body (Crescent)
