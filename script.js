@@ -828,39 +828,97 @@ class Missilite {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // HELICOPTER DESIGN
-        ctx.shadowBlur = 10; ctx.shadowColor = '#ffaa00';
+        // APACHE GUNSHIP DESIGN
+        ctx.shadowBlur = 15; ctx.shadowColor = '#000000';
 
-        // Rotor Blades (Spinning)
+        // Main Rotor (Blur Effect)
         ctx.save();
-        ctx.rotate(frames * 0.5);
-        ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
-        ctx.fillRect(-40, -2, 80, 4);
-        ctx.fillRect(-2, -40, 4, 80);
+        ctx.rotate(frames * 0.8);
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.5)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#111';
+        ctx.fillRect(-45, -3, 90, 6);
+        ctx.fillRect(-3, -45, 6, 90);
         ctx.restore();
 
-        // Main Body
-        ctx.rotate(this.angle * 0.2); // Slight body tilt
-        ctx.fillStyle = '#664400';
-        ctx.strokeStyle = '#ffaa00';
-        ctx.lineWidth = 2;
+        // Body Rotation
+        ctx.rotate(this.angle * 0.3); // Tilt into turn
 
-        // Fuselage
+        // Tail Boom
+        ctx.fillStyle = '#444';
         ctx.beginPath();
-        ctx.ellipse(0, 0, 25, 35, 0, 0, Math.PI * 2);
+        ctx.moveTo(0, -5);
+        ctx.lineTo(-40, -2);
+        ctx.lineTo(-45, -8); // Tail fin
+        ctx.lineTo(-40, 5);
+        ctx.lineTo(0, 10);
         ctx.fill();
+
+        // Tail Rotor
+        ctx.save();
+        ctx.translate(-45, -5);
+        ctx.rotate(frames * 1.2);
+        ctx.fillStyle = 'rgba(200, 200, 200, 0.8)';
+        ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+
+        // Main Fuselage (Metallic Gradient)
+        const grad = ctx.createLinearGradient(0, -15, 0, 15);
+        grad.addColorStop(0, '#556655'); // Military Green Light
+        grad.addColorStop(0.5, '#2f3f2f'); // Darker
+        grad.addColorStop(1, '#1a221a'); // Shadow
+        ctx.fillStyle = grad;
+
+        ctx.beginPath();
+        ctx.moveTo(25, 5);  // Nose
+        ctx.lineTo(10, -15); // Cockpit top
+        ctx.lineTo(-20, -15); // Top rear
+        ctx.lineTo(-25, 5);  // Bottom rear
+        ctx.lineTo(15, 15);  // Chin
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Cockpit
+        // Cockpit Glass (Reflective)
         ctx.fillStyle = '#00ffff';
         ctx.beginPath();
-        ctx.arc(0, 10, 10, 0, Math.PI * 2);
+        ctx.moveTo(22, 5);
+        ctx.lineTo(10, -10);
+        ctx.lineTo(0, -10);
+        ctx.lineTo(5, 5);
+        ctx.closePath();
+        ctx.fill();
+        // Glare
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.beginPath();
+        ctx.moveTo(18, 2);
+        ctx.lineTo(12, -6);
+        ctx.lineTo(8, -6);
+        ctx.closePath();
         ctx.fill();
 
-        // Weapon Pods
+        // Weapon Wings
+        ctx.fillStyle = '#333';
+        ctx.fillRect(-5, -20, 10, 40); // Wing span
+
+        // Missile Pods
+        ctx.fillStyle = '#222';
+        ctx.fillRect(-8, -22, 6, 12); // Left Pod
+        ctx.fillRect(-8, 10, 6, 12);  // Right Pod
+
+        // Missile Tips (Visible Red)
         ctx.fillStyle = '#ff0000';
-        ctx.fillRect(-30, -5, 10, 20);
-        ctx.fillRect(20, -5, 10, 20);
+        ctx.beginPath(); ctx.arc(-5, -16, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-5, 16, 2, 0, Math.PI * 2); ctx.fill();
+
+        // Engine Glow
+        ctx.shadowBlur = 10; ctx.shadowColor = '#ffaa00';
+        ctx.fillStyle = 'rgba(255, 100, 0, 0.8)';
+        ctx.beginPath(); ctx.arc(-15, -8, 3, 0, Math.PI * 2); ctx.fill();
 
         ctx.restore();
     }
@@ -2886,6 +2944,12 @@ function spawnWaveEnemies(wave) {
                 enemies.push(new Spinner(width * 0.2, -50));
                 enemies.push(new Spinner(width * 0.5, -100));
                 enemies.push(new Spinner(width * 0.8, -50));
+
+                // MISSILITE SPAWN (Stage 3 Easy)
+                if (currentLevelIndex === 3) {
+                    console.log("Spawning Missilite in Stage 3 Easy");
+                    enemies.push(new Missilite(width * 0.5, 100));
+                }
             }
 
             let count = Math.ceil(20 * countMult);
