@@ -787,6 +787,92 @@ class Spinner {
         }
     }
 }
+class Missilite {
+    constructor(x, y) {
+        console.log("Missilite created at", x, y);
+        this.x = x; this.y = -50; // Start off screen
+        this.targetY = y; // Hover height
+        this.active = true;
+        this.hp = 450; // 1.5x Heavy (300)
+        this.fireTimer = 120;
+        this.points = 800;
+        this.angle = 0;
+        this.hoverOffset = Math.random() * 100;
+    }
+    update() {
+        if (!this.active) return;
+
+        // Enter and Hover Logic
+        if (this.y < this.targetY) {
+            this.y += 2;
+        } else {
+            // Hover oscillation
+            this.y = this.targetY + Math.sin((frames + this.hoverOffset) * 0.05) * 10;
+            // Horizontal sway
+            this.x += Math.sin((frames + this.hoverOffset) * 0.02) * 1;
+        }
+
+        // Calculate angle to player (for turret)
+        const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        this.angle += (targetAngle - this.angle) * 0.05;
+
+        this.fireTimer--;
+        if (this.fireTimer <= 0) {
+            // Fire Missile
+            bullets.push(new Bullet(this.x, this.y + 20, Math.cos(this.angle) * 4, Math.sin(this.angle) * 4, 'missile'));
+            this.fireTimer = 180; // 3 seconds
+        }
+    }
+    draw() {
+        if (!this.active) return;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // HELICOPTER DESIGN
+        ctx.shadowBlur = 10; ctx.shadowColor = '#ffaa00';
+
+        // Rotor Blades (Spinning)
+        ctx.save();
+        ctx.rotate(frames * 0.5);
+        ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+        ctx.fillRect(-40, -2, 80, 4);
+        ctx.fillRect(-2, -40, 4, 80);
+        ctx.restore();
+
+        // Main Body
+        ctx.rotate(this.angle * 0.2); // Slight body tilt
+        ctx.fillStyle = '#664400';
+        ctx.strokeStyle = '#ffaa00';
+        ctx.lineWidth = 2;
+
+        // Fuselage
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 25, 35, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Cockpit
+        ctx.fillStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.arc(0, 10, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Weapon Pods
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(-30, -5, 10, 20);
+        ctx.fillRect(20, -5, 10, 20);
+
+        ctx.restore();
+    }
+    hit(damage) {
+        this.hp -= damage;
+        if (this.hp <= 0) {
+            this.active = false; score += this.points; scoreEl.innerText = score;
+            for (let i = 0; i < 20; i++) particles.push(new Particle(this.x, this.y, '#ffaa00', 5, 5, 50));
+            drops.push(new Drop(this.x, this.y, 'star'));
+        }
+    }
+}
 class MineLayer {
     constructor(x, y) {
         this.x = x; this.y = y;
@@ -2644,6 +2730,7 @@ function spawnWaveEnemies(wave) {
 
             // MISSILITE SPAWN (Wave 5)
             if (wave === 5) {
+                console.log("Spawning Missilite in Wave 5");
                 enemies.push(new Missilite(width * 0.5, 100));
             }
         } else if (wave >= 9 && wave <= 14) {
