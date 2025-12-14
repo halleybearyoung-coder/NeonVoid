@@ -1097,15 +1097,21 @@ class SwarmEnemy {
         this.timeOffset = Math.random() * 100;
         this.fireTimer = (Math.random() * 120 + 60) * currentSettings.fireRateMult;
         this.points = 100;
+        this.angle = 0;
     }
     update() {
         if (!this.active) return;
         this.x = this.origX + Math.sin((frames + this.timeOffset) * 0.05) * 50;
         this.y += 1.5;
+
+        // Calculate angle to player
+        const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        // Smooth rotation (optional, but looks better)
+        this.angle += (targetAngle - this.angle) * 0.1;
+
         this.fireTimer--;
         if (this.fireTimer <= 0) {
-            let angle = Math.atan2(player.y - this.y, player.x - this.x);
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle) * 4, Math.sin(angle) * 4, 'boss_orb'));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(this.angle) * 4, Math.sin(this.angle) * 4, 'boss_orb'));
             this.fireTimer = (120 + Math.random() * 60) * currentSettings.fireRateMult;
         }
         if (this.y > height + 20) this.active = false;
@@ -1114,6 +1120,7 @@ class SwarmEnemy {
         if (!this.active) return;
         ctx.save();
         ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle - Math.PI / 2); // Adjust for sprite orientation (pointing up/down vs right)
 
         // ARROWHEAD DRONE DESIGN
         ctx.shadowBlur = 5; ctx.shadowColor = '#ff00ff';
@@ -1123,7 +1130,7 @@ class SwarmEnemy {
         ctx.strokeStyle = '#ff00ff';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(0, 15);   // Nose
+        ctx.moveTo(0, 15);   // Nose (pointing down relative to rotation)
         ctx.lineTo(12, -10); // Right Wing
         ctx.lineTo(0, -5);   // Rear Center
         ctx.lineTo(-12, -10);// Left Wing
@@ -1155,6 +1162,7 @@ class HeavyStriker {
         this.hp = currentSettings.heavyHp;
         this.fireTimer = (Math.random() * 60 + 60) * currentSettings.fireRateMult;
         this.points = 300;
+        this.angle = 0;
     }
     update() {
         if (!this.active) return;
@@ -1163,12 +1171,16 @@ class HeavyStriker {
             this.x += this.vx;
             if (this.x < 50 || this.x > width - 50) this.vx *= -1;
         }
+
+        // Calculate angle to player
+        const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        this.angle += (targetAngle - this.angle) * 0.05; // Slower turn for heavy unit
+
         this.fireTimer--;
         if (this.fireTimer <= 0) {
-            let angle = Math.atan2(player.y - this.y, player.x - this.x);
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle) * 4, Math.sin(angle) * 4, 'boss_orb'));
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle - 0.3) * 4, Math.sin(angle - 0.3) * 4, 'boss_orb'));
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle + 0.3) * 4, Math.sin(angle + 0.3) * 4, 'boss_orb'));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(this.angle) * 4, Math.sin(this.angle) * 4, 'boss_orb'));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(this.angle - 0.3) * 4, Math.sin(this.angle - 0.3) * 4, 'boss_orb'));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(this.angle + 0.3) * 4, Math.sin(this.angle + 0.3) * 4, 'boss_orb'));
             this.fireTimer = 100 * currentSettings.fireRateMult;
         }
         if (this.y > height + 50) this.active = false;
@@ -1177,6 +1189,7 @@ class HeavyStriker {
         if (!this.active) return;
         ctx.save();
         ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle - Math.PI / 2);
 
         // HEAVY ARMOR DESIGN
         ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000';
@@ -1231,10 +1244,16 @@ class LaserEnemy {
         this.state = 'enter';
         this.timer = 0;
         this.points = 500;
+        this.angle = 0;
     }
     update() {
         if (!this.active) return;
         this.timer++;
+
+        // Calculate angle to player
+        const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        this.angle += (targetAngle - this.angle) * 0.1;
+
         if (this.state === 'enter') {
             this.y += 3;
             if (this.y > 100 + Math.random() * 100) this.state = 'charge';
@@ -1262,6 +1281,12 @@ class LaserEnemy {
         if (!this.active) return;
         if (this.state === 'fire' && this.timer > 30) {
             ctx.save();
+            // Laser beam should also rotate? For now, keep beam vertical as it's a "LaserEnemy" mechanic often implying vertical beams.
+            // But user asked for pointing. If we rotate the beam, it becomes a tracking laser.
+            // The original logic was a vertical beam: ctx.fillRect(this.x - 10, this.y, 20, height);
+            // Let's keep the beam vertical for gameplay consistency (it's a zone denial weapon), 
+            // BUT rotate the ship body to look like it's aiming.
+
             ctx.shadowBlur = 20; ctx.shadowColor = 'cyan';
             ctx.fillStyle = 'rgba(0, 255, 255, 0.6)';
             ctx.fillRect(this.x - 10, this.y, 20, height);
@@ -1279,6 +1304,8 @@ class LaserEnemy {
         // FLOATING CANNON DESIGN
         ctx.save();
         ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle - Math.PI / 2);
+
         ctx.shadowBlur = 10; ctx.shadowColor = '#00ffff';
 
         // Main Body (Crescent)
