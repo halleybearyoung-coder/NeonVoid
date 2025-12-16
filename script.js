@@ -1663,6 +1663,11 @@ class Boss {
         this.binarySeed = Math.random();
         this.binaryTimer = 0;
         this.binaryShapeChangeTime = 1800; // 30 seconds
+
+        // SEQUENCE LOGIC
+        this.sequenceState = 0; // 0:Terminator, 1:Core, 2:Phantom, 3:Binary, 4:SuperNova, 5:Final
+        this.sequenceTimer = 0;
+        this.subState = 0;
     }
     activate() {
         this.active = true;
@@ -1686,34 +1691,104 @@ class Boss {
         }
         // --- SYNTAX ERROR LOGIC ---
         if (this.isSyntaxError) {
-            // True Form Trigger
-            if (!this.isPhaseTwo && this.hp < this.maxHp / 2) {
-                this.isPhaseTwo = true;
-                bossName.innerText = "FATAL EXCEPTION";
-                bossName.style.color = "#ff0000";
-                waveText.innerText = "TRUE FORM REVEALED";
-                waveText.style.color = "#ff0000";
-                waveText.style.opacity = 1;
-                waveText.style.transform = "scale(1)";
-                setTimeout(() => { waveText.style.opacity = 0; }, 2000);
-                for (let i = 0; i < 50; i++) particles.push(new Particle(this.x, this.y, '#00ff00', 8, 5, 60));
-            }
+            this.sequenceTimer++;
 
-            // True Form Passive Attack (Digit Balls)
-            if (this.isPhaseTwo && frames % 60 === 0) {
-                let angle = Math.atan2(player.y - this.y, player.x - this.x);
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle) * 6, Math.sin(angle) * 6, 'digit_ball'));
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle - 0.5) * 6, Math.sin(angle - 0.5) * 6, 'digit_ball'));
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle + 0.5) * 6, Math.sin(angle + 0.5) * 6, 'digit_ball'));
+            // STATE 0: TERMINATOR
+            if (this.sequenceState === 0) {
+                if (this.sequenceTimer === 60) {
+                    // Trigger Laser
+                    this.currentAttack = 'terminator_laser';
+                    this.laserCharge = 0;
+                    this.laserActive = false;
+                    this.attackTimer = 0;
+                }
+                if (this.currentAttack === 'terminator_laser') {
+                    this.attackTimer++;
+                    if (this.attackTimer < 60) this.laserCharge += 1 / 60;
+                    else if (this.attackTimer === 60) { this.laserActive = true; playSound('laser_heavy'); }
+                    else if (this.attackTimer > 180) {
+                        this.currentAttack = 'none';
+                        this.sequenceState = 1;
+                        this.sequenceTimer = 0;
+                    }
+                }
             }
+            // STATE 1: SYSTEM CORE OMEGA
+            else if (this.sequenceState === 1) {
+                if (this.sequenceTimer === 60) {
+                    this.currentAttack = 'redLines';
+                    this.redLines = [];
+                    for (let i = 0; i < 5; i++) this.redLines.push({ x: Math.random() * width, damage: false });
+                    this.attackTimer = 0;
+                }
+                if (this.currentAttack === 'redLines') {
+                    this.attackTimer++;
+                    if (this.attackTimer === 60) {
+                        this.redLines.forEach(l => l.damage = true);
+                        playSound('laser_shoot');
+                    }
+                    if (this.attackTimer > 120) {
+                        this.currentAttack = 'none';
+                        this.sequenceState = 2;
+                        this.sequenceTimer = 0;
+                    }
+                }
+            }
+            // STATE 2: PHANTOM PROTOCOL
+            else if (this.sequenceState === 2) {
+                if (this.sequenceTimer === 60) {
+                    this.currentAttack = 'glitch_laser';
+                    bullets.push(new Bullet(this.x, this.y, 0, 10, 'glitch_laser')); // Vertical
+                    bullets.push(new Bullet(this.x, this.y, 10, 0, 'glitch_laser')); // Horizontal
+                    this.attackTimer = 0;
+                }
+                if (this.sequenceTimer > 180) {
+                    this.sequenceState = 3;
+                    this.sequenceTimer = 0;
+                }
+            }
+            // STATE 3: BINARY STARS (FLASH)
+            else if (this.sequenceState === 3) {
+                // Flash 5 times fast
+                if (this.sequenceTimer % 10 === 0 && this.sequenceTimer < 50) {
+                    // Toggle visual handled in draw
+                }
+                if (this.sequenceTimer > 60) {
+                    this.sequenceState = 4;
+                    this.sequenceTimer = 0;
+                }
+            }
+            // STATE 4: SUPER NOVA
+            else if (this.sequenceState === 4) {
+                // Explosion effect handled in draw
+                if (this.sequenceTimer > 120) {
+                    this.sequenceState = 5;
+                    this.sequenceTimer = 0;
+                    // Trigger "True Form" text
+                    bossName.innerText = "FATAL EXCEPTION";
+                    waveText.innerText = "TRUE FORM REVEALED";
+                    waveText.style.opacity = 1;
+                    setTimeout(() => { waveText.style.opacity = 0; }, 2000);
+                }
+            }
+            // STATE 5: FINAL FORM (CLUMP)
+            else if (this.sequenceState === 5) {
+                // Standard Syntax Error Logic (Binary Shape + Attacks)
 
-            // Binary Shape Timer
-            this.binaryTimer++;
-            if (this.binaryTimer >= this.binaryShapeChangeTime) {
-                this.binaryTimer = 0;
-                this.binarySeed = Math.random(); // Regenerate shape
-                // Glitch effect
-                for (let i = 0; i < 20; i++) particles.push(new Particle(this.x, this.y, '#ff0000', 5, 5, 30));
+                // True Form Passive Attack (Digit Balls)
+                if (frames % 60 === 0) {
+                    let angle = Math.atan2(player.y - this.y, player.x - this.x);
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle) * 6, Math.sin(angle) * 6, 'digit_ball'));
+                }
+
+                // Binary Shape Timer
+                this.binaryTimer++;
+                if (this.binaryTimer >= this.binaryShapeChangeTime) {
+                    this.binaryTimer = 0;
+                    this.binarySeed = Math.random(); // Regenerate shape
+                    // Glitch effect
+                    for (let i = 0; i < 20; i++) particles.push(new Particle(this.x, this.y, '#ff0000', 5, 5, 30));
+                }
             }
 
             // Lag Spike Movement (Boss moves fast, Player is slow)
@@ -2231,52 +2306,544 @@ class Boss {
             ctx.save();
             ctx.translate(this.x, this.y);
 
-            // Flash Colors (Terminator Theme: Red, Dark Red, White, Black)
-            const colors = ['#ff0000', '#ffffff', '#880000', '#000000'];
-            ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-            ctx.font = '24px monospace';
+            // STATE 0: TERMINATOR VISUALS
+            if (this.sequenceState === 0) {
+                // Terminator Draw Logic (Simplified)
+                ctx.scale(4, 4);
+                ctx.shadowBlur = 20; ctx.shadowColor = '#ff0000'; ctx.fillStyle = '#ffcccc';
+                ctx.rotate(Math.PI);
+                ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 15); ctx.lineTo(0, 10); ctx.lineTo(-15, 15); ctx.fill();
+                ctx.fillStyle = '#880000';
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, 10); ctx.lineTo(20, 25); ctx.lineTo(5, 15); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-20, 10); ctx.lineTo(-20, 25); ctx.lineTo(-5, 15); ctx.fill();
+                ctx.fillStyle = "#ffaa00";
+                ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
 
-            // LAG SPIKE VISUAL
-            if (this.lagSpikeActive) {
-                ctx.fillStyle = "#ffffff";
-                ctx.fillText("BUFFERING...", -50, -60);
-            }
-
-            // Draw based on Shape
-            if (this.currentShape === 'mess') {
-                // Procedural Binary Ship
-                // Use binarySeed to determine structure
-                // We'll draw a grid of 0s and 1s that form a rough ship shape
-                const size = 10;
-                const cols = 8;
-                const rows = 8;
-
-                // Seeded random function for consistency within the 30s window
-                let seed = this.binarySeed;
-                const seededRandom = () => {
-                    seed = (seed * 9301 + 49297) % 233280;
-                    return seed / 233280;
-                };
-
-                ctx.fillStyle = '#ff0000';
-                ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000';
-
-                for (let r = -rows / 2; r < rows / 2; r++) {
-                    for (let c = -cols / 2; c < cols / 2; c++) {
-                        // Mirror horizontally for symmetry
-                        let xPos = c;
-                        if (xPos < 0) xPos = Math.abs(xPos) - 1;
-
-                        // Generate value based on position and seed
-                        let val = Math.floor(seededRandom() * 2); // 0 or 1
-
-                        // Only draw some blocks to make a shape
-                        if (seededRandom() > 0.3) {
-                            ctx.fillText(val, c * 15, r * 15);
-                        }
+                // Laser Draw
+                if (this.currentAttack === 'terminator_laser') {
+                    ctx.rotate(Math.PI); // Reset rotation
+                    ctx.scale(0.25, 0.25); // Reset scale
+                    ctx.rotate(this.laserAngle - Math.PI / 2);
+                    if (this.attackTimer < 60) {
+                        ctx.fillStyle = `rgba(255, 0, 0, ${this.laserCharge})`;
+                        ctx.beginPath(); ctx.arc(0, 0, this.laserCharge * 20, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = "rgba(255, 0, 0, 0.3)"; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 1000); ctx.stroke();
+                    } else if (this.laserActive) {
+                        ctx.shadowBlur = 40; ctx.shadowColor = "red";
+                        ctx.fillStyle = "rgba(255, 0, 0, 0.9)";
+                        ctx.fillRect(-30, 0, 60, height * 1.5);
+                        ctx.fillStyle = "white";
+                        ctx.fillRect(-10, 0, 20, height * 1.5);
                     }
                 }
+            }
+            // STATE 1: SYSTEM CORE VISUALS
+            else if (this.sequenceState === 1) {
+                ctx.shadowBlur = 30; ctx.shadowColor = '#ff3300'; ctx.fillStyle = '#880000';
+                ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 5;
+                ctx.beginPath(); ctx.arc(0, 0, 60, frames * 0.1, frames * 0.1 + 4); ctx.stroke();
+                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, 70, -frames * 0.1, -frames * 0.1 + 4); ctx.stroke();
 
+                // Red Lines
+                if (this.currentAttack === 'redLines') {
+                    this.redLines.forEach(l => {
+                        ctx.save();
+                        ctx.translate(-this.x, -this.y); // Global coords
+                        if (!l.damage) {
+                            ctx.strokeStyle = `rgba(255, 0, 0, ${Math.abs(Math.sin(frames * 0.2))})`;
+                            ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
+                            ctx.beginPath(); ctx.moveTo(l.x, 0); ctx.lineTo(l.x, height); ctx.stroke();
+                        } else {
+                            ctx.shadowBlur = 20; ctx.shadowColor = '#ff0000';
+                            ctx.fillStyle = 'rgba(255, 0, 0, 0.8)'; ctx.fillRect(l.x - 20, 0, 40, height);
+                            ctx.fillStyle = '#fff'; ctx.fillRect(l.x - 2, 0, 4, height);
+                        }
+                        ctx.restore();
+                    });
+                }
+            }
+            // STATE 2: PHANTOM VISUALS
+            else if (this.sequenceState === 2) {
+                ctx.strokeStyle = '#ff00ff'; ctx.lineWidth = 3;
+                ctx.shadowBlur = 15; ctx.shadowColor = '#ff00ff';
+                ctx.beginPath(); ctx.moveTo(0, -60); ctx.lineTo(60, 0); ctx.lineTo(0, 60); ctx.lineTo(-60, 0); ctx.closePath(); ctx.stroke();
+                ctx.fillStyle = `rgba(255, 0, 255, ${0.2 + Math.sin(frames * 0.1) * 0.2})`; ctx.fill();
+            }
+            // STATE 3: BINARY STARS VISUALS
+            else if (this.sequenceState === 3) {
+                if (Math.floor(this.sequenceTimer / 5) % 2 === 0) {
+                    // Draw Blue Star
+                    ctx.fillStyle = '#00ffff'; ctx.shadowBlur = 20; ctx.shadowColor = '#00ffff';
+                    ctx.beginPath(); ctx.arc(-50, 0, 40, 0, Math.PI * 2); ctx.fill();
+                } else {
+                    // Draw Red Star
+                    ctx.fillStyle = '#ff0000'; ctx.shadowBlur = 20; ctx.shadowColor = '#ff0000';
+                    ctx.beginPath(); ctx.arc(50, 0, 40, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            // STATE 4: SUPER NOVA
+            else if (this.sequenceState === 4) {
+                ctx.save();
+                let progress = this.sequenceTimer / 120;
+                let radius = progress * width * 1.5;
+                let alpha = 1 - progress;
+                ctx.globalAlpha = alpha;
+
+                // 3D-ish Sphere Effect
+                let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.2, '#ffff00');
+                grad.addColorStop(0.5, '#ff0000');
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+            // STATE 5: FINAL FORM (CLUMP)
+            else if (this.sequenceState === 5) {
+                // CLUMP OF PIXELS AND BOSS PARTS
+
+                // 1. Glitch Diamond Background
+                ctx.save();
+                ctx.rotate(frames * 0.05);
+                ctx.strokeStyle = 'rgba(255, 0, 255, 0.5)'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.rect(-70, -70, 140, 140); ctx.stroke();
+                ctx.restore();
+
+                // 2. System Core Rings
+                ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, 60 + Math.sin(frames * 0.2) * 10, 0, Math.PI * 2); ctx.stroke();
+
+                // 3. Terminator Eye
+                ctx.fillStyle = '#ffaa00';
+                ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill();
+
+                // 4. Binary Digits Overlay (The "Pixels")
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '16px monospace';
+                for (let i = 0; i < 10; i++) {
+                    let char = Math.random() > 0.5 ? '1' : '0';
+                    ctx.fillText(char, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100);
+                }
+
+                // Flash Colors (Terminator Theme: Red, Dark Red, White, Black)
+                const colors = ['#ff0000', '#ffffff', '#880000', '#000000'];
+                ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                ctx.font = '24px monospace';
+
+                // LAG SPIKE VISUAL
+                if (this.lagSpikeActive) {
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillText("BUFFERING...", -50, -60);
+                }
+
+                // Draw based on Shape (Reusing existing logic for the core binary shape)
+                if (this.currentShape === 'mess') {
+
+                    // LAG SPIKE VISUAL
+                    if (this.lagSpikeActive) {
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillText("BUFFERING...", -50, -60);
+                    }
+
+                    // Draw based on Shape
+                    if (this.currentShape === 'mess') {
+                        // Procedural Binary Ship
+                        // Use binarySeed to determine structure
+                        // We'll draw a grid of 0s and 1s that form a rough ship shape
+                        const size = 10;
+                        const cols = 8;
+                        const rows = 8;
+
+                        // Seeded random function for consistency within the 30s window
+                        let seed = this.binarySeed;
+                        const seededRandom = () => {
+                            seed = (seed * 9301 + 49297) % 233280;
+                            return seed / 233280;
+                        };
+
+                        ctx.fillStyle = '#ff0000';
+                        ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000';
+
+                        for (let r = -rows / 2; r < rows / 2; r++) {
+                            for (let c = -cols / 2; c < cols / 2; c++) {
+                                // Mirror horizontally for symmetry
+                                let xPos = c;
+                                if (xPos < 0) xPos = Math.abs(xPos) - 1;
+
+                                // Generate value based on position and seed
+                                let val = Math.floor(seededRandom() * 2); // 0 or 1
+
+                                // Only draw some blocks to make a shape
+                                if (seededRandom() > 0.3) {
+                                    ctx.fillText(val, c * 15, r * 15);
+                                }
+                            }
+                        }
+
+                    } else if (this.currentShape === 'ball') {
+                        // Clump of Numbers
+                        ctx.fillStyle = '#ff0000';
+                        for (let i = 0; i < 40; i++) {
+                            let char = Math.random() > 0.5 ? '1' : '0';
+                            let angle = Math.random() * Math.PI * 2;
+                            let r = Math.random() * 40;
+                            ctx.fillText(char, Math.cos(angle) * r, Math.sin(angle) * r);
+                        }
+                        // Spikes made of Numbers
+                        ctx.fillStyle = '#ff0000';
+                        for (let i = 0; i < 8; i++) {
+                            ctx.save();
+                            let a = (Math.PI * 2 / 8) * i + frames * 0.1;
+                            ctx.rotate(a);
+                            ctx.fillText("1010101", 40, 5); // Number string spike
+                            ctx.restore();
+                        }
+                    } else if (this.currentShape === 'dragon') {
+                        // Trail
+                        for (let i = 0; i < 10; i++) {
+                            let char = "ERROR";
+                            ctx.fillText(char, Math.sin(frames * 0.1 + i) * 30, i * 20);
+                        }
+                    } else if (this.currentShape === 'ship') {
+                        // ASCII Ship
+                        ctx.fillStyle = '#00ff00';
+                        ctx.fillText("  /\\  ", -20, -20);
+                        ctx.fillText(" /  \\ ", -20, 0);
+                        ctx.fillText("/____\\", -20, 20);
+
+                        // Laser
+                        if (this.laserActive) {
+                            ctx.fillStyle = '#00ff00';
+                            ctx.fillRect(-10, 30, 20, 1000);
+                        }
+                    }
+
+                    ctx.restore();
+                    return;
+                }
+                // --- BINARY STARS DRAWING ---
+                if (this.isBinaryStars) {
+                    const rageMode = (!this.twinRed.active || !this.twinBlue.active);
+
+                    // Draw RED Twin (The Sun)
+                    if (this.twinRed.active) {
+                        ctx.save();
+                        ctx.translate(this.twinRed.x, this.twinRed.y);
+
+                        // Rage effect
+                        if (!this.twinBlue.active) {
+                            ctx.shadowBlur = 50; ctx.shadowColor = '#ff0000';
+                            ctx.scale(1.2, 1.2); // Grow slightly in rage
+                        } else {
+                            ctx.shadowBlur = 20; ctx.shadowColor = '#ff4400';
+                        }
+
+                        // Rotating Corona (Jagged)
+                        ctx.save();
+                        ctx.rotate(frames * (rageMode ? 0.1 : 0.05));
+                        ctx.fillStyle = `rgba(255, 50, 0, 0.6)`;
+                        ctx.beginPath();
+                        for (let i = 0; i < 12; i++) {
+                            let a = (Math.PI * 2 / 12) * i;
+                            let r = 40 + (i % 2 === 0 ? 10 : 0);
+                            ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                        // Inner Core
+                        const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 30);
+                        grad.addColorStop(0, '#ffff00');
+                        grad.addColorStop(0.5, '#ff8800');
+                        grad.addColorStop(1, '#880000');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.fill();
+
+                        ctx.restore();
+                    }
+                    // Draw BLUE Twin (The Moon/Crystal)
+                    if (this.twinBlue.active) {
+                        ctx.save();
+                        ctx.translate(this.twinBlue.x, this.twinBlue.y);
+
+                        // Rage effect
+                        if (!this.twinRed.active) {
+                            ctx.shadowBlur = 50; ctx.shadowColor = '#00ffff';
+                            ctx.scale(1.2, 1.2);
+                        } else {
+                            ctx.shadowBlur = 20; ctx.shadowColor = '#0088ff';
+                        }
+                        // Rotating Crystal Rings
+                        ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
+                        ctx.lineWidth = 3;
+
+                        // Ring 1
+                        ctx.save();
+                        ctx.rotate(-frames * (rageMode ? 0.1 : 0.03));
+                        ctx.strokeRect(-45, -45, 90, 90);
+                        ctx.restore();
+                        // Ring 2
+                        ctx.save();
+                        ctx.rotate(frames * (rageMode ? 0.08 : 0.02) + Math.PI / 4);
+                        ctx.strokeRect(-35, -35, 70, 70);
+                        ctx.restore();
+                        // Core
+                        const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 25);
+                        grad.addColorStop(0, '#ffffff');
+                        grad.addColorStop(0.5, '#00ffff');
+                        grad.addColorStop(1, '#000088');
+                        ctx.fillStyle = grad;
+
+                        // Diamond shape
+                        ctx.beginPath();
+                        ctx.moveTo(0, -30); ctx.lineTo(30, 0); ctx.lineTo(0, 30); ctx.lineTo(-30, 0);
+                        ctx.closePath();
+                        ctx.fill();
+
+                        ctx.restore();
+                    }
+                    return;
+                }
+                // --- SNAKE BOSS DRAWING ---
+                if (this.isSnake) {
+                    // Increased segment count and reduced spacing for "connected" look
+                    const segmentCount = 50;
+                    const spacing = 2; // Frames apart - very close
+
+                    // Color based on difficulty
+                    const mainColor = (activeDifficultyMode === 'hard') ? '#ff0000' : '#00ff00';
+                    const altColor = (activeDifficultyMode === 'hard') ? '#880000' : '#008800';
+                    const detailColor = (activeDifficultyMode === 'hard') ? '#ff4444' : '#00aa00';
+                    for (let i = segmentCount; i > 0; i--) {
+                        let pathIndex = i * spacing;
+                        if (pathIndex < this.snakePath.length) {
+                            let pos = this.snakePath[pathIndex];
+
+                            // Check for tail whip collision (simple proximity)
+                            if (this.currentAttack === 'snake_rush' && player.active) {
+                                let d = Math.hypot(pos.x - player.x, pos.y - player.y);
+                                if (d < 30) player.hit(2);
+                            }
+                            ctx.save();
+                            ctx.translate(pos.x, pos.y);
+                            ctx.fillStyle = (i % 4 === 0) ? altColor : detailColor;
+                            ctx.shadowBlur = 10; ctx.shadowColor = mainColor;
+
+                            // Taper size from head to tail
+                            let size = 30 * (1 - i / (segmentCount + 10)) + 8;
+                            // Segment Shape
+                            ctx.beginPath();
+                            ctx.arc(0, 0, size, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            ctx.restore();
+                        }
+                    }
+                    // Draw Head
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.shadowBlur = 20; ctx.shadowColor = mainColor;
+
+                    // Head Shape (Bigger 1.5x)
+                    ctx.fillStyle = mainColor;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 30); // Nose
+                    ctx.lineTo(30, -15);
+                    ctx.lineTo(15, -30);
+                    ctx.lineTo(-15, -30);
+                    ctx.lineTo(-30, -15);
+                    ctx.closePath();
+                    ctx.fill();
+                    // Eyes (Bigger)
+                    ctx.fillStyle = (activeDifficultyMode === 'hard') ? '#ffff00' : '#ff0000';
+                    ctx.beginPath(); ctx.arc(-15, 0, 6, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(15, 0, 6, 0, Math.PI * 2); ctx.fill();
+                    if (this.flashTimer > 0) {
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.fillStyle = "white";
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                    return;
+                }
+                // --- GLITCH DRAWING ---
+                if (this.isGlitch) {
+                    ctx.save();
+
+                    // Draw Main Boss (Visual is handled by 3D mostly, but 2D hit area needed)
+                    // Draw a flickering diamond shape
+                    ctx.translate(this.x, this.y);
+                    if (frames % 4 === 0) ctx.translate((Math.random() - 0.5) * 10, 0); // Glitch jitter
+
+                    ctx.strokeStyle = '#ff00ff';
+                    ctx.lineWidth = 3;
+                    ctx.shadowBlur = 15; ctx.shadowColor = '#ff00ff';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -60); ctx.lineTo(60, 0); ctx.lineTo(0, 60); ctx.lineTo(-60, 0); ctx.closePath();
+                    ctx.stroke();
+
+                    // Inner Fill
+                    ctx.fillStyle = `rgba(255, 0, 255, ${0.2 + Math.sin(frames * 0.1) * 0.2})`;
+                    ctx.fill();
+                    ctx.restore();
+                    // Draw Clones
+                    this.clones.forEach(c => {
+                        ctx.save();
+                        ctx.translate(c.x, c.y);
+                        // Make them less transparent (higher alpha)
+                        ctx.globalAlpha = 0.8 + Math.sin(frames * 0.5) * 0.1; // Range 0.7 - 0.9
+                        ctx.strokeStyle = '#00ffff'; // Cyan clones
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -50); ctx.lineTo(50, 0); ctx.lineTo(0, 50); ctx.lineTo(-50, 0); ctx.closePath();
+                        ctx.stroke();
+                        ctx.restore();
+                    });
+
+                    return;
+                }
+                // --- TERMINATOR DRAWING (GIANT RED SHIP) ---
+                if (this.isTerminator) {
+                    ctx.save(); ctx.translate(this.x, this.y);
+
+                    // TERMINATOR LASER
+                    if (this.currentAttack === 'terminator_laser') {
+                        ctx.rotate(this.laserAngle - Math.PI / 2);
+
+                        if (this.attackTimer < 60) {
+                            ctx.fillStyle = `rgba(255, 0, 0, ${this.laserCharge})`;
+                            ctx.beginPath(); ctx.arc(0, 0, this.laserCharge * 20, 0, Math.PI * 2); ctx.fill();
+                            ctx.strokeStyle = "rgba(255, 0, 0, 0.3)"; ctx.lineWidth = 2;
+                            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 1000); ctx.stroke();
+                        }
+                        else if (this.laserActive) {
+                            ctx.save();
+                            ctx.shadowBlur = 40; ctx.shadowColor = "red";
+                            ctx.fillStyle = "rgba(255, 0, 0, 0.9)";
+                            ctx.fillRect(-30, 0, 60, height * 1.5);
+                            ctx.fillStyle = "white";
+                            ctx.fillRect(-10, 0, 20, height * 1.5);
+                            ctx.restore();
+                        }
+                        ctx.rotate(-(this.laserAngle - Math.PI / 2));
+                    }
+
+                    // 2D SHIELD FOR TERMINATOR
+                    if (this.shieldHp > 0) {
+                        ctx.save();
+                        if (this.currentAttack === 'terminator_laser') ctx.rotate(this.laserAngle - Math.PI / 2);
+                        else ctx.rotate(Math.PI);
+                        ctx.beginPath();
+                        ctx.arc(0, 10, 80, 0, Math.PI * 2);
+                        ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.sin(frames * 0.1) * 0.2})`;
+                        ctx.lineWidth = 5;
+                        ctx.shadowBlur = 20; ctx.shadowColor = "cyan";
+                        ctx.stroke();
+                        ctx.fillStyle = "rgba(0, 255, 255, 0.1)";
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    ctx.scale(4, 4);
+                    ctx.shadowBlur = 20; ctx.shadowColor = '#ff0000'; ctx.fillStyle = '#ffcccc';
+                    ctx.rotate(Math.PI);
+                    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 15); ctx.lineTo(0, 10); ctx.lineTo(-15, 15); ctx.fill();
+                    ctx.fillStyle = '#880000';
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, 10); ctx.lineTo(20, 25); ctx.lineTo(5, 15); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-20, 10); ctx.lineTo(-20, 25); ctx.lineTo(-5, 15); ctx.fill();
+                    ctx.fillStyle = "#ffaa00";
+                    ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
+                    if (this.flashTimer > 0) {
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.fillStyle = "white";
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                    return;
+                }
+                // --- STANDARD BOSS DRAWING ---
+                ctx.save(); ctx.translate(this.x, this.y);
+                // 2D SHIELD BACKUP FOR SYSTEM CORE
+                if (this.shieldHp > 0) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 90, 0, Math.PI * 2); // 90px radius
+                    ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 + Math.sin(frames * 0.2) * 0.3})`;
+                    ctx.lineWidth = 3;
+                    ctx.shadowBlur = 15; ctx.shadowColor = "#00ffff";
+                    ctx.stroke();
+                    ctx.fillStyle = "rgba(0, 255, 255, 0.15)";
+                    ctx.fill();
+                    ctx.restore();
+                }
+                if (this.currentAttack === 'laser') {
+                    ctx.rotate(this.laserAngle - Math.PI / 2);
+                    if (this.attackTimer < 60) {
+                        ctx.strokeStyle = `rgba(255, 0, 0, ${Math.random()})`; ctx.lineWidth = 1;
+                        for (let i = 0; i < 5; i++) {
+                            ctx.beginPath(); ctx.moveTo((Math.random() - 0.5) * 200, 200); ctx.lineTo(0, 40); ctx.stroke();
+                        }
+                        ctx.fillStyle = `rgba(255, 200, 200, ${this.laserCharge})`;
+                        ctx.beginPath(); ctx.arc(0, 50, this.laserCharge * 20, 0, Math.PI * 2); ctx.fill();
+                    } else if (this.laserActive) {
+                        ctx.save(); ctx.shadowBlur = 40; ctx.shadowColor = "red";
+                        const beamWidth = 60 + Math.sin(frames * 0.5) * 5;
+                        ctx.fillStyle = this.isPhaseTwo ? "rgba(255, 50, 0, 0.9)" : "rgba(255, 0, 0, 0.7)";
+                        ctx.fillRect(-beamWidth / 2, 0, beamWidth, height * 1.5);
+                        ctx.fillStyle = "white"; ctx.fillRect(-beamWidth / 4, 0, beamWidth / 2, height * 1.5);
+                        ctx.restore();
+
+                        if (Math.random() > 0.5) particles.push(new Particle(this.x, this.y + 50, '#ff5500', 5, 8, 30));
+                    }
+                }
+                if (this.isPhaseTwo) ctx.globalAlpha = 0.5;
+                if (this.flashTimer > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffffff'; }
+                else { ctx.shadowBlur = 30; ctx.shadowColor = '#ff3300'; ctx.fillStyle = '#880000'; }
+
+                ctx.rotate(-(this.laserAngle - Math.PI / 2));
+                ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.fill();
+                if (this.flashTimer > 0) ctx.globalCompositeOperation = 'source-over';
+
+                ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 5;
+                ctx.beginPath(); ctx.arc(0, 0, 60, frames * 0.1, frames * 0.1 + 4); ctx.stroke();
+                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, 70, -frames * 0.1, -frames * 0.1 + 4); ctx.stroke();
+                ctx.restore();
+                ctx.globalAlpha = 1.0;
+                if (this.currentAttack === 'redLines') {
+                    this.redLines.forEach(l => {
+                        ctx.save();
+                        if (!l.damage) {
+                            ctx.strokeStyle = `rgba(255, 0, 0, ${Math.abs(Math.sin(frames * 0.2))})`;
+                            ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
+                            ctx.beginPath(); ctx.moveTo(l.x, 0); ctx.lineTo(l.x, height); ctx.stroke();
+                        } else {
+                            ctx.shadowBlur = 20; ctx.shadowColor = '#ff0000';
+                            ctx.fillStyle = 'rgba(255, 0, 0, 0.8)'; ctx.fillRect(l.x - 20, 0, 40, height);
+                            ctx.fillStyle = '#fff'; ctx.fillRect(l.x - 2, 0, 4, height);
+                        }
+                        ctx.restore();
+                    });
+                }
+            }
+            // Draw based on Shape (Reusing existing logic for the core binary shape)
+            if (this.currentShape === 'mess') {
+                // Procedural Binary Ship
+                const size = 10; const cols = 8; const rows = 8;
+                let seed = this.binarySeed;
+                const seededRandom = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+                ctx.fillStyle = '#ff0000'; ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000';
+                for (let r = -rows / 2; r < rows / 2; r++) {
+                    for (let c = -cols / 2; c < cols / 2; c++) {
+                        let xPos = c; if (xPos < 0) xPos = Math.abs(xPos) - 1;
+                        let val = Math.floor(seededRandom() * 2);
+                        if (seededRandom() > 0.3) ctx.fillText(val, c * 15, r * 15);
+                    }
+                }
             } else if (this.currentShape === 'ball') {
                 // Clump of Numbers
                 ctx.fillStyle = '#ff0000';
@@ -2292,394 +2859,73 @@ class Boss {
                     ctx.save();
                     let a = (Math.PI * 2 / 8) * i + frames * 0.1;
                     ctx.rotate(a);
-                    ctx.fillText("1010101", 40, 5); // Number string spike
-                    ctx.restore();
-                }
-            } else if (this.currentShape === 'dragon') {
-                // Trail
-                for (let i = 0; i < 10; i++) {
-                    let char = "ERROR";
-                    ctx.fillText(char, Math.sin(frames * 0.1 + i) * 30, i * 20);
-                }
-            } else if (this.currentShape === 'ship') {
-                // ASCII Ship
-                ctx.fillStyle = '#00ff00';
-                ctx.fillText("  /\\  ", -20, -20);
-                ctx.fillText(" /  \\ ", -20, 0);
-                ctx.fillText("/____\\", -20, 20);
-
-                // Laser
-                if (this.laserActive) {
-                    ctx.fillStyle = '#00ff00';
-                    ctx.fillRect(-10, 30, 20, 1000);
-                }
-            }
-
-            ctx.restore();
-            return;
-        }
-        // --- BINARY STARS DRAWING ---
-        if (this.isBinaryStars) {
-            const rageMode = (!this.twinRed.active || !this.twinBlue.active);
-
-            // Draw RED Twin (The Sun)
-            if (this.twinRed.active) {
-                ctx.save();
-                ctx.translate(this.twinRed.x, this.twinRed.y);
-
-                // Rage effect
-                if (!this.twinBlue.active) {
-                    ctx.shadowBlur = 50; ctx.shadowColor = '#ff0000';
-                    ctx.scale(1.2, 1.2); // Grow slightly in rage
-                } else {
-                    ctx.shadowBlur = 20; ctx.shadowColor = '#ff4400';
-                }
-
-                // Rotating Corona (Jagged)
-                ctx.save();
-                ctx.rotate(frames * (rageMode ? 0.1 : 0.05));
-                ctx.fillStyle = `rgba(255, 50, 0, 0.6)`;
-                ctx.beginPath();
-                for (let i = 0; i < 12; i++) {
-                    let a = (Math.PI * 2 / 12) * i;
-                    let r = 40 + (i % 2 === 0 ? 10 : 0);
-                    ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-                }
-                ctx.closePath();
-                ctx.fill();
-                ctx.restore();
-                // Inner Core
-                const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 30);
-                grad.addColorStop(0, '#ffff00');
-                grad.addColorStop(0.5, '#ff8800');
-                grad.addColorStop(1, '#880000');
-                ctx.fillStyle = grad;
-                ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.fill();
-
-                ctx.restore();
-            }
-            // Draw BLUE Twin (The Moon/Crystal)
-            if (this.twinBlue.active) {
-                ctx.save();
-                ctx.translate(this.twinBlue.x, this.twinBlue.y);
-
-                // Rage effect
-                if (!this.twinRed.active) {
-                    ctx.shadowBlur = 50; ctx.shadowColor = '#00ffff';
-                    ctx.scale(1.2, 1.2);
-                } else {
-                    ctx.shadowBlur = 20; ctx.shadowColor = '#0088ff';
-                }
-                // Rotating Crystal Rings
-                ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
-                ctx.lineWidth = 3;
-
-                // Ring 1
-                ctx.save();
-                ctx.rotate(-frames * (rageMode ? 0.1 : 0.03));
-                ctx.strokeRect(-45, -45, 90, 90);
-                ctx.restore();
-                // Ring 2
-                ctx.save();
-                ctx.rotate(frames * (rageMode ? 0.08 : 0.02) + Math.PI / 4);
-                ctx.strokeRect(-35, -35, 70, 70);
-                ctx.restore();
-                // Core
-                const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 25);
-                grad.addColorStop(0, '#ffffff');
-                grad.addColorStop(0.5, '#00ffff');
-                grad.addColorStop(1, '#000088');
-                ctx.fillStyle = grad;
-
-                // Diamond shape
-                ctx.beginPath();
-                ctx.moveTo(0, -30); ctx.lineTo(30, 0); ctx.lineTo(0, 30); ctx.lineTo(-30, 0);
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.restore();
-            }
-            return;
-        }
-        // --- SNAKE BOSS DRAWING ---
-        if (this.isSnake) {
-            // Increased segment count and reduced spacing for "connected" look
-            const segmentCount = 50;
-            const spacing = 2; // Frames apart - very close
-
-            // Color based on difficulty
-            const mainColor = (activeDifficultyMode === 'hard') ? '#ff0000' : '#00ff00';
-            const altColor = (activeDifficultyMode === 'hard') ? '#880000' : '#008800';
-            const detailColor = (activeDifficultyMode === 'hard') ? '#ff4444' : '#00aa00';
-            for (let i = segmentCount; i > 0; i--) {
-                let pathIndex = i * spacing;
-                if (pathIndex < this.snakePath.length) {
-                    let pos = this.snakePath[pathIndex];
-
-                    // Check for tail whip collision (simple proximity)
-                    if (this.currentAttack === 'snake_rush' && player.active) {
-                        let d = Math.hypot(pos.x - player.x, pos.y - player.y);
-                        if (d < 30) player.hit(2);
-                    }
-                    ctx.save();
-                    ctx.translate(pos.x, pos.y);
-                    ctx.fillStyle = (i % 4 === 0) ? altColor : detailColor;
-                    ctx.shadowBlur = 10; ctx.shadowColor = mainColor;
-
-                    // Taper size from head to tail
-                    let size = 30 * (1 - i / (segmentCount + 10)) + 8;
-                    // Segment Shape
-                    ctx.beginPath();
-                    ctx.arc(0, 0, size, 0, Math.PI * 2);
-                    ctx.fill();
-
+                    ctx.fillText("1010101", 40, 5);
                     ctx.restore();
                 }
             }
-            // Draw Head
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.shadowBlur = 20; ctx.shadowColor = mainColor;
-
-            // Head Shape (Bigger 1.5x)
-            ctx.fillStyle = mainColor;
-            ctx.beginPath();
-            ctx.moveTo(0, 30); // Nose
-            ctx.lineTo(30, -15);
-            ctx.lineTo(15, -30);
-            ctx.lineTo(-15, -30);
-            ctx.lineTo(-30, -15);
-            ctx.closePath();
-            ctx.fill();
-            // Eyes (Bigger)
-            ctx.fillStyle = (activeDifficultyMode === 'hard') ? '#ffff00' : '#ff0000';
-            ctx.beginPath(); ctx.arc(-15, 0, 6, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(15, 0, 6, 0, Math.PI * 2); ctx.fill();
-            if (this.flashTimer > 0) {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.fillStyle = "white";
-                ctx.fill();
-            }
-            ctx.restore();
-            return;
         }
-        // --- GLITCH DRAWING ---
-        if (this.isGlitch) {
-            ctx.save();
-
-            // Draw Main Boss (Visual is handled by 3D mostly, but 2D hit area needed)
-            // Draw a flickering diamond shape
-            ctx.translate(this.x, this.y);
-            if (frames % 4 === 0) ctx.translate((Math.random() - 0.5) * 10, 0); // Glitch jitter
-
-            ctx.strokeStyle = '#ff00ff';
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 15; ctx.shadowColor = '#ff00ff';
-            ctx.beginPath();
-            ctx.moveTo(0, -60); ctx.lineTo(60, 0); ctx.lineTo(0, 60); ctx.lineTo(-60, 0); ctx.closePath();
-            ctx.stroke();
-
-            // Inner Fill
-            ctx.fillStyle = `rgba(255, 0, 255, ${0.2 + Math.sin(frames * 0.1) * 0.2})`;
-            ctx.fill();
-            ctx.restore();
-            // Draw Clones
-            this.clones.forEach(c => {
-                ctx.save();
-                ctx.translate(c.x, c.y);
-                // Make them less transparent (higher alpha)
-                ctx.globalAlpha = 0.8 + Math.sin(frames * 0.5) * 0.1; // Range 0.7 - 0.9
-                ctx.strokeStyle = '#00ffff'; // Cyan clones
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(0, -50); ctx.lineTo(50, 0); ctx.lineTo(0, 50); ctx.lineTo(-50, 0); ctx.closePath();
-                ctx.stroke();
-                ctx.restore();
-            });
-
-            return;
-        }
-        // --- TERMINATOR DRAWING (GIANT RED SHIP) ---
-        if (this.isTerminator) {
-            ctx.save(); ctx.translate(this.x, this.y);
-
-            // TERMINATOR LASER
-            if (this.currentAttack === 'terminator_laser') {
-                ctx.rotate(this.laserAngle - Math.PI / 2);
-
-                if (this.attackTimer < 60) {
-                    ctx.fillStyle = `rgba(255, 0, 0, ${this.laserCharge})`;
-                    ctx.beginPath(); ctx.arc(0, 0, this.laserCharge * 20, 0, Math.PI * 2); ctx.fill();
-                    ctx.strokeStyle = "rgba(255, 0, 0, 0.3)"; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 1000); ctx.stroke();
-                }
-                else if (this.laserActive) {
-                    ctx.save();
-                    ctx.shadowBlur = 40; ctx.shadowColor = "red";
-                    ctx.fillStyle = "rgba(255, 0, 0, 0.9)";
-                    ctx.fillRect(-30, 0, 60, height * 1.5);
-                    ctx.fillStyle = "white";
-                    ctx.fillRect(-10, 0, 20, height * 1.5);
-                    ctx.restore();
-                }
-                ctx.rotate(-(this.laserAngle - Math.PI / 2));
-            }
-
-            // 2D SHIELD FOR TERMINATOR
-            if (this.shieldHp > 0) {
-                ctx.save();
-                if (this.currentAttack === 'terminator_laser') ctx.rotate(this.laserAngle - Math.PI / 2);
-                else ctx.rotate(Math.PI);
-                ctx.beginPath();
-                ctx.arc(0, 10, 80, 0, Math.PI * 2);
-                ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.sin(frames * 0.1) * 0.2})`;
-                ctx.lineWidth = 5;
-                ctx.shadowBlur = 20; ctx.shadowColor = "cyan";
-                ctx.stroke();
-                ctx.fillStyle = "rgba(0, 255, 255, 0.1)";
-                ctx.fill();
-                ctx.restore();
-            }
-            ctx.scale(4, 4);
-            ctx.shadowBlur = 20; ctx.shadowColor = '#ff0000'; ctx.fillStyle = '#ffcccc';
-            ctx.rotate(Math.PI);
-            ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 15); ctx.lineTo(0, 10); ctx.lineTo(-15, 15); ctx.fill();
-            ctx.fillStyle = '#880000';
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, 10); ctx.lineTo(20, 25); ctx.lineTo(5, 15); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-20, 10); ctx.lineTo(-20, 25); ctx.lineTo(-5, 15); ctx.fill();
-            ctx.fillStyle = "#ffaa00";
-            ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
-            if (this.flashTimer > 0) {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.fillStyle = "white";
-                ctx.fill();
-            }
-            ctx.restore();
-            return;
-        }
-        // --- STANDARD BOSS DRAWING ---
-        ctx.save(); ctx.translate(this.x, this.y);
-        // 2D SHIELD BACKUP FOR SYSTEM CORE
-        if (this.shieldHp > 0) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(0, 0, 90, 0, Math.PI * 2); // 90px radius
-            ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 + Math.sin(frames * 0.2) * 0.3})`;
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 15; ctx.shadowColor = "#00ffff";
-            ctx.stroke();
-            ctx.fillStyle = "rgba(0, 255, 255, 0.15)";
-            ctx.fill();
-            ctx.restore();
-        }
-        if (this.currentAttack === 'laser') {
-            ctx.rotate(this.laserAngle - Math.PI / 2);
-            if (this.attackTimer < 60) {
-                ctx.strokeStyle = `rgba(255, 0, 0, ${Math.random()})`; ctx.lineWidth = 1;
-                for (let i = 0; i < 5; i++) {
-                    ctx.beginPath(); ctx.moveTo((Math.random() - 0.5) * 200, 200); ctx.lineTo(0, 40); ctx.stroke();
-                }
-                ctx.fillStyle = `rgba(255, 200, 200, ${this.laserCharge})`;
-                ctx.beginPath(); ctx.arc(0, 50, this.laserCharge * 20, 0, Math.PI * 2); ctx.fill();
-            } else if (this.laserActive) {
-                ctx.save(); ctx.shadowBlur = 40; ctx.shadowColor = "red";
-                const beamWidth = 60 + Math.sin(frames * 0.5) * 5;
-                ctx.fillStyle = this.isPhaseTwo ? "rgba(255, 50, 0, 0.9)" : "rgba(255, 0, 0, 0.7)";
-                ctx.fillRect(-beamWidth / 2, 0, beamWidth, height * 1.5);
-                ctx.fillStyle = "white"; ctx.fillRect(-beamWidth / 4, 0, beamWidth / 2, height * 1.5);
-                ctx.restore();
-
-                if (Math.random() > 0.5) particles.push(new Particle(this.x, this.y + 50, '#ff5500', 5, 8, 30));
-            }
-        }
-        if (this.isPhaseTwo) ctx.globalAlpha = 0.5;
-        if (this.flashTimer > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffffff'; }
-        else { ctx.shadowBlur = 30; ctx.shadowColor = '#ff3300'; ctx.fillStyle = '#880000'; }
-
-        ctx.rotate(-(this.laserAngle - Math.PI / 2));
-        ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.fill();
-        if (this.flashTimer > 0) ctx.globalCompositeOperation = 'source-over';
-
-        ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 5;
-        ctx.beginPath(); ctx.arc(0, 0, 60, frames * 0.1, frames * 0.1 + 4); ctx.stroke();
-        ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(0, 0, 70, -frames * 0.1, -frames * 0.1 + 4); ctx.stroke();
         ctx.restore();
-        ctx.globalAlpha = 1.0;
-        if (this.currentAttack === 'redLines') {
-            this.redLines.forEach(l => {
-                ctx.save();
-                if (!l.damage) {
-                    ctx.strokeStyle = `rgba(255, 0, 0, ${Math.abs(Math.sin(frames * 0.2))})`;
-                    ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
-                    ctx.beginPath(); ctx.moveTo(l.x, 0); ctx.lineTo(l.x, height); ctx.stroke();
-                } else {
-                    ctx.shadowBlur = 20; ctx.shadowColor = '#ff0000';
-                    ctx.fillStyle = 'rgba(255, 0, 0, 0.8)'; ctx.fillRect(l.x - 20, 0, 40, height);
-                    ctx.fillStyle = '#fff'; ctx.fillRect(l.x - 2, 0, 4, height);
-                }
-                ctx.restore();
-            });
-        }
-    }
-    hit(damage) {
-        if (this.phase !== 'fight') return;
-
-        // BINARY STARS HIT LOGIC
-        if (this.isBinaryStars) {
-            // Check against Red
-            if (this.twinRed.active) {
-                // Approximate hitbox
-                if (Math.hypot(this.twinRed.x - player.x, this.twinRed.y - player.y) < 200) { // Using a big range to catch bullet positions?
-                    // Wait, need to check bullet pos in main logic, here we just receive damage
-                    // But hit() is called by Bullet, passing damage. Bullet needs to know WHICH one it hit.
-                    // Actually, the bullet collision logic calls boss.hit().
-                    // We should update collision logic in animateGame instead to handle multiple hitboxes properly
-                    // For now, let's just assume if this is called, we check proximity to find who got hit
-                }
-            }
-            return;
-            // This method is awkward for multi-part bosses without passing coordinates.
-            // I will update the collision logic in the bullet loop instead.
-        }
-        // SHIELD MECHANIC
-        if (this.shieldHp > 0) {
-            this.shieldHp -= damage;
-            bossShieldBar.style.width = `${(this.shieldHp / this.maxShieldHp) * 100}%`;
-            if (this.shieldHp <= 0) {
-                bossShieldBar.style.width = "0%";
-                bossShieldContainer.style.display = "none"; // Hide bar container when shield is gone
-                for (let i = 0; i < 30; i++) particles.push(new Particle(this.x, this.y, '#00ffff', 5, 5, 40));
-            }
-            return;
-        }
-        this.hp -= damage;
-        this.flashTimer = 4;
-        bossHealthBar.style.width = `${(this.hp / this.maxHp) * 100}%`;
-        if (this.hp <= 0 && this.active) {
-            this.active = false; bossHealthBar.style.width = '0%';
-            isPhase2Active = false;
-            this.isTerminator = false;
-            for (let i = 0; i < 100; i++) {
-                particles.push(new Particle(this.x, this.y, '#ffaa00', 10, 8, 100));
-                particles.push(new Particle(this.x, this.y, '#ffffff', 15, 5, 120));
-            }
-
-            flashOverlay.style.transition = 'none';
-            flashOverlay.style.opacity = 1;
-            void flashOverlay.offsetWidth;
-            flashOverlay.style.transition = 'opacity 2s ease-out';
-            flashOverlay.style.opacity = 0;
-
-            let dropCount = 50;
-            for (let k = 0; k < dropCount; k++) {
-                drops.push(new Drop(this.x + (Math.random() - 0.5) * 500, this.y, 'star'));
-            }
-            triggerSupernova();
-            startVictorySequence();
-        }
+        return;
     }
 }
+hit(damage) {
+    if (this.phase !== 'fight') return;
+
+    // BINARY STARS HIT LOGIC
+    if (this.isBinaryStars) {
+        // Check against Red
+        if (this.twinRed.active) {
+            // Approximate hitbox
+            if (Math.hypot(this.twinRed.x - player.x, this.twinRed.y - player.y) < 200) { // Using a big range to catch bullet positions?
+                // Wait, need to check bullet pos in main logic, here we just receive damage
+                // But hit() is called by Bullet, passing damage. Bullet needs to know WHICH one it hit.
+                // Actually, the bullet collision logic calls boss.hit().
+                // We should update collision logic in animateGame instead to handle multiple hitboxes properly
+                // For now, let's just assume if this is called, we check proximity to find who got hit
+            }
+        }
+        return;
+        // This method is awkward for multi-part bosses without passing coordinates.
+        // I will update the collision logic in the bullet loop instead.
+    }
+    // SHIELD MECHANIC
+    if (this.shieldHp > 0) {
+        this.shieldHp -= damage;
+        bossShieldBar.style.width = `${(this.shieldHp / this.maxShieldHp) * 100}%`;
+        if (this.shieldHp <= 0) {
+            bossShieldBar.style.width = "0%";
+            bossShieldContainer.style.display = "none"; // Hide bar container when shield is gone
+            for (let i = 0; i < 30; i++) particles.push(new Particle(this.x, this.y, '#00ffff', 5, 5, 40));
+        }
+        return;
+    }
+    this.hp -= damage;
+    this.flashTimer = 4;
+    bossHealthBar.style.width = `${(this.hp / this.maxHp) * 100}%`;
+    if (this.hp <= 0 && this.active) {
+        this.active = false; bossHealthBar.style.width = '0%';
+        isPhase2Active = false;
+        this.isTerminator = false;
+        for (let i = 0; i < 100; i++) {
+            particles.push(new Particle(this.x, this.y, '#ffaa00', 10, 8, 100));
+            particles.push(new Particle(this.x, this.y, '#ffffff', 15, 5, 120));
+        }
+
+        flashOverlay.style.transition = 'none';
+        flashOverlay.style.opacity = 1;
+        void flashOverlay.offsetWidth;
+        flashOverlay.style.transition = 'opacity 2s ease-out';
+        flashOverlay.style.opacity = 0;
+
+        let dropCount = 50;
+        for (let k = 0; k < dropCount; k++) {
+            drops.push(new Drop(this.x + (Math.random() - 0.5) * 500, this.y, 'star'));
+        }
+        triggerSupernova();
+        startVictorySequence();
+    }
+}
+
 function createShockwave(x, y) {
     for (let i = 0; i < 360; i += 10) {
         let angle = i * Math.PI / 180;
