@@ -525,7 +525,8 @@ class Bullet {
         } else if (type === 'missile') {
             this.color = '#ff0000'; this.size = 5; this.damage = 20;
             this.angle = Math.atan2(vy, vx); this.speed = 4;
-            this.guidanceTimer = 90;
+            this.guidanceTimer = 90; // Life timer
+            this.guidanceDelay = 30; // Delay before tracking starts
         } else if (type === 'glitch_laser') {
             this.color = '#ff00ff'; this.size = 2000; this.damage = 25; // Size is length
             this.isVertical = vx === 0;
@@ -592,14 +593,22 @@ class Bullet {
             return;
         }
         if (this.type === 'missile' && player.active && this.guidanceTimer > 0) {
-            let dx = player.x - this.x; let dy = player.y - this.y;
-            let targetAngle = Math.atan2(dy, dx);
-            let diff = targetAngle - this.angle;
-            while (diff < -Math.PI) diff += Math.PI * 2;
-            while (diff > Math.PI) diff -= Math.PI * 2;
-            this.angle += diff * 0.05;
-            this.vx = Math.cos(this.angle) * this.speed;
-            this.vy = Math.sin(this.angle) * this.speed;
+            if (this.guidanceDelay > 0) {
+                this.guidanceDelay--;
+                // Fly straight (spread out)
+                this.x += this.vx; this.y += this.vy;
+            } else {
+                // Homing Logic
+                let dx = player.x - this.x; let dy = player.y - this.y;
+                let targetAngle = Math.atan2(dy, dx);
+                let diff = targetAngle - this.angle;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.angle += diff * 0.08; // Sharper turn after delay
+                this.vx = Math.cos(this.angle) * this.speed;
+                this.vy = Math.sin(this.angle) * this.speed;
+                this.x += this.vx; this.y += this.vy;
+            }
             this.guidanceTimer--;
             if (Math.random() > 0.5) particles.push(new Particle(this.x, this.y, '#555', 1, 3, 20));
         }
@@ -2679,6 +2688,9 @@ function showMidGameBriefing() {
     } else if (currentLevelIndex === 2) {
         contentDiv.innerHTML = 'NEW THREAT IDENTIFIED: <span style="color: #fff; font-weight: bold;">THE SPINNER</span>';
         descDiv.innerHTML = 'Rotational defense unit. Fires a suppression web in all cardinal directions. <br><span style="color: #ff00ff;">TIMING IS KEY. WEAVE THROUGH THE PATTERN.</span>';
+    } else if (currentLevelIndex === 3) {
+        contentDiv.innerHTML = 'NEW THREAT IDENTIFIED: <span style="color: #fff; font-weight: bold;">THE MISSILITE</span>';
+        descDiv.innerHTML = 'Heavy aerial gunship. Deploys tracking ordnance. <br><span style="color: #ffaa00;">EVASIVE MANEUVERS REQUIRED. SHOOT IT DOWN.</span>';
     }
     // Start preview animation
     animateBriefingPreview();
@@ -2742,6 +2754,19 @@ function animateBriefingPreview() {
             bCtx.beginPath(); bCtx.arc(-dist, 0, 4, 0, Math.PI * 2); bCtx.fill();
             bCtx.beginPath(); bCtx.arc(dist, 0, 4, 0, Math.PI * 2); bCtx.fill();
         }
+    } else if (currentLevelIndex === 3) {
+        // --- DRAW MISSILITE ---
+        bCtx.translate(0, Math.sin(briefingFrame * 0.05) * 5);
+        // Main Rotor
+        bCtx.save(); bCtx.rotate(briefingFrame * 0.8);
+        bCtx.fillStyle = 'rgba(50, 50, 50, 0.5)'; bCtx.beginPath(); bCtx.arc(0, 0, 45, 0, Math.PI * 2); bCtx.fill();
+        bCtx.fillStyle = '#111'; bCtx.fillRect(-45, -3, 90, 6); bCtx.fillRect(-3, -45, 6, 90);
+        bCtx.restore();
+        // Body
+        bCtx.fillStyle = '#556655';
+        bCtx.beginPath(); bCtx.moveTo(25, 5); bCtx.lineTo(10, -15); bCtx.lineTo(-20, -15); bCtx.lineTo(-25, 5); bCtx.lineTo(15, 15); bCtx.fill();
+        // Cockpit
+        bCtx.fillStyle = '#00ffff'; bCtx.beginPath(); bCtx.moveTo(22, 5); bCtx.lineTo(10, -10); bCtx.lineTo(0, -10); bCtx.lineTo(5, 5); bCtx.fill();
     }
 
     bCtx.restore();
@@ -2962,12 +2987,20 @@ function spawnWaveEnemies(wave) {
         } else if (wave >= 2 && wave <= 5) {
             // Wave 5: SPINNER INTRO
             if (wave === 5) {
+                if (currentLevelIndex === 2 && !midGameBriefingShown) {
+                    showMidGameBriefing();
+                    return;
+                }
                 enemies.push(new Spinner(width * 0.2, -50));
                 enemies.push(new Spinner(width * 0.5, -100));
                 enemies.push(new Spinner(width * 0.8, -50));
 
                 // MISSILITE SPAWN (Stage 3 Easy)
                 if (currentLevelIndex === 3) {
+                    if (!midGameBriefingShown) {
+                        showMidGameBriefing();
+                        return;
+                    }
                     console.log("Spawning Missilite in Stage 3 Easy");
                     enemies.push(new Missilite(width * 0.5, 100));
                 }
