@@ -818,8 +818,10 @@ class Missilite {
 
         this.fireTimer--;
         if (this.fireTimer <= 0) {
-            // Fire 10 Missiles with spread
-            for (let i = 0; i < 10; i++) {
+            // Fire Missiles based on difficulty
+            const missileCount = (activeDifficultyMode === 'hard') ? 10 : 3;
+
+            for (let i = 0; i < missileCount; i++) {
                 const spread = (Math.random() - 0.5) * 1.5; // Spread +/- 0.75 radians (~45 degrees)
                 const missileAngle = this.angle + spread;
                 bullets.push(new Bullet(this.x, this.y + 20, Math.cos(missileAngle) * 4, Math.sin(missileAngle) * 4, 'missile'));
