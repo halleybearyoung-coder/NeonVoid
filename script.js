@@ -1654,10 +1654,15 @@ class Boss {
         this.hp = this.maxHp;
         bossName.innerText = "THE SYNTAX ERROR";
         bossName.style.fontFamily = "Courier New, monospace";
-        bossName.style.color = "#00ff00";
-        bossName.style.textShadow = "0 0 5px #00ff00";
+        bossName.style.color = "#ff0000"; // Red
+        bossName.style.textShadow = "0 0 5px #ff0000";
         isPhase2Active = false;
         this.currentShape = 'mess';
+
+        // Binary Shape Logic
+        this.binarySeed = Math.random();
+        this.binaryTimer = 0;
+        this.binaryShapeChangeTime = 1800; // 30 seconds
     }
     activate() {
         this.active = true;
@@ -1700,6 +1705,15 @@ class Boss {
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle) * 6, Math.sin(angle) * 6, 'digit_ball'));
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle - 0.5) * 6, Math.sin(angle - 0.5) * 6, 'digit_ball'));
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle + 0.5) * 6, Math.sin(angle + 0.5) * 6, 'digit_ball'));
+            }
+
+            // Binary Shape Timer
+            this.binaryTimer++;
+            if (this.binaryTimer >= this.binaryShapeChangeTime) {
+                this.binaryTimer = 0;
+                this.binarySeed = Math.random(); // Regenerate shape
+                // Glitch effect
+                for (let i = 0; i < 20; i++) particles.push(new Particle(this.x, this.y, '#ff0000', 5, 5, 30));
             }
 
             // Lag Spike Movement (Boss moves fast, Player is slow)
@@ -2217,8 +2231,8 @@ class Boss {
             ctx.save();
             ctx.translate(this.x, this.y);
 
-            // Flash Colors
-            const colors = ['#00ff00', '#ffffff', '#ff00ff', '#000000'];
+            // Flash Colors (Terminator Theme: Red, Dark Red, White, Black)
+            const colors = ['#ff0000', '#ffffff', '#880000', '#000000'];
             ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
             ctx.font = '24px monospace';
 
@@ -2230,26 +2244,56 @@ class Boss {
 
             // Draw based on Shape
             if (this.currentShape === 'mess') {
-                // Random characters cloud
-                for (let i = 0; i < 10; i++) {
-                    let char = String.fromCharCode(33 + Math.random() * 90);
-                    ctx.fillText(char, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100);
+                // Procedural Binary Ship
+                // Use binarySeed to determine structure
+                // We'll draw a grid of 0s and 1s that form a rough ship shape
+                const size = 10;
+                const cols = 8;
+                const rows = 8;
+
+                // Seeded random function for consistency within the 30s window
+                let seed = this.binarySeed;
+                const seededRandom = () => {
+                    seed = (seed * 9301 + 49297) % 233280;
+                    return seed / 233280;
+                };
+
+                ctx.fillStyle = '#ff0000';
+                ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000';
+
+                for (let r = -rows / 2; r < rows / 2; r++) {
+                    for (let c = -cols / 2; c < cols / 2; c++) {
+                        // Mirror horizontally for symmetry
+                        let xPos = c;
+                        if (xPos < 0) xPos = Math.abs(xPos) - 1;
+
+                        // Generate value based on position and seed
+                        let val = Math.floor(seededRandom() * 2); // 0 or 1
+
+                        // Only draw some blocks to make a shape
+                        if (seededRandom() > 0.3) {
+                            ctx.fillText(val, c * 15, r * 15);
+                        }
+                    }
                 }
+
             } else if (this.currentShape === 'ball') {
-                // Clump
-                for (let i = 0; i < 30; i++) {
-                    let char = String.fromCharCode(48 + Math.floor(Math.random() * 10)); // Numbers
+                // Clump of Numbers
+                ctx.fillStyle = '#ff0000';
+                for (let i = 0; i < 40; i++) {
+                    let char = Math.random() > 0.5 ? '1' : '0';
                     let angle = Math.random() * Math.PI * 2;
                     let r = Math.random() * 40;
                     ctx.fillText(char, Math.cos(angle) * r, Math.sin(angle) * r);
                 }
-                // Spikes
-                ctx.strokeStyle = '#00ff00';
+                // Spikes made of Numbers
+                ctx.fillStyle = '#ff0000';
                 for (let i = 0; i < 8; i++) {
-                    ctx.beginPath(); ctx.moveTo(0, 0);
+                    ctx.save();
                     let a = (Math.PI * 2 / 8) * i + frames * 0.1;
-                    ctx.lineTo(Math.cos(a) * 60, Math.sin(a) * 60);
-                    ctx.stroke();
+                    ctx.rotate(a);
+                    ctx.fillText("1010101", 40, 5); // Number string spike
+                    ctx.restore();
                 }
             } else if (this.currentShape === 'dragon') {
                 // Trail
