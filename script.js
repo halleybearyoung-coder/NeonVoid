@@ -37,13 +37,26 @@ const STAGE_MESSAGES = {
 
 function setCookie(name, value, days) {
     // Using LocalStorage to mimic cookie behavior for reliability
-    localStorage.setItem(name, value);
+    try {
+        localStorage.setItem(name, value);
+    } catch (e) {
+        console.warn("LocalStorage set failed:", e);
+    }
 }
 function getCookie(name) {
-    return localStorage.getItem(name);
+    try {
+        return localStorage.getItem(name);
+    } catch (e) {
+        console.warn("LocalStorage get failed:", e);
+        return null;
+    }
 }
 function deleteCookie(name) {
-    localStorage.removeItem(name);
+    try {
+        localStorage.removeItem(name);
+    } catch (e) {
+        console.warn("LocalStorage remove failed:", e);
+    }
 }
 // --- DATA PERSISTENCE ---
 let gameData;
@@ -2867,65 +2880,65 @@ class Boss {
         ctx.restore();
         return;
     }
-}
-hit(damage) {
-    if (this.phase !== 'fight') return;
 
-    // BINARY STARS HIT LOGIC
-    if (this.isBinaryStars) {
-        // Check against Red
-        if (this.twinRed.active) {
-            // Approximate hitbox
-            if (Math.hypot(this.twinRed.x - player.x, this.twinRed.y - player.y) < 200) { // Using a big range to catch bullet positions?
-                // Wait, need to check bullet pos in main logic, here we just receive damage
-                // But hit() is called by Bullet, passing damage. Bullet needs to know WHICH one it hit.
-                // Actually, the bullet collision logic calls boss.hit().
-                // We should update collision logic in animateGame instead to handle multiple hitboxes properly
-                // For now, let's just assume if this is called, we check proximity to find who got hit
+    hit(damage) {
+        if (this.phase !== 'fight') return;
+
+        // BINARY STARS HIT LOGIC
+        if (this.isBinaryStars) {
+            // Check against Red
+            if (this.twinRed.active) {
+                // Approximate hitbox
+                if (Math.hypot(this.twinRed.x - player.x, this.twinRed.y - player.y) < 200) { // Using a big range to catch bullet positions?
+                    // Wait, need to check bullet pos in main logic, here we just receive damage
+                    // But hit() is called by Bullet, passing damage. Bullet needs to know WHICH one it hit.
+                    // Actually, the bullet collision logic calls boss.hit().
+                    // We should update collision logic in animateGame instead to handle multiple hitboxes properly
+                    // For now, let's just assume if this is called, we check proximity to find who got hit
+                }
             }
+            return;
+            // This method is awkward for multi-part bosses without passing coordinates.
+            // I will update the collision logic in the bullet loop instead.
         }
-        return;
-        // This method is awkward for multi-part bosses without passing coordinates.
-        // I will update the collision logic in the bullet loop instead.
-    }
-    // SHIELD MECHANIC
-    if (this.shieldHp > 0) {
-        this.shieldHp -= damage;
-        bossShieldBar.style.width = `${(this.shieldHp / this.maxShieldHp) * 100}%`;
-        if (this.shieldHp <= 0) {
-            bossShieldBar.style.width = "0%";
-            bossShieldContainer.style.display = "none"; // Hide bar container when shield is gone
-            for (let i = 0; i < 30; i++) particles.push(new Particle(this.x, this.y, '#00ffff', 5, 5, 40));
+        // SHIELD MECHANIC
+        if (this.shieldHp > 0) {
+            this.shieldHp -= damage;
+            bossShieldBar.style.width = `${(this.shieldHp / this.maxShieldHp) * 100}%`;
+            if (this.shieldHp <= 0) {
+                bossShieldBar.style.width = "0%";
+                bossShieldContainer.style.display = "none"; // Hide bar container when shield is gone
+                for (let i = 0; i < 30; i++) particles.push(new Particle(this.x, this.y, '#00ffff', 5, 5, 40));
+            }
+            return;
         }
-        return;
-    }
-    this.hp -= damage;
-    this.flashTimer = 4;
-    bossHealthBar.style.width = `${(this.hp / this.maxHp) * 100}%`;
-    if (this.hp <= 0 && this.active) {
-        this.active = false; bossHealthBar.style.width = '0%';
-        isPhase2Active = false;
-        this.isTerminator = false;
-        for (let i = 0; i < 100; i++) {
-            particles.push(new Particle(this.x, this.y, '#ffaa00', 10, 8, 100));
-            particles.push(new Particle(this.x, this.y, '#ffffff', 15, 5, 120));
-        }
+        this.hp -= damage;
+        this.flashTimer = 4;
+        bossHealthBar.style.width = `${(this.hp / this.maxHp) * 100}%`;
+        if (this.hp <= 0 && this.active) {
+            this.active = false; bossHealthBar.style.width = '0%';
+            isPhase2Active = false;
+            this.isTerminator = false;
+            for (let i = 0; i < 100; i++) {
+                particles.push(new Particle(this.x, this.y, '#ffaa00', 10, 8, 100));
+                particles.push(new Particle(this.x, this.y, '#ffffff', 15, 5, 120));
+            }
 
-        flashOverlay.style.transition = 'none';
-        flashOverlay.style.opacity = 1;
-        void flashOverlay.offsetWidth;
-        flashOverlay.style.transition = 'opacity 2s ease-out';
-        flashOverlay.style.opacity = 0;
+            flashOverlay.style.transition = 'none';
+            flashOverlay.style.opacity = 1;
+            void flashOverlay.offsetWidth;
+            flashOverlay.style.transition = 'opacity 2s ease-out';
+            flashOverlay.style.opacity = 0;
 
-        let dropCount = 50;
-        for (let k = 0; k < dropCount; k++) {
-            drops.push(new Drop(this.x + (Math.random() - 0.5) * 500, this.y, 'star'));
+            let dropCount = 50;
+            for (let k = 0; k < dropCount; k++) {
+                drops.push(new Drop(this.x + (Math.random() - 0.5) * 500, this.y, 'star'));
+            }
+            triggerSupernova();
+            startVictorySequence();
         }
-        triggerSupernova();
-        startVictorySequence();
     }
 }
-
 function createShockwave(x, y) {
     for (let i = 0; i < 360; i += 10) {
         let angle = i * Math.PI / 180;
@@ -4116,5 +4129,14 @@ if (window.speechSynthesis) {
 }
 
 // Start check
-checkFirstVisit();
+// Start check
+try {
+    checkFirstVisit();
+} catch (e) {
+    console.error("Critical initialization error:", e);
+    // Fallback to menu to avoid black screen
+    if (typeof resetToMenu === 'function') {
+        resetToMenu();
+    }
+}
 animateGame();
