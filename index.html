@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Void</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="three-container"></div>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="flash-overlay"></div>
+
+    <button id="dev-toggle" onclick="toggleDevPanel()">DEV</button>
+    <div id="dev-panel">
+        <div style="text-align: center; color: #ff00ff; margin-bottom: 10px; font-weight: bold;">DEV CONSOLE</div>
+        <div class="dev-row">
+            <span style="font-size: 12px; color: #ccc;">STARS:</span>
+            <input type="number" id="dev-stars" class="dev-input" placeholder="Amount">
+            <button class="dev-btn" onclick="devSetStars()">SET</button>
+        </div>
+        <div class="dev-row">
+            <span style="font-size: 12px; color: #ccc;">WAVE:</span>
+            <input type="number" id="dev-wave" class="dev-input" placeholder="#">
+            <button class="dev-btn" onclick="devSkipWave()">GO</button>
+        </div>
+        <button class="dev-btn" style="width: 100%; color: #ff4444; border-color: #ff4444;" onclick="devKillAll()">KILL ALL ENEMIES</button>
+        <div style="margin-top: 10px; border-top: 1px solid #555; padding-top: 10px; text-align: center;">
+            <span style="font-size: 11px; color: #aaa; display: block; margin-bottom: 5px;">DATA MANAGEMENT</span>
+            <button class="dev-btn" style="width: 100%; color: #00ff00; border-color: #00ff00;" onclick="devUnlockStages()">UNLOCK ALL STAGES</button>
+            <button class="dev-btn" style="width: 100%; color: #ffd700; border-color: #ffd700;" onclick="devResetStarsOnly()">RESET STARS</button>
+            <button class="dev-btn" style="width: 100%; color: #00ffff; border-color: #00ffff;" onclick="devResetUpgradesOnly()">RESET UPGRADES</button>
+            <button class="dev-btn" style="width: 100%; color: #ff00ff; border-color: #ff00ff;" onclick="devResetLevelsOnly()">RESET LEVELS</button>
+            <button class="dev-btn" style="width: 100%; color: #ff3300; border-color: #ff3300; font-weight: bold; background: #300;" onclick="devGlobalWipe()">GLOBAL DATA WIPE</button>
+            <button class="dev-btn" style="width: 100%; color: #888; border-color: #888;" onclick="devResetCookies()">CLEAR COOKIES (INTRO)</button>
+        </div>
+    </div>
+
+    <div id="msg-modal">
+        <div class="title-text" style="font-size: 30px; margin-bottom: 10px; color: #ff4444;">ACCESS DENIED</div>
+        <div id="msg-text">Level Locked. Complete previous sector.</div>
+        <button class="btn" onclick="closeMsgModal()" style="font-size: 16px; padding: 10px 30px;">OK</button>
+    </div>
+
+    <div id="ui-layer">
+        <div id="boss-hud">
+            <div id="boss-name">System Core: Omega</div>
+            <div id="boss-shield-container">
+                <div id="boss-shield-bar"></div>
+            </div>
+            <div id="boss-health-container">
+                <div id="boss-health-bar"></div>
+            </div>
+        </div>
+        <div id="player-hud">
+            <div class="hud-text">HP: <span id="player-hp">100</span>%</div>
+            <div class="hud-text">SCORE: <span id="score">0</span></div>
+            <div class="hud-text" style="color: #ffd700;">STARS: <span id="stars-display">0</span></div>
+            <div class="hud-text" style="font-size: 14px; margin-top: 5px; color: #aaa;">STAGE: <span id="stage-display">1</span></div>
+        </div>
+        <div class="phase-indicator" id="phase-debug">INIT</div>
+        <div id="wave-announcement">WAVE 1</div>
+    </div>
+
+    <div id="welcome-screen" class="screen-overlay">
+        <div class="radio-box" id="welcome-box">
+            <div class="radio-header">
+                <span id="welcome-header">UNIDENTIFIED SIGNAL</span>
+                <span class="blink">● LIVE</span>
+            </div>
+            <div id="welcome-content" class="radio-content">
+            </div>
+            <div class="radio-footer" id="welcome-footer">
+            </div>
+        </div>
+    </div>
+
+    <div id="intro-screen" class="screen-overlay">
+        <div class="radio-box">
+            <div class="radio-header">
+                <span>INCOMING TRANSMISSION</span>
+                <span class="blink">● REC</span>
+            </div>
+            <div id="radio-content" class="radio-content">
+            </div>
+            <div class="radio-footer">
+                <button class="btn" style="border-color: #00ff00; color: #00ff00; font-family: inherit;" onclick="skipIntro()">ESTABLISH LINK (SKIP) <span id="intro-countdown">30</span>s</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="menu-screen" class="screen-overlay">
+        <div class="title-text" style="color: #00ffff;">NEON VOID</div>
+        <div class="subtitle-text">SELECT DIFFICULTY</div>
+        <div class="btn-container">
+            <button id="start-hard-btn" class="btn btn-hard">EXPERT</button>
+            <button id="start-easy-btn" class="btn">BEGINNER</button>
+        </div>
+        <div class="controls-hint">ARROWS / WASD to Move &nbsp;|&nbsp; MOUSE to Follow</div>
+    </div>
+
+    <div id="level-select-screen" class="screen-overlay">
+        <button id="beginner-hangar-btn" class="hangar-toggle-btn" onclick="openHangar('easy')" aria-label="Open beginner hangar">🛠️ HANGAR</button>
+        <div class="title-text" style="color: #00ffff;">BEGINNER CAMPAIGN</div>
+        <div id="easy-grid" class="level-grid">
+        </div>
+        <button class="btn" onclick="resetToMenu()">BACK</button>
+    </div>
+
+    <div id="expert-level-select-screen" class="screen-overlay red-theme">
+        <button id="expert-hangar-btn" class="hangar-toggle-btn" onclick="openHangar('hard')" aria-label="Open expert hangar">🛠️ HANGAR</button>
+        <div class="title-text">EXPERT CAMPAIGN</div>
+        <div id="hard-grid" class="level-grid">
+        </div>
+        <button class="btn" onclick="resetToMenu()">BACK</button>
+    </div>
+
+    <div id="hangar-screen" class="screen-overlay">
+        <div id="hangar-content">
+            <div class="title-text" id="hangar-title" style="font-size: 36px; margin-bottom: 10px; color: #fff; text-shadow: 0 0 20px #00ffff;">HANGAR</div>
+            <div style="font-size: 20px; color: #ffd700; margin-bottom: 30px; font-weight: bold; text-shadow: 0 0 10px #ffd700; letter-spacing: 2px;">CREDITS: <span id="hangar-stars">0</span> ⭐</div>
+            
+            <div class="hologram-container">
+                <div class="holo-bracket hb-tl"></div>
+                <div class="holo-bracket hb-tr"></div>
+                <div class="holo-bracket hb-bl"></div>
+                <div class="holo-bracket hb-br"></div>
+                <div class="scanline"></div>
+                <canvas id="hangarShipCanvas" width="200" height="200" style="z-index: 2;"></canvas>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; width: 300px; align-items:center; margin-bottom: 20px;">
+                <button class="btn" style="padding: 10px 20px;" onclick="prevShip()">&#9664;</button>
+                <div style="text-align:center;">
+                    <div id="ship-name" style="font-size: 24px; font-weight: bold; color: #00ffff; letter-spacing: 2px;">STRIKER</div>
+                    <div id="ship-desc" style="font-size: 14px; color: #aaa;">BALANCED</div>
+                </div>
+                <button class="btn" style="padding: 10px 20px;" onclick="nextShip()">&#9654;</button>
+            </div>
+            <button id="btn-equip-ship" class="btn" style="margin-bottom: 30px; font-size: 16px; padding: 10px 40px;" onclick="buyOrEquipShip()">EQUIPPED</button>
+    
+            <div class="upgrade-row">
+                <div class="upgrade-card card-hp">
+                    <div class="upgrade-title">HULL INTEGRITY</div>
+                    <div class="level-bar-container" id="hp-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="hp-bonus" style="color: #0f0;">+0 HP</div>
+                    <button id="btn-upg-hp" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #0f0; color: #0f0;" onclick="upgradeHealth()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-cannon">
+                    <div class="upgrade-title">MAIN CANNON</div>
+                    <div class="level-bar-container" id="cannon-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="cannon-bonus" style="color: #00ffff;">+0 DMG</div>
+                    <button id="btn-upg-cannon" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #00ffff; color: #00ffff;" onclick="upgradeCannon()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-special locked">
+                    <div class="upgrade-title">HEAVY BEAM</div>
+                    <div class="level-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" style="color: #555;">LOCKED</div>
+                    <button class="btn" style="font-size: 14px; padding: 10px; width: 100%; background: #111; border-color: #333; cursor: not-allowed; color: #555;">REQ. LVL 5</button>
+                </div>
+            </div>
+            <button class="btn" style="margin-top: 10px; border-color: #fff; color: #fff;" onclick="closeHangar()">EXIT HANGAR</button>
+        </div>
+    </div>
+
+    <div id="game-over-screen" class="screen-overlay">
+        <div class="title-text" id="game-over-title">Mission Failed</div>
+        <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
