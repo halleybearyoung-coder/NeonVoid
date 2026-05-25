@@ -128,7 +128,7 @@ canvas {
     background: rgba(0,0,0,0.4);
     opacity: 0; 
 }
-#level-select-screen, #expert-level-select-screen, #hangar-screen, #intro-screen, #welcome-screen {
+#level-select-screen, #simulation-level-select-screen, #expert-level-select-screen, #insane-level-select-screen, #hangar-screen, #intro-screen, #welcome-screen {
     pointer-events: auto;
     background: rgba(0,0,0,0.9);
     opacity: 0; 
@@ -169,6 +169,12 @@ canvas {
     display: flex;
     gap: 20px;
 }
+.difficulty-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 16px 20px;
+    max-width: 620px;
+}
 .btn {
     background: rgba(0, 0, 0, 0.6);
     color: #00ffff;
@@ -203,6 +209,26 @@ canvas {
     background: #ff4444;
     color: white;
     box-shadow: 0 0 40px #ff4444;
+}
+.btn-insane {
+    border-color: #ff00aa;
+    color: #ff00aa;
+    box-shadow: 0 0 15px rgba(255, 0, 170, 0.2);
+}
+.btn-insane:hover {
+    background: #ff00aa;
+    color: white;
+    box-shadow: 0 0 40px #ff00aa;
+}
+.btn-sim {
+    border-color: #7dff77;
+    color: #7dff77;
+    box-shadow: 0 0 15px rgba(125, 255, 119, 0.2);
+}
+.btn-sim:hover {
+    background: #7dff77;
+    color: #031203;
+    box-shadow: 0 0 40px #7dff77;
 }
 .hangar-toggle-btn {
     position: absolute;
@@ -303,6 +329,8 @@ canvas {
 }
 .card-hp { border-top-color: #00ff00; }
 .card-cannon { border-top-color: #00ffff; }
+.card-engine { border-top-color: #46b8ff; }
+.card-magnet { border-top-color: #aa66ff; }
 .card-special { border-top-color: #ff4444; }
 
 .upgrade-card:hover {
@@ -312,6 +340,8 @@ canvas {
 }
 .card-hp:hover { border-color: #00ff00; box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
 .card-cannon:hover { border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
+.card-engine:hover { border-color: #46b8ff; box-shadow: 0 0 15px rgba(70, 184, 255, 0.24); }
+.card-magnet:hover { border-color: #aa66ff; box-shadow: 0 0 15px rgba(170, 102, 255, 0.24); }
 .card-special:hover:not(.locked) { border-color: #ff4444; box-shadow: 0 0 15px rgba(255, 68, 68, 0.2); }
 
 .upgrade-title {
@@ -346,6 +376,8 @@ canvas {
 }
 .card-hp .level-segment.active { background: #00ff00; box-shadow: 0 0 5px #00ff00; border-color: #00ff00; }
 .card-cannon .level-segment.active { background: #00ffff; box-shadow: 0 0 5px #00ffff; border-color: #00ffff; }
+.card-engine .level-segment.active { background: #46b8ff; box-shadow: 0 0 5px #46b8ff; border-color: #46b8ff; }
+.card-magnet .level-segment.active { background: #aa66ff; box-shadow: 0 0 5px #aa66ff; border-color: #aa66ff; }
 .card-special .level-segment.active { background: #ff4444; box-shadow: 0 0 5px #ff4444; border-color: #ff4444; }
 
 .locked { border-color: #333; color: #555; opacity: 0.6; pointer-events: none; border-top-color: #333; }
@@ -406,6 +438,38 @@ canvas {
 .red-theme .level-btn.locked { border-color: rgba(255, 68, 68, 0.3); color: rgba(255, 68, 68, 0.3); }
 .red-theme .btn { border-color: #ff4444; color: #ff4444; }
 .red-theme .btn:hover { background: #ff4444; color: white; }
+
+.insane-theme .title-text { color: #ff00aa !important; text-shadow: 0 0 20px rgba(255, 0, 170, 0.6); }
+.insane-theme .level-btn.active { border-color: #ff00aa; color: #ff00aa; background: rgba(60, 0, 35, 0.55); box-shadow: 0 0 18px rgba(255, 0, 170, 0.35); }
+.insane-theme .level-btn.active:hover { background: #ff00aa; color: black; box-shadow: 0 0 36px #ff00aa; }
+.insane-theme .level-btn.locked { border-color: rgba(255, 0, 170, 0.28); color: rgba(255, 0, 170, 0.28); }
+.insane-theme .btn { border-color: #ff00aa; color: #ff00aa; }
+.insane-theme .btn:hover { background: #ff00aa; color: white; }
+
+.simulation-theme {
+    background:
+        repeating-linear-gradient(0deg, rgba(180,255,180,0.06) 0 2px, rgba(0,0,0,0) 2px 5px),
+        radial-gradient(circle at center, rgba(35, 80, 35, 0.25), rgba(0,0,0,0.94) 70%);
+}
+.simulation-theme .title-text { color: #7dff77 !important; text-shadow: 0 0 16px rgba(125, 255, 119, 0.65); }
+.simulation-theme .level-btn.active { border-color: #7dff77; color: #7dff77; background: rgba(0, 50, 20, 0.62); box-shadow: 0 0 18px rgba(125, 255, 119, 0.26); }
+.simulation-theme .level-btn.active:hover { background: #7dff77; color: #031203; box-shadow: 0 0 34px #7dff77; }
+.simulation-theme .level-btn.locked { border-color: rgba(125, 255, 119, 0.28); color: rgba(125, 255, 119, 0.28); }
+.simulation-theme .btn { border-color: #7dff77; color: #7dff77; }
+.simulation-theme .btn:hover { background: #7dff77; color: #031203; }
+
+body.simulation-mode::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 12;
+    background:
+        repeating-linear-gradient(0deg, rgba(190,255,190,0.08) 0 1px, rgba(0,0,0,0) 1px 4px),
+        radial-gradient(circle at center, rgba(150,255,150,0.08), rgba(0,0,0,0.16));
+    mix-blend-mode: screen;
+    opacity: 0.65;
+}
 
 .radio-box {
     width: 60%;

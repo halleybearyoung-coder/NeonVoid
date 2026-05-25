@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Neon Void</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20260525-difficulty">
 </head>
 <body>
 
@@ -35,7 +35,7 @@
             <button class="dev-btn" style="width: 100%; color: #00ffff; border-color: #00ffff;" onclick="devResetUpgradesOnly()">RESET UPGRADES</button>
             <button class="dev-btn" style="width: 100%; color: #ff00ff; border-color: #ff00ff;" onclick="devResetLevelsOnly()">RESET LEVELS</button>
             <button class="dev-btn" style="width: 100%; color: #ff3300; border-color: #ff3300; font-weight: bold; background: #300;" onclick="devGlobalWipe()">GLOBAL DATA WIPE</button>
-            <button class="dev-btn" style="width: 100%; color: #888; border-color: #888;" onclick="devResetCookies()">CLEAR COOKIES (INTRO)</button>
+            <button class="dev-btn" style="width: 100%; color: #888; border-color: #888;" onclick="devResetCookies()">COOKIE RESET + WIPE</button>
         </div>
     </div>
 
@@ -58,7 +58,7 @@
         <div id="player-hud">
             <div class="hud-text">HP: <span id="player-hp">100</span>%</div>
             <div class="hud-text">SCORE: <span id="score">0</span></div>
-            <div class="hud-text" style="color: #ffd700;">STARS: <span id="stars-display">0</span></div>
+            <div class="hud-text" style="color: #46b8ff;">STARS: <span id="stars-display">0</span></div>
             <div class="hud-text" style="font-size: 14px; margin-top: 5px; color: #aaa;">STAGE: <span id="stage-display">1</span></div>
         </div>
         <div class="phase-indicator" id="phase-debug">INIT</div>
@@ -95,9 +95,11 @@
     <div id="menu-screen" class="screen-overlay">
         <div class="title-text" style="color: #00ffff;">NEON VOID</div>
         <div class="subtitle-text">SELECT DIFFICULTY</div>
-        <div class="btn-container">
+        <div class="btn-container difficulty-grid">
             <button id="start-hard-btn" class="btn btn-hard">EXPERT</button>
             <button id="start-easy-btn" class="btn">BEGINNER</button>
+            <button id="start-insane-btn" class="btn btn-insane">INSANE</button>
+            <button id="start-sim-btn" class="btn btn-sim">SIMULATION</button>
         </div>
         <div class="controls-hint">ARROWS / WASD to Move &nbsp;|&nbsp; MOUSE to Follow</div>
     </div>
@@ -110,6 +112,14 @@
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
 
+    <div id="simulation-level-select-screen" class="screen-overlay simulation-theme">
+        <button id="simulation-hangar-btn" class="hangar-toggle-btn" onclick="openHangar('sim')" aria-label="Open simulation hangar">🛠️ HANGAR</button>
+        <div class="title-text">SIMULATIONS</div>
+        <div id="sim-grid" class="level-grid">
+        </div>
+        <button class="btn" onclick="resetToMenu()">BACK</button>
+    </div>
+
     <div id="expert-level-select-screen" class="screen-overlay red-theme">
         <button id="expert-hangar-btn" class="hangar-toggle-btn" onclick="openHangar('hard')" aria-label="Open expert hangar">🛠️ HANGAR</button>
         <div class="title-text">EXPERT CAMPAIGN</div>
@@ -118,10 +128,18 @@
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
 
+    <div id="insane-level-select-screen" class="screen-overlay insane-theme">
+        <button id="insane-hangar-btn" class="hangar-toggle-btn" onclick="openHangar('insane')" aria-label="Open insane hangar">🛠️ HANGAR</button>
+        <div class="title-text">INSANE CAMPAIGN</div>
+        <div id="insane-grid" class="level-grid">
+        </div>
+        <button class="btn" onclick="resetToMenu()">BACK</button>
+    </div>
+
     <div id="hangar-screen" class="screen-overlay">
         <div id="hangar-content">
             <div class="title-text" id="hangar-title" style="font-size: 36px; margin-bottom: 10px; color: #fff; text-shadow: 0 0 20px #00ffff;">HANGAR</div>
-            <div style="font-size: 20px; color: #ffd700; margin-bottom: 30px; font-weight: bold; text-shadow: 0 0 10px #ffd700; letter-spacing: 2px;">CREDITS: <span id="hangar-stars">0</span> ⭐</div>
+            <div style="font-size: 20px; color: #46b8ff; margin-bottom: 30px; font-weight: bold; text-shadow: 0 0 10px #46b8ff; letter-spacing: 2px;">CREDITS: <span id="hangar-stars">0</span> ✦</div>
             
             <div class="hologram-container">
                 <div class="holo-bracket hb-tl"></div>
@@ -161,6 +179,24 @@
                     <button id="btn-upg-cannon" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #00ffff; color: #00ffff;" onclick="upgradeCannon()">UPGRADE</button>
                 </div>
 
+                <div class="upgrade-card card-engine">
+                    <div class="upgrade-title">ENGINE TUNING</div>
+                    <div class="level-bar-container" id="engine-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="engine-bonus" style="color: #46b8ff;">+0 SPD</div>
+                    <button id="btn-upg-engine" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #46b8ff; color: #46b8ff;" onclick="upgradeEngine()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-magnet">
+                    <div class="upgrade-title">GRAVITY SCOOP</div>
+                    <div class="level-bar-container" id="magnet-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="magnet-bonus" style="color: #aa66ff;">+0 RANGE</div>
+                    <button id="btn-upg-magnet" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #aa66ff; color: #aa66ff;" onclick="upgradeMagnet()">UPGRADE</button>
+                </div>
+
                 <div class="upgrade-card card-special locked">
                     <div class="upgrade-title">HEAVY BEAM</div>
                     <div class="level-bar-container">
@@ -179,6 +215,6 @@
         <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20260525-difficulty"></script>
 </body>
 </html>
