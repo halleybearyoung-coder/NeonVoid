@@ -13,20 +13,113 @@ let currentHangarMode = 'easy';
 let introTimer = 30;
 let introInterval = null;
 let cookiesAccepted = false;
+let levelSelectReadyAt = 0;
+let levelSelectArmTimer = null;
 
 // --- AUDIO SYSTEM ---
 let audioCtx = null;
 let musicInterval = null;
 let nextNoteTime = 0;
 let currentNote = 0;
-const bassNotes = [65.41, 65.41, 77.78, 65.41, 65.41, 77.78, 98.00, 87.31]; 
+let currentMusicLevel = 0;
+let musicAudio = null;
+let musicUnlocked = false;
+const MUSIC_TRACKS = [
+    null,
+    'assets/music/stage01-omega-curse.mp3',
+    'assets/music/stage02-slim-chance.mp3',
+    'assets/music/stage03-broken-glass.mp3',
+    'assets/music/stage04-snake-den.mp3',
+    'assets/music/stage05-ship-swarm.mp3',
+    'assets/music/stage06-matrix-glitch.mp3',
+    'assets/music/stage01-omega-curse.mp3',
+    'assets/music/stage02-slim-chance.mp3',
+    'assets/music/stage03-broken-glass.mp3',
+    'assets/music/stage04-snake-den.mp3',
+    'assets/music/stage05-ship-swarm.mp3',
+    'assets/music/stage06-matrix-glitch.mp3'
+];
+const MUSIC_DEFAULT_VOLUME = 0.35;
+const LEVEL_TRACKS = [
+    { root: 36, tempo: 0.20, wave: 'sawtooth', bass: [0,0,7,0,0,10,7,5], lead: [12,null,15,17,12,null,19,17], color: 'menu' },
+    { root: 36, tempo: 0.18, wave: 'square', bass: [0,0,7,0,3,0,10,7], lead: [12,15,17,null,15,12,10,null], color: 'omega' },
+    { root: 38, tempo: 0.17, wave: 'sawtooth', bass: [0,5,0,7,0,10,7,5], lead: [17,null,15,14,17,19,null,22], color: 'terminator' },
+    { root: 39, tempo: 0.16, wave: 'square', bass: [0,0,6,0,11,0,6,4], lead: [12,18,null,16,23,18,16,null], color: 'phantom' },
+    { root: 35, tempo: 0.18, wave: 'triangle', bass: [0,7,5,7,0,10,7,5], lead: [19,17,null,15,14,15,17,null], color: 'serpent' },
+    { root: 34, tempo: 0.19, wave: 'sawtooth', bass: [0,0,3,0,8,7,5,3], lead: [15,null,17,20,19,null,17,15], color: 'hive' },
+    { root: 41, tempo: 0.15, wave: 'square', bass: [0,6,1,7,0,11,6,1], lead: [12,13,18,null,19,18,13,null], color: 'syntax' },
+    { root: 32, tempo: 0.20, wave: 'sawtooth', bass: [0,0,12,10,7,0,5,7], lead: [24,null,22,19,null,17,19,22], color: 'null' },
+    { root: 37, tempo: 0.155, wave: 'square', bass: [0,7,0,10,12,10,7,3], lead: [19,22,null,24,22,19,17,null], color: 'oblivion' },
+    { root: 40, tempo: 0.17, wave: 'sawtooth', bass: [0,4,7,11,0,7,11,14], lead: [16,null,19,23,28,23,19,null], color: 'architect' },
+    { root: 31, tempo: 0.145, wave: 'square', bass: [0,0,7,10,0,12,10,7], lead: [24,22,19,null,27,24,22,null], color: 'void' },
+    { root: 42, tempo: 0.16, wave: 'sawtooth', bass: [0,5,9,12,0,9,5,2], lead: [21,null,24,26,28,26,24,null], color: 'rift' },
+    { root: 43, tempo: 0.15, wave: 'square', bass: [0,0,8,0,3,10,8,3], lead: [20,23,null,27,30,27,23,null], color: 'portal' }
+];
+
+function midiToFreq(note) {
+    return 440 * Math.pow(2, (note - 69) / 12);
+}
+
+function setLevelMusic(level) {
+    currentMusicLevel = Math.max(0, Math.min(MUSIC_TRACKS.length - 1, level));
+    currentNote = 0;
+    nextNoteTime = audioCtx ? audioCtx.currentTime + 0.05 : 0;
+    startMusicTrack();
+}
+
+function startMusicTrack() {
+    if (!musicUnlocked) return;
+    const src = MUSIC_TRACKS[currentMusicLevel];
+    if (!src) {
+        if (musicAudio) musicAudio.pause();
+        return;
+    }
+    if (!musicAudio) {
+        musicAudio = new Audio();
+        musicAudio.loop = true;
+        musicAudio.volume = MUSIC_DEFAULT_VOLUME;
+        musicAudio.addEventListener('ended', () => {
+            if (gameState === STATE.PLAYING || gameState === STATE.INTRO || gameState === STATE.VICTORY_SEQUENCE) {
+                musicAudio.currentTime = 0;
+                musicAudio.play().catch(() => {});
+            }
+        });
+    }
+    const nextSrc = new URL(src, window.location.href).href;
+    if (musicAudio.src !== nextSrc) {
+        musicAudio.pause();
+        musicAudio.src = src;
+        musicAudio.currentTime = 0;
+    }
+    musicAudio.volume = MUSIC_DEFAULT_VOLUME;
+    musicAudio.play().catch(() => {});
+}
+
+function fadeOutMusic(duration = 1300) {
+    if (!musicAudio || musicAudio.paused) return;
+    const startVolume = musicAudio.volume;
+    const startedAt = performance.now();
+    function fadeFrame(now) {
+        const t = Math.min(1, (now - startedAt) / duration);
+        musicAudio.volume = startVolume * (1 - t);
+        if (t < 1 && gameState === STATE.GAMEOVER) {
+            requestAnimationFrame(fadeFrame);
+        } else {
+            musicAudio.pause();
+            musicAudio.currentTime = 0;
+            musicAudio.volume = MUSIC_DEFAULT_VOLUME;
+        }
+    }
+    requestAnimationFrame(fadeFrame);
+}
 
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (!musicInterval) musicInterval = setInterval(scheduleMusic, 50);
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
+    musicUnlocked = true;
+    startMusicTrack();
 }
 
 window.addEventListener('click', initAudio, { once: true });
@@ -35,29 +128,54 @@ window.addEventListener('touchstart', initAudio, { once: true });
 
 function scheduleMusic() {
     if (!audioCtx || audioCtx.state === 'suspended') return;
+    const track = LEVEL_TRACKS[currentMusicLevel] || LEVEL_TRACKS[0];
     while (nextNoteTime < audioCtx.currentTime + 0.1) {
         if (nextNoteTime === 0) nextNoteTime = audioCtx.currentTime + 0.1;
-        
-        const osc = audioCtx.createOscillator();
-        const filter = audioCtx.createBiquadFilter();
-        const gain = audioCtx.createGain();
 
-        osc.type = 'sawtooth';
-        osc.frequency.value = bassNotes[currentNote % bassNotes.length] / 2; 
-        
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(200, nextNoteTime);
-        filter.frequency.exponentialRampToValueAtTime(1200, nextNoteTime + 0.05);
-        filter.frequency.exponentialRampToValueAtTime(200, nextNoteTime + 0.1);
+        const step = currentNote % track.bass.length;
+        const bassFreq = midiToFreq(track.root + track.bass[step]);
+        const leadOffset = track.lead[step % track.lead.length];
 
-        gain.gain.setValueAtTime(0.0, nextNoteTime);
-        gain.gain.linearRampToValueAtTime(0.02, nextNoteTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, nextNoteTime + 0.15);
+        const bassOsc = audioCtx.createOscillator();
+        const bassFilter = audioCtx.createBiquadFilter();
+        const bassGain = audioCtx.createGain();
+        bassOsc.type = track.wave;
+        bassOsc.frequency.value = bassFreq / 2;
+        bassFilter.type = 'lowpass';
+        bassFilter.frequency.setValueAtTime(180, nextNoteTime);
+        bassFilter.frequency.exponentialRampToValueAtTime(1000 + currentMusicLevel * 55, nextNoteTime + 0.045);
+        bassFilter.frequency.exponentialRampToValueAtTime(160, nextNoteTime + track.tempo * 0.78);
+        bassGain.gain.setValueAtTime(0.0, nextNoteTime);
+        bassGain.gain.linearRampToValueAtTime(0.026, nextNoteTime + 0.018);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, nextNoteTime + track.tempo * 0.88);
+        bassOsc.connect(bassFilter); bassFilter.connect(bassGain); bassGain.connect(audioCtx.destination);
+        bassOsc.start(nextNoteTime); bassOsc.stop(nextNoteTime + track.tempo * 0.92);
 
-        osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(nextNoteTime); osc.stop(nextNoteTime + 0.15);
-        
-        nextNoteTime += 0.18; 
+        if (leadOffset !== null && (currentNote + currentMusicLevel) % 2 === 0) {
+            const leadOsc = audioCtx.createOscillator();
+            const leadGain = audioCtx.createGain();
+            leadOsc.type = currentMusicLevel % 3 === 0 ? 'triangle' : 'square';
+            leadOsc.frequency.value = midiToFreq(track.root + leadOffset);
+            leadGain.gain.setValueAtTime(0.0, nextNoteTime + track.tempo * 0.35);
+            leadGain.gain.linearRampToValueAtTime(0.014, nextNoteTime + track.tempo * 0.4);
+            leadGain.gain.exponentialRampToValueAtTime(0.001, nextNoteTime + track.tempo * 0.9);
+            leadOsc.connect(leadGain); leadGain.connect(audioCtx.destination);
+            leadOsc.start(nextNoteTime + track.tempo * 0.34); leadOsc.stop(nextNoteTime + track.tempo * 0.92);
+        }
+
+        if (currentNote % 4 === 0) {
+            const kickOsc = audioCtx.createOscillator();
+            const kickGain = audioCtx.createGain();
+            kickOsc.type = 'sine';
+            kickOsc.frequency.setValueAtTime(75, nextNoteTime);
+            kickOsc.frequency.exponentialRampToValueAtTime(35, nextNoteTime + 0.08);
+            kickGain.gain.setValueAtTime(0.04, nextNoteTime);
+            kickGain.gain.exponentialRampToValueAtTime(0.001, nextNoteTime + 0.09);
+            kickOsc.connect(kickGain); kickGain.connect(audioCtx.destination);
+            kickOsc.start(nextNoteTime); kickOsc.stop(nextNoteTime + 0.1);
+        }
+
+        nextNoteTime += track.tempo;
         currentNote++;
     }
 }
@@ -3543,7 +3661,7 @@ function showExpertSelect() {
     gameState = STATE.LEVEL_SELECT; menuScreen.style.opacity = '0'; menuScreen.style.pointerEvents = 'none';
     hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
     levelSelectScreen.style.opacity = '0'; levelSelectScreen.style.pointerEvents = 'none';
-    expertSelectScreen.style.opacity = '1'; expertSelectScreen.style.pointerEvents = 'auto'; updateLevelGrid('hard');
+    expertSelectScreen.style.opacity = '1'; armLevelSelectScreen(expertSelectScreen, 'hard'); updateLevelGrid('hard');
 }
 
 function showRookieSelect() {
@@ -3552,7 +3670,22 @@ function showRookieSelect() {
     gameState = STATE.LEVEL_SELECT; menuScreen.style.opacity = '0'; menuScreen.style.pointerEvents = 'none';
     hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
     expertSelectScreen.style.opacity = '0'; expertSelectScreen.style.pointerEvents = 'none';
-    levelSelectScreen.style.opacity = '1'; levelSelectScreen.style.pointerEvents = 'auto'; updateLevelGrid('easy');
+    levelSelectScreen.style.opacity = '1'; armLevelSelectScreen(levelSelectScreen, 'easy'); updateLevelGrid('easy');
+}
+
+function armLevelSelectScreen(screen, mode) {
+    if (levelSelectArmTimer) clearTimeout(levelSelectArmTimer);
+    levelSelectReadyAt = Date.now() + 350;
+    screen.style.pointerEvents = 'none';
+    levelSelectArmTimer = setTimeout(() => {
+        if (gameState === STATE.LEVEL_SELECT && currentHangarMode === mode) {
+            screen.style.pointerEvents = 'auto';
+        }
+    }, 350);
+}
+
+function canLaunchSelectedLevel(mode) {
+    return gameState === STATE.LEVEL_SELECT && currentHangarMode === mode && Date.now() >= levelSelectReadyAt;
 }
 
 function updateLevelGrid(mode) {
@@ -3567,9 +3700,18 @@ function updateLevelGrid(mode) {
         const btn = document.createElement('button'); btn.className = 'level-btn';
         if (i <= stats.maxStage) {
             btn.classList.add('active'); btn.innerText = i < 10 ? `0${i}` : i; 
-            btn.onclick = () => launchMission(mode, i);
+            btn.onclick = (event) => {
+                event.stopPropagation();
+                if (!canLaunchSelectedLevel(mode)) return;
+                launchMission(mode, i);
+            };
         } else {
-            btn.classList.add('locked'); btn.innerHTML = `${i < 10 ? '0'+i : i} <span style="font-size:12px">🔒</span>`; btn.onclick = showLockedMessage;
+            btn.classList.add('locked'); btn.innerHTML = `${i < 10 ? '0'+i : i} <span style="font-size:12px">🔒</span>`;
+            btn.onclick = (event) => {
+                event.stopPropagation();
+                if (!canLaunchSelectedLevel(mode)) return;
+                showLockedMessage();
+            };
         }
         gridEl.appendChild(btn);
     }
@@ -3714,6 +3856,7 @@ function updateUI() {
 
 function launchMission(mode, levelIndex) {
     currentSettings = mode === 'hard' ? DIFFICULTY.NORMAL : DIFFICULTY.EASY; activeDifficultyMode = mode; currentLevelIndex = levelIndex;
+    setLevelMusic(levelIndex);
     menuScreen.style.opacity = '0'; menuScreen.style.pointerEvents = 'none';
     levelSelectScreen.style.opacity = '0'; levelSelectScreen.style.pointerEvents = 'none';
     expertSelectScreen.style.opacity = '0'; expertSelectScreen.style.pointerEvents = 'none';
@@ -3761,6 +3904,7 @@ function startVictorySequence() {
 
 function resetToMenu() {
     setArenaScale(1);
+    setLevelMusic(0);
     gameState = STATE.MENU; menuScreen.style.opacity = '1'; menuScreen.style.pointerEvents = 'auto';
     levelSelectScreen.style.opacity = '0'; levelSelectScreen.style.pointerEvents = 'none';
     expertSelectScreen.style.opacity = '0'; expertSelectScreen.style.pointerEvents = 'none';
@@ -3777,6 +3921,7 @@ function gameOver(win) {
     gameState = STATE.GAMEOVER; gameOverScreen.style.opacity = '1'; gameOverScreen.style.pointerEvents = 'auto';
     gameOverTitle.innerText = win ? "STAGE CLEARED" : "MISSION FAILED";
     gameOverTitle.style.color = win ? "#00ff00" : "#ff0000"; waveText.style.opacity = 0;
+    if (!win) fadeOutMusic();
 
     if (win) {
         const stats = (activeDifficultyMode === 'easy') ? gameData.easy : gameData.hard;
