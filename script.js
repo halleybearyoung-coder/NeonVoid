@@ -4,7 +4,7 @@ const STATE = {
     VICTORY_SEQUENCE: 'victory_sequence', HANGAR: 'hangar'
 };
 let gameState = STATE.MENU;
-const MAX_STAGE = 15;
+const MAX_STAGE = 18;
 const CAMPAIGN_MODES = ['sim', 'easy', 'hard', 'insane'];
 const MODE_LABELS = {
     sim: 'SIMULATION',
@@ -25,6 +25,7 @@ let arenaScale = 1;
 let currentLevelIndex = 1;
 let activeDifficultyMode = 'easy';
 let currentHangarMode = 'easy';
+let hangarReturnToMenu = false;
 let introTimer = 30;
 let introInterval = null;
 let cookiesAccepted = false;
@@ -50,11 +51,18 @@ const MUSIC_TRACKS = [
     'assets/music/stage01-omega-curse.mp3',
     'assets/music/stage02-slim-chance.mp3',
     'assets/music/stage03-broken-glass.mp3',
+    'Pressure_Threshold.mp3',
+    'assets/music/stage05-ship-swarm.mp3',
+    'assets/music/stage06-matrix-glitch.mp3',
+    'assets/music/stage01-omega-curse.mp3',
+    'assets/music/stage02-slim-chance.mp3',
+    'assets/music/stage03-broken-glass.mp3',
     'assets/music/stage04-snake-den.mp3',
     'assets/music/stage05-ship-swarm.mp3',
     'assets/music/stage06-matrix-glitch.mp3'
 ];
 const MUSIC_DEFAULT_VOLUME = 0.35;
+const EXPLOSION_SAMPLE_SRC = 'soundreality-explosion-fx-343683.mp3';
 const LEVEL_TRACKS = [
     { root: 36, tempo: 0.20, wave: 'sawtooth', bass: [0,0,7,0,0,10,7,5], lead: [12,null,15,17,12,null,19,17], color: 'menu' },
     { root: 36, tempo: 0.18, wave: 'square', bass: [0,0,7,0,3,0,10,7], lead: [12,15,17,null,15,12,10,null], color: 'omega' },
@@ -199,6 +207,12 @@ window.addEventListener('mousedown', (e) => {
     if (e.target && e.target.classList && e.target.classList.contains('btn')) playSound('click');
 });
 
+function playExplosionSample() {
+    const sample = new Audio(EXPLOSION_SAMPLE_SRC);
+    sample.volume = 0.18;
+    sample.play().catch(() => {});
+}
+
 function playSound(type) {
     if (!audioCtx || audioCtx.state === 'suspended') return;
     const osc = audioCtx.createOscillator();
@@ -213,15 +227,16 @@ function playSound(type) {
             osc.type = 'triangle'; 
             osc.frequency.setValueAtTime(1200, now);
             osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
-            gainNode.gain.setValueAtTime(0.1, now);
+            gainNode.gain.setValueAtTime(0.032, now);
             gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
             osc.start(now);
             osc.stop(now + 0.15);
         } else if (type === 'explosion') {
+            playExplosionSample();
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(100 + Math.random()*50, now);
             osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
-            gainNode.gain.setValueAtTime(0.1, now);
+            gainNode.gain.setValueAtTime(0.025, now);
             gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
             osc.start(now);
             osc.stop(now + 0.3);
@@ -267,6 +282,9 @@ const STAGE_MESSAGES = {
     'easy_13': "ASTRAL TRIO DETECTED. <br><br>Two outer stars are protecting a split core. Destroy the red and blue stars first, then break the center before it grows unstable.",
     'easy_14': "MIMIC SIGNATURE DETECTED. <br><br>It changes shape every 15 seconds and copies bosses from the first five sectors. Do not trust what you see.",
     'easy_15': "CURSE 0 ONLINE. <br><br>A blue zero is forming in the void. Its Termination 0 shots are slow, but one hit ends everything.",
+    'easy_16': "PULSE DRAGON DETECTED. <br><br>A long neon beast is coiling through the grid. Its rings move slowly, then snap shut fast.",
+    'easy_17': "STAR FORGE ONLINE. <br><br>The machine is building stars and throwing the broken pieces at you. Stay out of the falling lanes.",
+    'easy_18': "REALITY WARDEN FOUND. <br><br>It is trying to pin the whole sector in place. Break the lock before the void closes.",
     'hard_1': "Veteran difficulty authorized. <br><br>The enemy AI has adapted to standard tactics. Expect aggressive maneuvers.",
     'hard_2': "This is it. The Elite Terminator unit has been deployed. <br><br>Survival probability is near zero. Good luck, Commander.",
     'hard_3': "Elite Deep Sector. \n\nNo support available. You are on your own, Commander.",
@@ -281,7 +299,10 @@ const STAGE_MESSAGES = {
     'hard_12': "THE PORTAL PROTOTYPE. <br><br>Space is no longer trustworthy. Lasers enter one gate and leave another. So can you. So can it.",
     'hard_13': "THE ASTRAL TRIO. <br><br>Three stars, one shielded heart. Kill the orbiting red and blue stars before the center wakes up.",
     'hard_14': "THE MIMIC. <br><br>It remembers the first five nightmares and wears them like masks. Every 15 seconds, the fight changes.",
-    'hard_15': "CURSE 0. <br><br>A null-blue zero with one command: terminate. Its bullets are slow. That is the only mercy."
+    'hard_15': "CURSE 0. <br><br>A null-blue zero with one command: terminate. Its bullets are slow. That is the only mercy.",
+    'hard_16': "THE PULSE DRAGON. <br><br>It coils around the battlefield and floods space with pulse rings. Its body is the warning.",
+    'hard_17': "THE STAR FORGE. <br><br>It manufactures little suns as ammunition. The longer it runs, the hotter the screen gets.",
+    'hard_18': "REALITY WARDEN. <br><br>The Warden does not chase you. It rewrites where safety is allowed to exist."
 };
 
 function setCookie(name, value, days) { localStorage.setItem(name, value); }
@@ -290,8 +311,12 @@ function deleteCookie(name) { localStorage.removeItem(name); }
 
 let gameData;
 
+function createShipUpgradeData() {
+    return { healthLvl: 0, cannonLvl: 0, engineLvl: 0, magnetLvl: 0 };
+}
+
 function createModeData() {
-    return { stars: 0, healthLvl: 0, cannonLvl: 0, engineLvl: 0, magnetLvl: 0, maxStage: 1, unlockedShips: [0], currentShip: 0 };
+    return { stars: 0, maxStage: 1, unlockedShips: [0], currentShip: 0, shipUpgrades: { 0: createShipUpgradeData() } };
 }
 
 function normalizeModeData(mode) {
@@ -308,11 +333,32 @@ function normalizeModeData(mode) {
     stats.unlockedShips = [...new Set(stats.unlockedShips.map(Number))].filter(id => id >= 0 && id < SHIPS.length);
     if (!stats.unlockedShips.includes(0)) stats.unlockedShips.unshift(0);
     if (!stats.unlockedShips.includes(stats.currentShip)) stats.currentShip = 0;
+    if (!stats.shipUpgrades) {
+        stats.shipUpgrades = {};
+        stats.shipUpgrades[stats.currentShip] = {
+            healthLvl: Math.min(HEALTH_UPGRADES.bonuses.length, stats.healthLvl || 0),
+            cannonLvl: Math.min(CANNON_UPGRADES.bonuses.length, stats.cannonLvl || 0),
+            engineLvl: Math.min(ENGINE_UPGRADES.bonuses.length, stats.engineLvl || 0),
+            magnetLvl: Math.min(MAGNET_UPGRADES.bonuses.length, stats.magnetLvl || 0)
+        };
+    }
+    stats.unlockedShips.forEach(shipId => { getShipUpgrades(stats, shipId); });
     return stats;
 }
 
 function getModeData(mode = activeDifficultyMode) {
     return normalizeModeData(CAMPAIGN_MODES.includes(mode) ? mode : 'easy');
+}
+
+function getShipUpgrades(stats, shipId = stats.currentShip) {
+    if (!stats.shipUpgrades) stats.shipUpgrades = {};
+    if (!stats.shipUpgrades[shipId]) stats.shipUpgrades[shipId] = createShipUpgradeData();
+    const upgrades = stats.shipUpgrades[shipId];
+    upgrades.healthLvl = Math.max(0, Math.min(HEALTH_UPGRADES.bonuses.length, upgrades.healthLvl || 0));
+    upgrades.cannonLvl = Math.max(0, Math.min(CANNON_UPGRADES.bonuses.length, upgrades.cannonLvl || 0));
+    upgrades.engineLvl = Math.max(0, Math.min(ENGINE_UPGRADES.bonuses.length, upgrades.engineLvl || 0));
+    upgrades.magnetLvl = Math.max(0, Math.min(MAGNET_UPGRADES.bonuses.length, upgrades.magnetLvl || 0));
+    return upgrades;
 }
 
 function resetAllProgressData() {
@@ -342,10 +388,10 @@ function saveData() {
     setCookie('neonVoidData_v3', JSON.stringify(gameData), 365);
 }
 
-const HEALTH_UPGRADES = { costs: [250, 450, 800, 1600, 3200], bonuses: [4, 8, 12, 16, 32] };
-const CANNON_UPGRADES = { costs: [350, 700, 1300, 2600, 5200], bonuses: [1, 1, 2, 2, 3] };
-const ENGINE_UPGRADES = { costs: [300, 600, 1100, 2200, 4200], bonuses: [0.25, 0.5, 0.75, 1.0, 1.35] };
-const MAGNET_UPGRADES = { costs: [250, 500, 950, 1800, 3400], bonuses: [8, 16, 25, 35, 50] };
+const HEALTH_UPGRADES = { costs: [300, 600, 1100, 2200, 4200, 7800, 12500, 19000], bonuses: [8, 12, 18, 26, 38, 55, 75, 110] };
+const CANNON_UPGRADES = { costs: [350, 700, 1300, 2600, 5200, 9000, 15000, 23000], bonuses: [1, 1, 2, 2, 3, 3, 4, 5] };
+const ENGINE_UPGRADES = { costs: [300, 600, 1100, 2200, 4200, 7600, 11800, 17000], bonuses: [0.25, 0.5, 0.75, 1.0, 1.35, 1.7, 2.05, 2.5] };
+const MAGNET_UPGRADES = { costs: [250, 500, 950, 1800, 3400, 6500, 9800, 14500], bonuses: [8, 16, 25, 35, 50, 68, 90, 120] };
 const ECONOMY_MULTIPLIERS = { sim: 1.0, easy: 1.3, hard: 2.4, insane: 4.5 };
 
 function totalUpgradeBonus(config, level) {
@@ -815,6 +861,9 @@ const PORTAL_SEQUENCE = ['portal_laser', 'portal_barrage', 'portal_shift', 'port
 const ASTRAL_SEQUENCE = ['astral_orbit_fire', 'astral_outer_cross', 'astral_orbit_fire', 'astral_outer_cross'];
 const ASTRAL_CORE_SEQUENCE = ['astral_lasers', 'astral_starfall', 'astral_rapid_fire', 'astral_lasers'];
 const CURSE_SEQUENCE = ['curse_termination', 'curse_ring', 'curse_termination', 'curse_drift'];
+const PULSE_DRAGON_SEQUENCE = ['pulse_rings', 'pulse_spiral', 'pulse_lanes', 'pulse_rings'];
+const STAR_FORGE_SEQUENCE = ['forge_meteors', 'forge_cross', 'forge_minions', 'forge_meteors'];
+const REALITY_WARDEN_SEQUENCE = ['warden_lasers', 'warden_collapse', 'warden_zero', 'warden_lasers'];
 
 const DIFFICULTY = {
     SIM: { name: "SIMULATION", playerDamage: 16, swarmHp: 6, heavyHp: 25, laserHp: 18, bossHp: 1600, heavyAgile: false, enemyCountMult: 0.3, fireRateMult: 2.4, incomingDamageMult: 0.55, waveDelay: 150 },
@@ -850,7 +899,8 @@ class Drop {
         if (this.y > height + 20) this.active = false;
         if (player && player.active) {
             const stats = getModeData(activeDifficultyMode);
-            const magnetRange = 40 + totalUpgradeBonus(MAGNET_UPGRADES, stats.magnetLvl || 0);
+            const shipUpgrades = getShipUpgrades(stats);
+            const magnetRange = 40 + totalUpgradeBonus(MAGNET_UPGRADES, shipUpgrades.magnetLvl);
             const dist = Math.hypot(this.x - player.x, this.y - player.y);
             if (dist < magnetRange && dist > 0) {
                 const pull = 0.05 + Math.min(0.18, (magnetRange - dist) / magnetRange * 0.18);
@@ -1475,6 +1525,12 @@ function fireAtTarget(x, y, speed, type, damage, target) {
     return bullet;
 }
 
+function normalizeAngle(angle) {
+    while (angle < -Math.PI) angle += Math.PI * 2;
+    while (angle > Math.PI) angle -= Math.PI * 2;
+    return angle;
+}
+
 function handleCometRamCollision(ship) {
     enemies.forEach(enemy => {
         if (enemy && enemy.active && Math.hypot(ship.x - enemy.x, ship.y - enemy.y) < 46) {
@@ -1496,19 +1552,21 @@ class Player {
         this.cometRamTimer = 0;
         this.cometRamCooldown = 0;
         this.cometRamCenter = { x: this.x, y: this.y };
+        this.renderAngle = -Math.PI / 2;
         let baseHp = 100; let bonusHp = 0;
         const stats = getModeData(activeDifficultyMode); 
         const shipInfo = SHIPS[stats.currentShip];
+        const shipUpgrades = getShipUpgrades(stats);
         
-        this.speed = shipInfo.spd + totalUpgradeBonus(ENGINE_UPGRADES, stats.engineLvl || 0);
+        this.speed = shipInfo.spd + totalUpgradeBonus(ENGINE_UPGRADES, shipUpgrades.engineLvl);
         this.damageTakenMult = shipInfo.dmgTakenMult || 1;
-        const hpLevel = stats.healthLvl;
+        const hpLevel = shipUpgrades.healthLvl;
         bonusHp = totalUpgradeBonus(HEALTH_UPGRADES, hpLevel);
         this.maxHp = (baseHp + bonusHp) * shipInfo.hpMult; 
         this.hp = this.maxHp;
         playerHpEl.innerText = Math.floor(this.hp);
 
-        const cannonLevel = stats.cannonLvl;
+        const cannonLevel = shipUpgrades.cannonLvl;
         const bonusDamage = totalUpgradeBonus(CANNON_UPGRADES, cannonLevel);
         this.damage = currentSettings.playerDamage + bonusDamage;
     }
@@ -1536,6 +1594,7 @@ class Player {
                 this.y = this.cometRamCenter.y + Math.sin(t * 1.4) * radius;
                 this.x = Math.max(20, Math.min(width - 20, this.x));
                 this.y = Math.max(20, Math.min(height - 20, this.y));
+                this.renderAngle = Math.atan2(Math.cos(t * 1.4) * radius, -Math.sin(t) * radius);
                 handleCometRamCollision(this);
                 mouse.targetX = this.x; mouse.targetY = this.y;
                 particles.push(new Particle(this.x, this.y, '#46b8ff', 4, 7, 18));
@@ -1587,10 +1646,17 @@ class Player {
                     playSound('shoot');
                 }
             } else if (stats.currentShip === 4) {
+                const target = getNearestTarget(this.x, this.y);
+                const aimAngle = target ? Math.atan2(target.y - this.y, target.x - this.x) : -Math.PI / 2;
+                this.renderAngle += normalizeAngle(aimAngle - this.renderAngle) * 0.18;
                 if (frames % 6 === 0) {
-                    bullets.push(new Bullet(this.x - 10, this.y - 10, 0, -15, 'player', this.damage * 0.82));
-                    bullets.push(new Bullet(this.x + 10, this.y - 10, 0, -15, 'player', this.damage * 0.82));
-                    if (frames % 30 === 0) bullets.push(fireAtTarget(this.x, this.y - 16, 8, 'player_missile', this.damage * 1.1, getNearestTarget(this.x, this.y)));
+                    const sideX = Math.cos(aimAngle + Math.PI / 2) * 10;
+                    const sideY = Math.sin(aimAngle + Math.PI / 2) * 10;
+                    const noseX = Math.cos(aimAngle) * 16;
+                    const noseY = Math.sin(aimAngle) * 16;
+                    bullets.push(new Bullet(this.x + sideX + noseX, this.y + sideY + noseY, Math.cos(aimAngle - 0.03)*15, Math.sin(aimAngle - 0.03)*15, 'player', this.damage * 0.78));
+                    bullets.push(new Bullet(this.x - sideX + noseX, this.y - sideY + noseY, Math.cos(aimAngle + 0.03)*15, Math.sin(aimAngle + 0.03)*15, 'player', this.damage * 0.78));
+                    if (frames % 30 === 0) bullets.push(fireAtTarget(this.x + noseX, this.y + noseY, 8, 'player_missile', this.damage * 1.1, target));
                     playSound('shoot');
                 }
             } else if (stats.currentShip === 5) {
@@ -1616,6 +1682,7 @@ class Player {
         const stats = getModeData(activeDifficultyMode);
         ctx.save(); ctx.translate(this.x, this.y);
         ctx.shadowBlur = 20; ctx.shadowColor = SHIPS[stats.currentShip].color; 
+        if (stats.currentShip === 4) ctx.rotate(this.renderAngle + Math.PI / 2);
         drawShipAsset(ctx, stats.currentShip, false);
         ctx.restore(); ctx.shadowBlur = 0;
     }
@@ -1818,6 +1885,9 @@ class Boss {
         this.isAstralTrio = false;
         this.isMimic = false;
         this.isCurseZero = false;
+        this.isPulseDragon = false;
+        this.isStarForge = false;
+        this.isRealityWarden = false;
         this.mimicTimer = 0;
         this.mimicForm = 'omega';
         this.curseShotTimer = 0;
@@ -1844,12 +1914,16 @@ class Boss {
         this.astralStars = [];
         this.astralCoreAwake = false;
         this.astralLaserAngles = [];
+        this.dragonPath = [];
+        this.forgeSparks = [];
+        this.wardenNodes = [];
     }
 
     clearBossIdentityFlags() {
         this.isPhaseTwo = false; this.isTerminator = false; this.isGlitch = false; this.isSnake = false; this.isHiveMother = false;
         this.isSyntaxError = false; this.isNullEntity = false; this.isOblivion = false; this.isArchitect = false; this.isNeonVoid = false;
-        this.isRiftSentinel = false; this.isPortalPrototype = false; this.isAstralTrio = false; this.isCurseZero = false;
+        this.isRiftSentinel = false; this.isPortalPrototype = false; this.isAstralTrio = false; this.isMimic = false; this.isCurseZero = false;
+        this.isPulseDragon = false; this.isStarForge = false; this.isRealityWarden = false;
     }
 
     initAsStage2() {
@@ -1996,6 +2070,39 @@ class Boss {
         this.curseShotTimer = 0;
         for(let i=0; i<70; i++) this.curseParticles.push({ angle: Math.random()*Math.PI*2, radius: 70 + Math.random()*100, speed: 0.008 + Math.random()*0.025, size: 2 + Math.random()*5 });
         bossName.innerText = "CURSE 0"; bossName.style.color = "#33aaff";
+    }
+
+    initAsStage16() {
+        this.clearBossIdentityFlags();
+        this.isPulseDragon = true;
+        this.damageMultiplier = isHardMode() ? 7.4 : 5.4;
+        this.maxHp = isHardMode() ? 52000 : 37000; this.hp = this.maxHp;
+        this.x = width / 2; this.y = -190; this.targetY = 165; this.rot = 0;
+        this.dragonPath = [];
+        for(let i=0; i<260; i++) this.dragonPath.push({ x: width / 2, y: -120 });
+        bossName.innerText = "THE PULSE DRAGON"; bossName.style.color = "#66ffee";
+    }
+
+    initAsStage17() {
+        this.clearBossIdentityFlags();
+        this.isStarForge = true;
+        this.damageMultiplier = isHardMode() ? 7.8 : 5.8;
+        this.maxHp = isHardMode() ? 58000 : 42000; this.hp = this.maxHp;
+        this.x = width / 2; this.y = -190; this.targetY = 185; this.rot = 0;
+        this.forgeSparks = [];
+        for(let i=0; i<50; i++) this.forgeSparks.push({ angle: Math.random()*Math.PI*2, radius: 45 + Math.random()*130, speed: 0.01 + Math.random()*0.025 });
+        bossName.innerText = "THE STAR FORGE"; bossName.style.color = "#ffcc33";
+    }
+
+    initAsStage18() {
+        this.clearBossIdentityFlags();
+        this.isRealityWarden = true;
+        this.damageMultiplier = isHardMode() ? 8.4 : 6.2;
+        this.maxHp = isHardMode() ? 66000 : 48000; this.hp = this.maxHp;
+        this.x = width / 2; this.y = -210; this.targetY = 190; this.rot = 0;
+        this.wardenNodes = [];
+        for(let i=0; i<6; i++) this.wardenNodes.push({ angle: (Math.PI*2/6)*i, radius: 115 + (i % 2) * 35 });
+        bossName.innerText = "REALITY WARDEN"; bossName.style.color = "#ffffff";
     }
 
     chooseMimicForm() {
@@ -2280,6 +2387,30 @@ class Boss {
                 for(let i=0; i<80; i++) particles.push(new Particle(this.x, this.y, i % 2 ? '#ff3333' : '#33aaff', 9, 6, 60));
             }
         }
+        else if (this.isPulseDragon) {
+            this.rot += 0.028;
+            const targetX = width/2 + Math.sin(frames * 0.018) * (width * 0.22);
+            const targetY = this.targetY + Math.cos(frames * 0.021) * 42;
+            this.x += (targetX - this.x) * 0.045;
+            this.y += (targetY - this.y) * 0.045;
+            this.dragonPath.unshift({ x: this.x, y: this.y });
+            if (this.dragonPath.length > 260) this.dragonPath.pop();
+        }
+        else if (this.isStarForge) {
+            this.rot += 0.024;
+            this.x = width/2 + Math.sin(frames * 0.01) * (width * 0.12);
+            this.y = this.targetY + Math.cos(frames * 0.015) * 30;
+            this.forgeSparks.forEach(spark => { spark.angle += spark.speed; });
+        }
+        else if (this.isRealityWarden) {
+            this.rot += 0.018;
+            this.x = width/2 + Math.sin(frames * 0.008) * (width * 0.1);
+            this.y = this.targetY + Math.cos(frames * 0.012) * 26;
+            if (this.currentAttack === 'warden_collapse' && player.active) {
+                player.x += (this.x - player.x) * 0.006;
+                player.y += (this.y - player.y) * 0.006;
+            }
+        }
         else if (this.isHiveMother) {
             this.y = this.targetY + Math.sin(frames * 0.02) * 20; this.x = width/2 + Math.cos(frames * 0.01) * 10;
             if (this.miniHives) {
@@ -2333,7 +2464,7 @@ class Boss {
         }
         
         this.attackTimer++;
-        if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isHiveMother && !this.isSyntaxError && !this.isNullEntity && !this.isOblivion && !this.isArchitect && !this.isNeonVoid && !this.isRiftSentinel && !this.isPortalPrototype && !this.isAstralTrio && !this.isCurseZero && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
+        if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isHiveMother && !this.isSyntaxError && !this.isNullEntity && !this.isOblivion && !this.isArchitect && !this.isNeonVoid && !this.isRiftSentinel && !this.isPortalPrototype && !this.isAstralTrio && !this.isCurseZero && !this.isPulseDragon && !this.isStarForge && !this.isRealityWarden && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
               enemies.push(new SwarmEnemy(this.x - 40, this.y)); enemies.push(new SwarmEnemy(this.x + 40, this.y));
         }
         this.handleAttack();
@@ -2369,6 +2500,9 @@ class Boss {
         if(this.isPortalPrototype) seq = PORTAL_SEQUENCE;
         if(this.isAstralTrio) seq = this.astralCoreAwake ? ASTRAL_CORE_SEQUENCE : ASTRAL_SEQUENCE;
         if(this.isCurseZero) seq = CURSE_SEQUENCE;
+        if(this.isPulseDragon) seq = PULSE_DRAGON_SEQUENCE;
+        if(this.isStarForge) seq = STAR_FORGE_SEQUENCE;
+        if(this.isRealityWarden) seq = REALITY_WARDEN_SEQUENCE;
         
         if (this.sequenceIndex >= seq.length) this.sequenceIndex = 0;
         this.currentAttack = seq[this.sequenceIndex];
@@ -2388,6 +2522,9 @@ class Boss {
         if(phaseName.startsWith("PORTAL_")) phaseName = phaseName.replace("PORTAL_", "");
         if(phaseName.startsWith("ASTRAL_")) phaseName = phaseName.replace("ASTRAL_", "");
         if(phaseName.startsWith("CURSE_")) phaseName = phaseName.replace("CURSE_", "");
+        if(phaseName.startsWith("PULSE_")) phaseName = phaseName.replace("PULSE_", "");
+        if(phaseName.startsWith("FORGE_")) phaseName = phaseName.replace("FORGE_", "");
+        if(phaseName.startsWith("WARDEN_")) phaseName = phaseName.replace("WARDEN_", "");
         
         phaseDebug.innerText = `PHASE: ${phaseName}`;
         this.laserCharge = 0; this.laserActive = false; this.redLines = []; this.laserAngle = Math.PI / 2;
@@ -2397,6 +2534,83 @@ class Boss {
 
     handleAttack() {
         switch(this.currentAttack) {
+            case 'pulse_rings':
+                if (this.attackTimer % 44 === 0 && this.attackTimer < 260) {
+                    const count = 18;
+                    for(let i=0; i<count; i++) {
+                        const angle = (Math.PI * 2 / count) * i + this.rot;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*6.4, Math.sin(angle)*6.4, i % 2 ? 'boss_orb' : 'venom'));
+                    }
+                }
+                if (this.attackTimer > 300) this.startNextAttack();
+                break;
+            case 'pulse_spiral':
+                if (this.attackTimer % 7 === 0 && this.attackTimer < 230) {
+                    const angle = this.attackTimer * 0.17;
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*7.5, Math.sin(angle)*7.5, 'purple_fireball'));
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle + Math.PI)*7.5, Math.sin(angle + Math.PI)*7.5, 'venom'));
+                }
+                if (this.attackTimer > 270) this.startNextAttack();
+                break;
+            case 'pulse_lanes':
+                if (this.attackTimer === 35) {
+                    for(let i=0; i<5; i++) bullets.push(new Bullet((i + 0.5) * width / 5, 0, 0, 0, 'glitch_laser'));
+                }
+                if (this.attackTimer > 150) this.startNextAttack();
+                break;
+            case 'forge_meteors':
+                if (this.attackTimer % 9 === 0 && this.attackTimer < 240) {
+                    bullets.push(new Bullet(Math.random()*width, -60, (Math.random()-0.5)*5, 10 + Math.random()*5, Math.random() > 0.5 ? 'fireball' : 'purple_fireball'));
+                }
+                if (this.attackTimer > 285) this.startNextAttack();
+                break;
+            case 'forge_cross':
+                if (this.attackTimer % 56 === 0 && this.attackTimer < 250) {
+                    for(let i=0; i<4; i++) {
+                        const angle = this.rot + i * Math.PI / 2;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*9, Math.sin(angle)*9, 'spine_laser'));
+                    }
+                }
+                if (this.attackTimer > 290) this.startNextAttack();
+                break;
+            case 'forge_minions':
+                if (this.attackTimer % 70 === 10 && this.attackTimer < 260) {
+                    enemies.push(new SpinnerEnemy(width * (0.2 + Math.random()*0.6), -130));
+                    enemies.push(new HeavyStriker(width * (0.2 + Math.random()*0.6), -100));
+                }
+                if (this.attackTimer % 34 === 0 && this.attackTimer < 230) {
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*7, Math.sin(angle)*7, 'fireball'));
+                }
+                if (this.attackTimer > 300) this.startNextAttack();
+                break;
+            case 'warden_lasers':
+                if (this.attackTimer % 74 === 20 && this.attackTimer < 260) {
+                    bullets.push(new Bullet(player.x + (Math.random()-0.5)*180, 0, 0, 0, 'glitch_laser'));
+                    bullets.push(new Bullet(0, player.y + (Math.random()-0.5)*140, 1, 0, 'glitch_laser'));
+                }
+                if (this.attackTimer > 310) this.startNextAttack();
+                break;
+            case 'warden_collapse':
+                if (this.attackTimer % 38 === 0 && this.attackTimer < 250) {
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x) + (Math.random()-0.5)*0.7;
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*6.4, Math.sin(angle)*6.4, 'boss_orb'));
+                }
+                if (this.attackTimer % 85 === 0 && this.attackTimer < 250) bullets.push(new Bullet(Math.random()*width, -40, 0, 0, 'mine'));
+                if (this.attackTimer > 295) this.startNextAttack();
+                break;
+            case 'warden_zero':
+                if (this.attackTimer % 95 === 1 && this.attackTimer < 285) {
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x) + (Math.random()-0.5)*0.25;
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*2.1, Math.sin(angle)*2.1, 'termination_zero'));
+                }
+                if (this.attackTimer % 24 === 0 && this.attackTimer < 260) {
+                    const angle = this.rot + this.attackTimer * 0.04;
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*7, Math.sin(angle)*7, 'purple_fireball'));
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle + Math.PI)*7, Math.sin(angle + Math.PI)*7, 'fireball'));
+                }
+                if (this.attackTimer > 330) this.startNextAttack();
+                break;
             case 'astral_orbit_fire':
                 if (this.attackTimer % 42 === 0 && this.attackTimer < 260) {
                     this.astralStars.forEach(star => {
@@ -3088,9 +3302,103 @@ class Boss {
             return;
         }
 
+        if (this.isPulseDragon) {
+            ctx.save();
+            const mainColor = '#66ffee';
+            for (let i = 42; i > 0; i--) {
+                const pos = this.dragonPath[i * 4];
+                if (!pos) continue;
+                ctx.save(); ctx.translate(pos.x, pos.y);
+                const size = 26 + Math.sin(i * 0.6 + frames * 0.08) * 4;
+                ctx.shadowBlur = 16; ctx.shadowColor = mainColor;
+                ctx.fillStyle = i % 2 ? '#0b4750' : '#08252f';
+                ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = mainColor; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2); ctx.stroke();
+                ctx.restore();
+            }
+            ctx.translate(this.x, this.y); ctx.rotate(this.rot * 0.6);
+            ctx.shadowBlur = 36; ctx.shadowColor = mainColor;
+            ctx.fillStyle = '#062b35'; ctx.strokeStyle = mainColor; ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.moveTo(0, -70); ctx.lineTo(64, -16); ctx.lineTo(40, 54); ctx.lineTo(0, 82); ctx.lineTo(-40, 54); ctx.lineTo(-64, -16); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(-22, -18, 8, 0, Math.PI*2); ctx.arc(22, -18, 8, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+            return;
+        }
+
+        if (this.isStarForge) {
+            ctx.save(); ctx.translate(this.x, this.y);
+            this.forgeSparks.forEach(spark => {
+                const px = Math.cos(spark.angle) * spark.radius;
+                const py = Math.sin(spark.angle) * spark.radius;
+                ctx.globalAlpha = 0.25 + Math.sin(frames * 0.08 + spark.radius) * 0.22;
+                ctx.fillStyle = spark.radius % 2 > 1 ? '#ffcc33' : '#33aaff';
+                ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            ctx.rotate(this.rot);
+            ctx.shadowBlur = 45; ctx.shadowColor = '#ffcc33';
+            ctx.strokeStyle = '#ffcc33'; ctx.lineWidth = 8;
+            for(let r=42; r<=118; r+=38) { ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.stroke(); }
+            ctx.fillStyle = '#2f1900';
+            ctx.beginPath();
+            for(let i=0; i<12; i++) {
+                const a = (Math.PI*2/12)*i;
+                const r = i % 2 ? 52 : 92;
+                ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+            }
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 24 + Math.sin(frames*0.09)*4, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+            return;
+        }
+
+        if (this.isRealityWarden) {
+            ctx.save(); ctx.translate(this.x, this.y);
+            if (this.laserActive) {
+                ctx.shadowBlur = 40; ctx.shadowColor = '#ffffff';
+                ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 6;
+                this.wardenNodes.forEach(node => {
+                    const a = node.angle + this.rot;
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a)*900, Math.sin(a)*900); ctx.stroke();
+                });
+            }
+            ctx.rotate(this.rot);
+            ctx.shadowBlur = 52; ctx.shadowColor = '#aa66ff';
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
+            ctx.fillStyle = 'rgba(40, 0, 70, 0.75)';
+            ctx.beginPath();
+            for(let i=0; i<6; i++) {
+                const a = (Math.PI*2/6)*i;
+                ctx.lineTo(Math.cos(a)*115, Math.sin(a)*115);
+            }
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.rotate(-this.rot * 2);
+            ctx.strokeStyle = '#aa66ff'; ctx.lineWidth = 7;
+            ctx.strokeRect(-55, -55, 110, 110);
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI*2); ctx.fill();
+            this.wardenNodes.forEach(node => {
+                const a = node.angle + frames * 0.025;
+                ctx.fillStyle = node.radius > 120 ? '#ff66ff' : '#66ffee';
+                ctx.beginPath(); ctx.arc(Math.cos(a)*node.radius, Math.sin(a)*node.radius, 10, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.restore();
+            return;
+        }
+
         if (this.isAstralTrio) {
             ctx.save();
             ctx.translate(this.x, this.y);
+            const drawSharpStar = (outer, inner) => {
+                ctx.beginPath();
+                for(let i=0; i<16; i++) {
+                    const a = -Math.PI/2 + i * Math.PI / 8;
+                    const r = i % 2 === 0 ? outer : inner;
+                    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+                }
+                ctx.closePath();
+            };
 
             if (this.laserActive && this.astralLaserAngles.length) {
                 this.astralLaserAngles.forEach((angle, index) => {
@@ -3112,26 +3420,25 @@ class Boss {
                 ctx.restore();
             }
 
-            const coreScale = this.astralCoreAwake ? 1.45 + Math.sin(frames * 0.08) * 0.08 : 1;
+            const coreScale = this.astralCoreAwake ? 1.55 + Math.sin(frames * 0.08) * 0.08 : 1;
             ctx.save();
             ctx.scale(coreScale, coreScale);
-            ctx.shadowBlur = this.astralCoreAwake ? 60 : 35;
+            ctx.rotate(-this.rot * 0.8);
+            ctx.shadowBlur = this.astralCoreAwake ? 70 : 42;
             ctx.shadowColor = '#cc99ff';
-            ctx.beginPath();
-            ctx.arc(0, 0, 62, -Math.PI/2, Math.PI/2);
-            ctx.lineTo(0, 62);
-            ctx.arc(0, 0, 62, Math.PI/2, Math.PI*1.5);
-            ctx.closePath();
-            ctx.fillStyle = '#ff3333'; ctx.fill();
-            ctx.beginPath();
-            ctx.arc(0, 0, 62, Math.PI/2, Math.PI*1.5);
-            ctx.lineTo(0, -62);
-            ctx.arc(0, 0, 62, -Math.PI/2, Math.PI/2);
-            ctx.closePath();
-            ctx.fillStyle = '#33aaff'; ctx.fill();
-            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.arc(0, 0, 62, 0, Math.PI*2); ctx.stroke();
-            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI*2); ctx.fill();
+            ctx.save();
+            ctx.beginPath(); ctx.rect(-90, -90, 90, 180); ctx.clip();
+            drawSharpStar(74, 34); ctx.fillStyle = '#ff3333'; ctx.fill();
+            ctx.restore();
+            ctx.save();
+            ctx.beginPath(); ctx.rect(0, -90, 90, 180); ctx.clip();
+            drawSharpStar(74, 34); ctx.fillStyle = '#33aaff'; ctx.fill();
+            ctx.restore();
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; drawSharpStar(74, 34); ctx.stroke();
+            ctx.rotate(this.rot * 2.2);
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.ellipse(0, 0, 96, 22, 0, 0, Math.PI*2); ctx.stroke();
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI*2); ctx.fill();
             ctx.restore();
 
             if (!this.astralCoreAwake) {
@@ -3145,14 +3452,13 @@ class Boss {
             this.astralStars.forEach(star => {
                 if (!star.active) return;
                 ctx.save(); ctx.translate(star.x - this.x, star.y - this.y); ctx.rotate(frames * 0.05 * (star.name === 'red' ? 1 : -1));
-                ctx.shadowBlur = 36; ctx.shadowColor = star.color; ctx.fillStyle = star.color;
-                ctx.beginPath();
-                for(let i=0; i<10; i++) {
-                    const a = i * Math.PI / 5;
-                    const r = i % 2 === 0 ? 48 : 22;
-                    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
-                }
-                ctx.closePath(); ctx.fill();
+                ctx.shadowBlur = 44; ctx.shadowColor = star.color; ctx.fillStyle = star.color;
+                drawSharpStar(58, 21); ctx.fill();
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; drawSharpStar(58, 21); ctx.stroke();
+                ctx.globalAlpha = 0.55; ctx.rotate(-frames * 0.11);
+                ctx.strokeStyle = star.color; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.ellipse(0, 0, 78, 18, 0, 0, Math.PI*2); ctx.stroke();
+                ctx.globalAlpha = 1;
                 ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = '#330000'; ctx.fillRect(-34, -62, 68, 5);
                 ctx.fillStyle = star.color; ctx.fillRect(-34, -62, 68 * Math.max(0, star.hp / star.maxHp), 5);
@@ -3966,9 +4272,69 @@ function spawnWaveEnemies(wave) {
     let maxDelay = 0; const countMult = currentSettings.enemyCountMult; const isHard = (isHardMode());
 
     // ===============================================
+    // STAGE 18 - REALITY WARDEN
+    // ===============================================
+    if (currentLevelIndex === 18) {
+        if (wave === 1) {
+            for(let i=0; i<8; i++) setTimeout(() => enemies.push(new PhaserEnemy(Math.random()*width, -70)), i*220);
+            for(let i=0; i<4; i++) setTimeout(() => enemies.push(new SpinnerEnemy(Math.random()*width, -140)), i*600);
+            maxDelay = 3800;
+        } else if (wave >= 2 && wave <= 14) {
+            let count = 44 + wave * 4; let delay = 44;
+            for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*delay);
+            if (wave % 2 === 0) { enemies.push(new LaserEnemy(width*0.2, -90)); enemies.push(new LaserEnemy(width*0.8, -90)); }
+            if (wave % 3 === 0) { enemies.push(new SpinnerEnemy(width*0.25, -150)); enemies.push(new SpinnerEnemy(width*0.75, -150)); }
+            if (wave % 4 === 0) { enemies.push(new MineLayer(width*0.35, -80)); enemies.push(new MineLayer(width*0.65, -80)); }
+            if (wave > 7) { setTimeout(() => enemies.push(new RammerEnemy(player.x, -70)), 1300); setTimeout(() => enemies.push(new PhaserEnemy(Math.random()*width, -90)), 2500); }
+            if (wave > 11) { setTimeout(() => enemies.push(new RammerEnemy(player.x, -70)), 3400); }
+            maxDelay = count * delay;
+        } else if (wave === 15) {
+            boss.activate(); boss.initAsStage18();
+        }
+    }
+    // ===============================================
+    // STAGE 17 - THE STAR FORGE
+    // ===============================================
+    else if (currentLevelIndex === 17) {
+        if (wave === 1) {
+            for(let i=0; i<10; i++) setTimeout(() => enemies.push(new HeavyStriker(Math.random()*width, -80)), i*260);
+            maxDelay = 3500;
+        } else if (wave >= 2 && wave <= 14) {
+            let count = 42 + wave * 3; let delay = 48;
+            for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*delay);
+            if (wave % 2 === 0) { enemies.push(new SpinnerEnemy(width*0.3, -150)); enemies.push(new SpinnerEnemy(width*0.7, -150)); }
+            if (wave % 3 === 0) { enemies.push(new HeavyStriker(width*0.25, -100)); enemies.push(new HeavyStriker(width*0.75, -100)); }
+            if (wave % 5 === 0) { enemies.push(new LaserEnemy(width*0.5, -100)); }
+            if (wave > 8) { setTimeout(() => enemies.push(new MineLayer(Math.random()*width, -80)), 1600); setTimeout(() => enemies.push(new RammerEnemy(player.x, -70)), 2800); }
+            maxDelay = count * delay;
+        } else if (wave === 15) {
+            boss.activate(); boss.initAsStage17();
+        }
+    }
+    // ===============================================
+    // STAGE 16 - THE PULSE DRAGON
+    // ===============================================
+    else if (currentLevelIndex === 16) {
+        if (wave === 1) {
+            for(let i=0; i<14; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*140);
+            for(let i=0; i<3; i++) setTimeout(() => enemies.push(new PhaserEnemy(Math.random()*width, -90)), i*700);
+            maxDelay = 3600;
+        } else if (wave >= 2 && wave <= 14) {
+            let count = 40 + wave * 3; let delay = 50;
+            for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*delay);
+            if (wave % 2 === 0) { enemies.push(new PhaserEnemy(width*0.2, -90)); enemies.push(new PhaserEnemy(width*0.8, -90)); }
+            if (wave % 3 === 0) { enemies.push(new SpinnerEnemy(width*0.5, -150)); }
+            if (wave % 4 === 0) { enemies.push(new LaserEnemy(width*0.25, -90)); enemies.push(new LaserEnemy(width*0.75, -90)); }
+            if (wave > 9) { setTimeout(() => enemies.push(new RammerEnemy(player.x, -70)), 1300); setTimeout(() => enemies.push(new RammerEnemy(player.x, -70)), 2600); }
+            maxDelay = count * delay;
+        } else if (wave === 15) {
+            boss.activate(); boss.initAsStage16();
+        }
+    }
+    // ===============================================
     // STAGE 15 - CURSE 0
     // ===============================================
-    if (currentLevelIndex === 15) {
+    else if (currentLevelIndex === 15) {
         if (wave === 1) {
             for(let i=0; i<12; i++) setTimeout(() => enemies.push(new PhaserEnemy(Math.random()*width, -60)), i*220);
             for(let i=0; i<4; i++) setTimeout(() => enemies.push(new LaserEnemy(Math.random()*width, -90)), i*650);
@@ -4388,13 +4754,13 @@ function showInsaneSelect() { showCampaignSelect('insane'); }
 
 function armLevelSelectScreen(screen, mode) {
     if (levelSelectArmTimer) clearTimeout(levelSelectArmTimer);
-    levelSelectReadyAt = Date.now() + 350;
+    levelSelectReadyAt = Date.now() + 100;
     screen.style.pointerEvents = 'none';
     levelSelectArmTimer = setTimeout(() => {
         if (gameState === STATE.LEVEL_SELECT && currentHangarMode === mode) {
             screen.style.pointerEvents = 'auto';
         }
-    }, 350);
+    }, 100);
 }
 
 function canLaunchSelectedLevel(mode) {
@@ -4443,18 +4809,24 @@ function getVisibleCampaignMode(fallbackMode) {
 
 function openHangar(mode) {
     const resolvedMode = getVisibleCampaignMode(mode);
+    hangarReturnToMenu = gameState === STATE.MENU;
     gameState = STATE.HANGAR; currentHangarMode = resolvedMode; activeDifficultyMode = resolvedMode;
     const stats = getModeData(resolvedMode);
     document.getElementById('hangar-stars').innerText = stats.stars;
     document.getElementById('hangar-title').innerText = MODE_LABELS[resolvedMode] + " HANGAR";
     previewShipIndex = stats.currentShip || 0;
     updateHangarUI();
+    menuScreen.style.opacity = '0'; menuScreen.style.pointerEvents = 'none';
     hideCampaignScreens();
     hangarScreen.style.opacity = '1'; hangarScreen.style.pointerEvents = 'auto';
 }
 
 function closeHangar() {
     gameState = STATE.LEVEL_SELECT; hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
+    if (hangarReturnToMenu) {
+        resetToMenu();
+        return;
+    }
     hideCampaignScreens();
     const screen = getModeScreen(currentHangarMode);
     screen.style.opacity = '1'; screen.style.pointerEvents = 'auto'; updateLevelGrid(currentHangarMode);
@@ -4492,8 +4864,23 @@ function buyOrEquipShip() {
     }
 }
 
+function syncUpgradeSegments(containerId, totalLevels, activeLevels) {
+    const container = document.getElementById(containerId);
+    while (container.children.length < totalLevels) {
+        const segment = document.createElement('div');
+        segment.className = 'level-segment';
+        container.appendChild(segment);
+    }
+    while (container.children.length > totalLevels) container.removeChild(container.lastElementChild);
+    [...container.children].forEach((seg, index) => {
+        if (index < activeLevels) seg.classList.add('active');
+        else seg.classList.remove('active');
+    });
+}
+
 function updateHangarUI() {
     const stats = getModeData(currentHangarMode);
+    const shipUpgrades = getShipUpgrades(stats, previewShipIndex);
     document.getElementById('hangar-stars').innerText = stats.stars;
     
     const ship = SHIPS[previewShipIndex];
@@ -4526,72 +4913,72 @@ function updateHangarUI() {
     drawShipAsset(hCtx, previewShipIndex, true);
     hCtx.restore();
 
-    const hpLvl = stats.healthLvl; const hpBtn = document.getElementById('btn-upg-hp'); const hpBonusEl = document.getElementById('hp-bonus');
-    let totalBonusHp = 0; for(let i=0; i<hpLvl; i++) totalBonusHp += HEALTH_UPGRADES.bonuses[i];
+    const hpLvl = shipUpgrades.healthLvl; const hpBtn = document.getElementById('btn-upg-hp'); const hpBonusEl = document.getElementById('hp-bonus');
+    let totalBonusHp = totalUpgradeBonus(HEALTH_UPGRADES, hpLvl);
     
-    const hpSegments = document.querySelectorAll('#hp-bar-container .level-segment');
-    hpSegments.forEach((seg, index) => { if (index < hpLvl) seg.classList.add('active'); else seg.classList.remove('active'); });
+    syncUpgradeSegments('hp-bar-container', HEALTH_UPGRADES.bonuses.length, hpLvl);
 
     hpBonusEl.innerText = "+" + totalBonusHp + " HP";
-    if (hpLvl >= 5) { hpBtn.innerText = "MAXED"; hpBtn.style.opacity = 0.5; hpBtn.style.cursor = "default"; hpBtn.onclick = null; } 
+    if (hpLvl >= HEALTH_UPGRADES.bonuses.length) { hpBtn.innerText = "MAXED"; hpBtn.style.opacity = 0.5; hpBtn.style.cursor = "default"; hpBtn.onclick = null; } 
     else { const cost = getHangarCost(HEALTH_UPGRADES.costs[hpLvl], currentHangarMode); hpBtn.innerText = `UPGRADE (${cost} ✦)`; hpBtn.style.opacity = 1; hpBtn.style.cursor = "pointer"; hpBtn.onclick = upgradeHealth; }
 
-    const cannonLvl = stats.cannonLvl; const cannonBtn = document.getElementById('btn-upg-cannon'); const cannonBonusEl = document.getElementById('cannon-bonus');
-    let totalBonusDmg = 0; for(let i=0; i<cannonLvl; i++) totalBonusDmg += CANNON_UPGRADES.bonuses[i];
+    const cannonLvl = shipUpgrades.cannonLvl; const cannonBtn = document.getElementById('btn-upg-cannon'); const cannonBonusEl = document.getElementById('cannon-bonus');
+    let totalBonusDmg = totalUpgradeBonus(CANNON_UPGRADES, cannonLvl);
 
-    const cannonSegments = document.querySelectorAll('#cannon-bar-container .level-segment');
-    cannonSegments.forEach((seg, index) => { if (index < cannonLvl) seg.classList.add('active'); else seg.classList.remove('active'); });
+    syncUpgradeSegments('cannon-bar-container', CANNON_UPGRADES.bonuses.length, cannonLvl);
 
     cannonBonusEl.innerText = "+" + totalBonusDmg + " DMG";
-    if (cannonLvl >= 5) { cannonBtn.innerText = "MAXED"; cannonBtn.style.opacity = 0.5; cannonBtn.style.cursor = "default"; cannonBtn.onclick = null; } 
+    if (cannonLvl >= CANNON_UPGRADES.bonuses.length) { cannonBtn.innerText = "MAXED"; cannonBtn.style.opacity = 0.5; cannonBtn.style.cursor = "default"; cannonBtn.onclick = null; } 
     else { const cost = getHangarCost(CANNON_UPGRADES.costs[cannonLvl], currentHangarMode); cannonBtn.innerText = `UPGRADE (${cost} ✦)`; cannonBtn.style.opacity = 1; cannonBtn.style.cursor = "pointer"; cannonBtn.onclick = upgradeCannon; }
 
-    const engineLvl = stats.engineLvl || 0; const engineBtn = document.getElementById('btn-upg-engine'); const engineBonusEl = document.getElementById('engine-bonus');
+    const engineLvl = shipUpgrades.engineLvl; const engineBtn = document.getElementById('btn-upg-engine'); const engineBonusEl = document.getElementById('engine-bonus');
     const totalBonusSpd = totalUpgradeBonus(ENGINE_UPGRADES, engineLvl);
-    const engineSegments = document.querySelectorAll('#engine-bar-container .level-segment');
-    engineSegments.forEach((seg, index) => { if (index < engineLvl) seg.classList.add('active'); else seg.classList.remove('active'); });
+    syncUpgradeSegments('engine-bar-container', ENGINE_UPGRADES.bonuses.length, engineLvl);
     engineBonusEl.innerText = "+" + totalBonusSpd.toFixed(1) + " SPD";
-    if (engineLvl >= 5) { engineBtn.innerText = "MAXED"; engineBtn.style.opacity = 0.5; engineBtn.style.cursor = "default"; engineBtn.onclick = null; }
+    if (engineLvl >= ENGINE_UPGRADES.bonuses.length) { engineBtn.innerText = "MAXED"; engineBtn.style.opacity = 0.5; engineBtn.style.cursor = "default"; engineBtn.onclick = null; }
     else { const cost = getHangarCost(ENGINE_UPGRADES.costs[engineLvl], currentHangarMode); engineBtn.innerText = `UPGRADE (${cost} ✦)`; engineBtn.style.opacity = 1; engineBtn.style.cursor = "pointer"; engineBtn.onclick = upgradeEngine; }
 
-    const magnetLvl = stats.magnetLvl || 0; const magnetBtn = document.getElementById('btn-upg-magnet'); const magnetBonusEl = document.getElementById('magnet-bonus');
+    const magnetLvl = shipUpgrades.magnetLvl; const magnetBtn = document.getElementById('btn-upg-magnet'); const magnetBonusEl = document.getElementById('magnet-bonus');
     const totalBonusRange = totalUpgradeBonus(MAGNET_UPGRADES, magnetLvl);
-    const magnetSegments = document.querySelectorAll('#magnet-bar-container .level-segment');
-    magnetSegments.forEach((seg, index) => { if (index < magnetLvl) seg.classList.add('active'); else seg.classList.remove('active'); });
+    syncUpgradeSegments('magnet-bar-container', MAGNET_UPGRADES.bonuses.length, magnetLvl);
     magnetBonusEl.innerText = "+" + totalBonusRange + " RANGE";
-    if (magnetLvl >= 5) { magnetBtn.innerText = "MAXED"; magnetBtn.style.opacity = 0.5; magnetBtn.style.cursor = "default"; magnetBtn.onclick = null; }
+    if (magnetLvl >= MAGNET_UPGRADES.bonuses.length) { magnetBtn.innerText = "MAXED"; magnetBtn.style.opacity = 0.5; magnetBtn.style.cursor = "default"; magnetBtn.onclick = null; }
     else { const cost = getHangarCost(MAGNET_UPGRADES.costs[magnetLvl], currentHangarMode); magnetBtn.innerText = `UPGRADE (${cost} ✦)`; magnetBtn.style.opacity = 1; magnetBtn.style.cursor = "pointer"; magnetBtn.onclick = upgradeMagnet; }
 }
 
 function upgradeHealth() {
     const stats = getModeData(currentHangarMode);
-    const currentLvl = stats.healthLvl; if (currentLvl >= 5) return;
+    const shipUpgrades = getShipUpgrades(stats, previewShipIndex);
+    const currentLvl = shipUpgrades.healthLvl; if (currentLvl >= HEALTH_UPGRADES.bonuses.length) return;
     const cost = getHangarCost(HEALTH_UPGRADES.costs[currentLvl], currentHangarMode);
-    if (stats.stars >= cost) { stats.stars -= cost; stats.healthLvl++; saveData(); updateHangarUI(); } 
+    if (stats.stars >= cost) { stats.stars -= cost; shipUpgrades.healthLvl++; saveData(); updateHangarUI(); } 
     else alert("Not enough stars!"); 
 }
 
 function upgradeCannon() {
     const stats = getModeData(currentHangarMode);
-    const currentLvl = stats.cannonLvl; if (currentLvl >= 5) return;
+    const shipUpgrades = getShipUpgrades(stats, previewShipIndex);
+    const currentLvl = shipUpgrades.cannonLvl; if (currentLvl >= CANNON_UPGRADES.bonuses.length) return;
     const cost = getHangarCost(CANNON_UPGRADES.costs[currentLvl], currentHangarMode);
-    if (stats.stars >= cost) { stats.stars -= cost; stats.cannonLvl++; saveData(); updateHangarUI(); } 
+    if (stats.stars >= cost) { stats.stars -= cost; shipUpgrades.cannonLvl++; saveData(); updateHangarUI(); } 
     else alert("Not enough stars!"); 
 }
 
 function upgradeEngine() {
     const stats = getModeData(currentHangarMode);
-    const currentLvl = stats.engineLvl || 0; if (currentLvl >= 5) return;
+    const shipUpgrades = getShipUpgrades(stats, previewShipIndex);
+    const currentLvl = shipUpgrades.engineLvl; if (currentLvl >= ENGINE_UPGRADES.bonuses.length) return;
     const cost = getHangarCost(ENGINE_UPGRADES.costs[currentLvl], currentHangarMode);
-    if (stats.stars >= cost) { stats.stars -= cost; stats.engineLvl++; saveData(); updateHangarUI(); }
+    if (stats.stars >= cost) { stats.stars -= cost; shipUpgrades.engineLvl++; saveData(); updateHangarUI(); }
     else alert("Not enough stars!");
 }
 
 function upgradeMagnet() {
     const stats = getModeData(currentHangarMode);
-    const currentLvl = stats.magnetLvl || 0; if (currentLvl >= 5) return;
+    const shipUpgrades = getShipUpgrades(stats, previewShipIndex);
+    const currentLvl = shipUpgrades.magnetLvl; if (currentLvl >= MAGNET_UPGRADES.bonuses.length) return;
     const cost = getHangarCost(MAGNET_UPGRADES.costs[currentLvl], currentHangarMode);
-    if (stats.stars >= cost) { stats.stars -= cost; stats.magnetLvl++; saveData(); updateHangarUI(); }
+    if (stats.stars >= cost) { stats.stars -= cost; shipUpgrades.magnetLvl++; saveData(); updateHangarUI(); }
     else alert("Not enough stars!");
 }
 
@@ -4606,6 +4993,7 @@ function launchMission(mode, levelIndex) {
     menuScreen.style.opacity = '0'; menuScreen.style.pointerEvents = 'none';
     hideCampaignScreens();
     gameOverScreen.style.opacity = '0'; gameOverScreen.style.pointerEvents = 'none';
+    gameOverScreen.classList.remove('boss-defeat');
     hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
     startIntro(mode, levelIndex);
 }
@@ -4666,7 +5054,9 @@ function resetToMenu() {
 
 function gameOver(win) {
     gameState = STATE.GAMEOVER; gameOverScreen.style.opacity = '1'; gameOverScreen.style.pointerEvents = 'auto';
-    gameOverTitle.innerText = win ? "STAGE CLEARED" : "MISSION FAILED";
+    const defeatedByBoss = !win && boss && boss.active;
+    gameOverScreen.classList.toggle('boss-defeat', defeatedByBoss);
+    gameOverTitle.innerText = win ? "STAGE CLEARED" : (defeatedByBoss ? `DEFEATED BY ${bossName.innerText}` : "MISSION FAILED");
     gameOverTitle.style.color = win ? "#00ff00" : "#ff0000"; waveText.style.opacity = 0;
     if (!win) fadeOutMusic();
 
@@ -4813,6 +5203,21 @@ function animateGame(currentTime) {
                             } else if (boss.isCurseZero) {
                                 let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
                                 if (dist < 92) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#33aaff', 3, 4, 16)); }
+                            } else if (boss.isPulseDragon) {
+                                let hitDragon = Math.hypot(b.x - boss.x, b.y - boss.y) < 88;
+                                if (!hitDragon) {
+                                    for (let j = 6; j < boss.dragonPath.length; j += 12) {
+                                        const pos = boss.dragonPath[j];
+                                        if (pos && Math.hypot(b.x - pos.x, b.y - pos.y) < 30) { hitDragon = true; break; }
+                                    }
+                                }
+                                if (hitDragon) { boss.hit(b.damage * 0.85); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#66ffee', 3, 4, 16)); }
+                            } else if (boss.isStarForge) {
+                                let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
+                                if (dist < 118) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#ffcc33', 3, 4, 16)); }
+                            } else if (boss.isRealityWarden) {
+                                let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
+                                if (dist < 126) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#ffffff', 3, 4, 16)); }
                             } else {
                                 let dx = b.x - boss.x; let dy = b.y - boss.y;
                                 if (Math.sqrt(dx*dx + dy*dy) < 60) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#ffaa00', 2, 2, 10)); }
@@ -4858,48 +5263,6 @@ function animateGame(currentTime) {
         if(p) { p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1); }
         else { particles.splice(i,1); }
     }
-}
-
-function toggleDevPanel() { const panel = document.getElementById('dev-panel'); panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; }
-function devSetStars() {
-    const val = parseInt(document.getElementById('dev-stars').value);
-    const targetMode = gameState === STATE.HANGAR ? currentHangarMode : activeDifficultyMode;
-    if (!isNaN(val)) { getModeData(targetMode).stars = val; saveData(); updateUI(); if (gameState === STATE.HANGAR) updateHangarUI(); }
-}
-function devSkipWave() {
-    const val = parseInt(document.getElementById('dev-wave').value);
-    if (!isNaN(val) && val > 0 && gameState === STATE.PLAYING) { enemies = []; bullets = []; if(boss.active) boss.active = false; startWave(val); }
-}
-function devKillAll() {
-    if (gameState === STATE.PLAYING) { enemies.forEach(e => { if (e.unbreakable) e.active = false; else e.hit(10000); }); if (boss && boss.active) { boss.hit(10000); boss.hit(10000); } }
-}
-function devResetStarsOnly() { CAMPAIGN_MODES.forEach(mode => { getModeData(mode).stars = 0; }); saveData(); updateUI(); if (gameState === STATE.HANGAR) updateHangarUI(); alert("Stars Reset!"); }
-function devResetUpgradesOnly() {
-    CAMPAIGN_MODES.forEach(mode => {
-        const stats = getModeData(mode);
-        stats.healthLvl = 0; stats.cannonLvl = 0; stats.engineLvl = 0; stats.magnetLvl = 0;
-    });
-    saveData(); updateUI(); if (gameState === STATE.HANGAR) updateHangarUI(); alert("Upgrades Reset!");
-}
-function devResetLevelsOnly() {
-    CAMPAIGN_MODES.forEach(mode => { getModeData(mode).maxStage = 1; }); saveData();
-    if (gameState === STATE.LEVEL_SELECT) updateLevelGrid(currentHangarMode);
-    alert("Levels Reset to 1!");
-}
-function devUnlockStages() {
-    CAMPAIGN_MODES.forEach(mode => { getModeData(mode).maxStage = MAX_STAGE; }); saveData();
-    if (gameState === STATE.LEVEL_SELECT) updateLevelGrid(currentHangarMode);
-    alert("All Stages Unlocked!");
-}
-function devGlobalWipe() { if(confirm("WARNING: Wipe ALL progress?")) { localStorage.removeItem('neonVoidData_v3'); localStorage.removeItem('neonVoid_visited'); location.reload(); } }
-function devResetCookies() {
-    localStorage.removeItem('neonVoid_visited');
-    localStorage.removeItem('neonVoidData_v3');
-    resetAllProgressData();
-    saveData();
-    updateUI();
-    if (gameState === STATE.HANGAR) updateHangarUI();
-    alert("Cookies, stars, ships, and upgrades reset. Refresh to see Welcome.");
 }
 
 function checkFirstVisit() {

@@ -38,7 +38,7 @@ canvas {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 20px;
+    padding: 64px 20px 20px;
     box-sizing: border-box;
     z-index: 10;
 }
@@ -122,11 +122,22 @@ canvas {
     z-index: 20;
     pointer-events: none;
     transition: opacity 0.5s;
+    box-sizing: border-box;
+    padding: 68px 20px 24px;
+    visibility: hidden;
+}
+.screen-overlay[style*="opacity: 1"] {
+    visibility: visible;
+}
+.screen-overlay[style*="opacity: 1"] * {
+    visibility: visible;
 }
 #menu-screen {
     pointer-events: auto;
     background: rgba(0,0,0,0.4);
     opacity: 0; 
+    z-index: 30;
+    visibility: visible;
 }
 #level-select-screen, #simulation-level-select-screen, #expert-level-select-screen, #insane-level-select-screen, #hangar-screen, #intro-screen, #welcome-screen {
     pointer-events: auto;
@@ -134,9 +145,42 @@ canvas {
     opacity: 0; 
     pointer-events: none;
 }
+#hangar-screen {
+    justify-content: flex-start;
+    overflow-y: auto;
+    z-index: 40;
+}
 #game-over-screen {
     background: rgba(0, 0, 0, 0.85);
     opacity: 0;
+    overflow: hidden;
+}
+#game-over-screen.boss-defeat::before,
+#game-over-screen.boss-defeat::after {
+    content: '';
+    position: absolute;
+    width: 118vmax;
+    height: 118vmax;
+    border: 3px solid rgba(255, 40, 40, 0.38);
+    border-radius: 46%;
+    box-shadow: 0 0 55px rgba(255, 0, 0, 0.4), inset 0 0 80px rgba(150, 0, 255, 0.18);
+    pointer-events: none;
+    animation: bossDefeatOrbit 9s linear infinite;
+}
+#game-over-screen.boss-defeat::before {
+    transform: rotate(18deg);
+}
+#game-over-screen.boss-defeat::after {
+    width: 86vmax;
+    height: 86vmax;
+    border-color: rgba(170, 0, 255, 0.28);
+    animation-duration: 6s;
+    animation-direction: reverse;
+}
+@keyframes bossDefeatOrbit {
+    from { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.08); }
+    to { transform: rotate(360deg) scale(1); }
 }
 #flash-overlay {
     position: absolute;
@@ -168,6 +212,38 @@ canvas {
 .btn-container {
     display: flex;
     gap: 20px;
+    position: relative;
+    z-index: 60;
+}
+.menu-hangar-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    gap: 10px 14px;
+    margin-top: 16px;
+    max-width: 620px;
+    position: relative;
+    z-index: 65;
+    pointer-events: auto;
+}
+.menu-hangar-btn {
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 2px solid #ffd700;
+    color: #ffd700;
+    background: rgba(0, 0, 0, 0.72);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 0 16px rgba(255, 215, 0, 0.18);
+    pointer-events: auto;
+    touch-action: manipulation;
+}
+.menu-hangar-btn:hover {
+    background: #ffd700;
+    color: #050505;
+    box-shadow: 0 0 28px rgba(255, 215, 0, 0.7);
 }
 .difficulty-grid {
     display: grid;
@@ -191,6 +267,11 @@ canvas {
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
     z-index: 50;
     position: relative;
+    touch-action: manipulation;
+}
+#menu-screen .btn {
+    min-width: 250px;
+    min-height: 74px;
 }
 .btn:hover {
     background: #00ffff;
@@ -232,9 +313,11 @@ canvas {
 }
 .hangar-toggle-btn {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    padding: 10px 20px;
+    top: 76px;
+    left: 28px;
+    min-width: 190px;
+    min-height: 58px;
+    padding: 14px 24px;
     border: 2px solid #ffd700;
     color: #ffd700;
     background: rgba(0,0,0,0.6);
@@ -243,8 +326,9 @@ canvas {
     text-transform: uppercase;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     transition: 0.3s;
-    z-index: 50;
+    z-index: 80;
     pointer-events: auto !important;
+    touch-action: manipulation;
 }
 .hangar-toggle-btn:hover {
     background: #ffd700;
@@ -390,6 +474,8 @@ canvas {
     margin-bottom: 40px;
     flex-wrap: wrap;
     max-width: 800px;
+    position: relative;
+    z-index: 60;
 }
 .level-btn {
     width: 100px;
@@ -409,6 +495,7 @@ canvas {
     z-index: 50;
     position: relative;
     pointer-events: auto !important;
+    touch-action: manipulation;
 }
 .level-btn:active {
     transform: scale(0.95);
@@ -535,54 +622,19 @@ body.simulation-mode::after {
     color: rgba(255,255,255,0.5); font-family: monospace;
 }
 
-#dev-toggle {
+#brand-badge {
     position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 2000;
-    background: rgba(0,0,0,0.7);
-    border: 1px solid #ff00ff;
-    color: #ff00ff;
+    top: 18px;
+    right: 18px;
+    z-index: 120;
+    background: rgba(0,0,0,0.76);
+    border: 1px solid #00ffff;
+    color: #00ffff;
     font-weight: bold;
-    padding: 5px 10px;
-    cursor: pointer;
+    padding: 8px 12px;
     font-family: monospace;
-    pointer-events: auto;
+    font-size: 13px;
+    letter-spacing: 1px;
+    pointer-events: none;
+    box-shadow: 0 0 16px rgba(0, 255, 255, 0.25);
 }
-#dev-panel {
-    position: fixed;
-    top: 40px;
-    right: 10px;
-    background: rgba(10, 10, 10, 0.95);
-    border: 1px solid #ff00ff;
-    padding: 15px;
-    z-index: 2000;
-    width: 220px;
-    display: none;
-    box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
-    font-family: monospace;
-    pointer-events: auto;
-}
-.dev-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-.dev-input {
-    width: 60px;
-    background: #222;
-    border: 1px solid #555;
-    color: white;
-    padding: 2px 5px;
-}
-.dev-btn {
-    background: #333;
-    color: #ff00ff;
-    border: 1px solid #ff00ff;
-    cursor: pointer;
-    padding: 4px 10px;
-    font-size: 12px;
-    margin-bottom: 5px;
-}
-.dev-btn:hover { background: #ff00ff; color: black; }

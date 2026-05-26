@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Neon Void</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260525-stages15">
+    <link rel="stylesheet" href="style.css?v=20260526-hangar-ships">
 </head>
 <body>
 
@@ -14,30 +14,7 @@
 
     <div id="flash-overlay"></div>
 
-    <button id="dev-toggle" onclick="toggleDevPanel()">DEV</button>
-    <div id="dev-panel">
-        <div style="text-align: center; color: #ff00ff; margin-bottom: 10px; font-weight: bold;">DEV CONSOLE</div>
-        <div class="dev-row">
-            <span style="font-size: 12px; color: #ccc;">STARS:</span>
-            <input type="number" id="dev-stars" class="dev-input" placeholder="Amount">
-            <button class="dev-btn" onclick="devSetStars()">SET</button>
-        </div>
-        <div class="dev-row">
-            <span style="font-size: 12px; color: #ccc;">WAVE:</span>
-            <input type="number" id="dev-wave" class="dev-input" placeholder="#">
-            <button class="dev-btn" onclick="devSkipWave()">GO</button>
-        </div>
-        <button class="dev-btn" style="width: 100%; color: #ff4444; border-color: #ff4444;" onclick="devKillAll()">KILL ALL ENEMIES</button>
-        <div style="margin-top: 10px; border-top: 1px solid #555; padding-top: 10px; text-align: center;">
-            <span style="font-size: 11px; color: #aaa; display: block; margin-bottom: 5px;">DATA MANAGEMENT</span>
-            <button class="dev-btn" style="width: 100%; color: #00ff00; border-color: #00ff00;" onclick="devUnlockStages()">UNLOCK ALL STAGES</button>
-            <button class="dev-btn" style="width: 100%; color: #ffd700; border-color: #ffd700;" onclick="devResetStarsOnly()">RESET STARS</button>
-            <button class="dev-btn" style="width: 100%; color: #00ffff; border-color: #00ffff;" onclick="devResetUpgradesOnly()">RESET UPGRADES</button>
-            <button class="dev-btn" style="width: 100%; color: #ff00ff; border-color: #ff00ff;" onclick="devResetLevelsOnly()">RESET LEVELS</button>
-            <button class="dev-btn" style="width: 100%; color: #ff3300; border-color: #ff3300; font-weight: bold; background: #300;" onclick="devGlobalWipe()">GLOBAL DATA WIPE</button>
-            <button class="dev-btn" style="width: 100%; color: #888; border-color: #888;" onclick="devResetCookies()">COOKIE RESET + WIPE</button>
-        </div>
-    </div>
+    <div id="brand-badge">asteroid.works</div>
 
     <div id="msg-modal">
         <div class="title-text" style="font-size: 30px; margin-bottom: 10px; color: #ff4444;">ACCESS DENIED</div>
@@ -100,6 +77,12 @@
             <button id="start-easy-btn" class="btn">BEGINNER</button>
             <button id="start-insane-btn" class="btn btn-insane">INSANE</button>
             <button id="start-sim-btn" class="btn btn-sim">SIMULATION</button>
+        </div>
+        <div class="menu-hangar-grid">
+            <button class="menu-hangar-btn" onclick="openHangar('easy')">BEGINNER HANGAR</button>
+            <button class="menu-hangar-btn" onclick="openHangar('sim')">SIMULATION HANGAR</button>
+            <button class="menu-hangar-btn" onclick="openHangar('hard')">EXPERT HANGAR</button>
+            <button class="menu-hangar-btn" onclick="openHangar('insane')">INSANE HANGAR</button>
         </div>
         <div class="controls-hint">ARROWS / WASD to Move &nbsp;|&nbsp; MOUSE to Follow</div>
     </div>
@@ -215,6 +198,6 @@
         <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
     </div>
 
-    <script src="script.js?v=20260525-stages15"></script>
+    <script src="script.js?v=20260526-hangar-ships"></script>
 </body>
 </html>
