@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Neon Void</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260526-hangar-ships">
+    <link rel="stylesheet" href="style.css?v=20260526-stage30-ancient">
 </head>
 <body>
 
@@ -15,6 +15,28 @@
     <div id="flash-overlay"></div>
 
     <div id="brand-badge">asteroid.works</div>
+    <button id="dev-toggle" onclick="toggleDevPanel()">DEV</button>
+    <div id="dev-panel">
+        <div class="dev-title">TEST PANEL</div>
+        <div class="dev-row">
+            <span>PASS</span>
+            <input type="password" id="dev-password" class="dev-input" placeholder="0818">
+            <button class="dev-btn" onclick="unlockDevPanel()">OPEN</button>
+        </div>
+        <div class="dev-row">
+            <span>STARS</span>
+            <input type="number" id="dev-stars" class="dev-input" placeholder="0">
+            <button class="dev-btn" onclick="devSetStars()">SET</button>
+        </div>
+        <div class="dev-row">
+            <span>WAVE</span>
+            <input type="number" id="dev-wave" class="dev-input" placeholder="#">
+            <button class="dev-btn" onclick="devSkipWave()">GO</button>
+        </div>
+        <button class="dev-btn dev-wide" onclick="devKillAll()">KILL ENEMIES</button>
+        <button class="dev-btn dev-wide" onclick="devUnlockStages()">UNLOCK STAGES</button>
+        <button class="dev-btn dev-wide" onclick="devUnlockAlpha()">UNLOCK ALPHA</button>
+    </div>
 
     <div id="msg-modal">
         <div class="title-text" style="font-size: 30px; margin-bottom: 10px; color: #ff4444;">ACCESS DENIED</div>
@@ -37,6 +59,7 @@
             <div class="hud-text">SCORE: <span id="score">0</span></div>
             <div class="hud-text" style="color: #46b8ff;">STARS: <span id="stars-display">0</span></div>
             <div class="hud-text" style="font-size: 14px; margin-top: 5px; color: #aaa;">STAGE: <span id="stage-display">1</span></div>
+            <div id="alpha-abilities" class="hud-text alpha-abilities"></div>
         </div>
         <div class="phase-indicator" id="phase-debug">INIT</div>
         <div id="wave-announcement">WAVE 1</div>
@@ -142,6 +165,7 @@
                 <button class="btn" style="padding: 10px 20px;" onclick="nextShip()">&#9654;</button>
             </div>
             <button id="btn-equip-ship" class="btn" style="margin-bottom: 30px; font-size: 16px; padding: 10px 40px;" onclick="buyOrEquipShip()">EQUIPPED</button>
+            <button id="btn-merge-ship" class="btn" style="margin-bottom: 30px; font-size: 14px; padding: 10px 28px; border-color: #ffd966; color: #ffd966;" onclick="mergeOrEquipFusion()">MERGE SHIPS</button>
     
             <div class="upgrade-row">
                 <div class="upgrade-card card-hp">
@@ -180,13 +204,13 @@
                     <button id="btn-upg-magnet" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #aa66ff; color: #aa66ff;" onclick="upgradeMagnet()">UPGRADE</button>
                 </div>
 
-                <div class="upgrade-card card-special locked">
+                <div class="upgrade-card card-special locked" id="special-card">
                     <div class="upgrade-title">HEAVY BEAM</div>
-                    <div class="level-bar-container">
+                    <div class="level-bar-container" id="beam-bar-container">
                         <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
                     </div>
-                    <div class="highlight-val" style="color: #555;">LOCKED</div>
-                    <button class="btn" style="font-size: 14px; padding: 10px; width: 100%; background: #111; border-color: #333; cursor: not-allowed; color: #555;">REQ. LVL 5</button>
+                    <div class="highlight-val" id="beam-bonus" style="color: #555;">LOCKED</div>
+                    <button id="btn-upg-beam" class="btn" style="font-size: 14px; padding: 10px; width: 100%; background: #111; border-color: #333; cursor: not-allowed; color: #555;" onclick="upgradeHeavyBeam()">CLEAR STAGE 5</button>
                 </div>
             </div>
             <button class="btn" style="margin-top: 10px; border-color: #fff; color: #fff;" onclick="closeHangar()">EXIT HANGAR</button>
@@ -198,6 +222,6 @@
         <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
     </div>
 
-    <script src="script.js?v=20260526-hangar-ships"></script>
+    <script src="script.js?v=20260526-stage30-ancient"></script>
 </body>
 </html>

@@ -638,3 +638,99 @@ body.simulation-mode::after {
     pointer-events: none;
     box-shadow: 0 0 16px rgba(0, 255, 255, 0.25);
 }
+
+#dev-toggle {
+    position: fixed;
+    top: 18px;
+    right: 160px;
+    z-index: 220;
+    background: rgba(0, 0, 0, 0.78);
+    border: 1px solid #ff00ff;
+    color: #ff00ff;
+    font-weight: 900;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: monospace;
+    letter-spacing: 1px;
+    pointer-events: auto;
+    box-shadow: 0 0 16px rgba(255, 0, 255, 0.24);
+}
+
+#dev-panel {
+    position: fixed;
+    top: 58px;
+    right: 18px;
+    width: 240px;
+    z-index: 220;
+    display: none;
+    background: rgba(5, 5, 8, 0.96);
+    border: 1px solid #ff00ff;
+    padding: 14px;
+    font-family: monospace;
+    pointer-events: auto;
+    box-shadow: 0 0 24px rgba(255, 0, 255, 0.28);
+}
+
+.dev-title {
+    color: #ff00ff;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+.dev-row {
+    display: grid;
+    grid-template-columns: 58px 1fr 48px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.dev-row span {
+    color: #bbbbbb;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dev-input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    background: #151515;
+    border: 1px solid #555;
+    color: #ffffff;
+    padding: 5px 6px;
+    font-family: monospace;
+}
+
+.dev-btn {
+    background: #111111;
+    color: #ff00ff;
+    border: 1px solid #ff00ff;
+    cursor: pointer;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 900;
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+.dev-btn:hover {
+    background: #ff00ff;
+    color: #000000;
+}
+
+.dev-wide {
+    width: 100%;
+    margin-top: 7px;
+}
+
+.alpha-abilities {
+    margin-top: 8px;
+    max-width: min(92vw, 720px);
+    color: #ffd966;
+    text-shadow: 0 0 7px #ffd966;
+    font-size: 14px;
+    line-height: 1.45;
+}
