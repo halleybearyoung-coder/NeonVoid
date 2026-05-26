@@ -4,7 +4,7 @@ const STATE = {
     VICTORY_SEQUENCE: 'victory_sequence', HANGAR: 'hangar'
 };
 let gameState = STATE.MENU;
-const MAX_STAGE = 13;
+const MAX_STAGE = 15;
 const CAMPAIGN_MODES = ['sim', 'easy', 'hard', 'insane'];
 const MODE_LABELS = {
     sim: 'SIMULATION',
@@ -18,6 +18,8 @@ const MODE_GRID_IDS = {
     hard: 'hard-grid',
     insane: 'insane-grid'
 };
+let playerTargetLock = null;
+let targetCycleIndex = 0;
 let width, height;
 let arenaScale = 1;
 let currentLevelIndex = 1;
@@ -263,6 +265,8 @@ const STAGE_MESSAGES = {
     'easy_11': "A new gate has opened beyond the prototype. <br><br>The Rift Sentinel is guarding the path deeper into the Void. Its lock-on beams are unstable, but still deadly.",
     'easy_12': "PORTAL PROTOTYPE ONLINE. <br><br>It can bend shots through gateways and move through them. Warning: your ship can also be pulled through any active portal.",
     'easy_13': "ASTRAL TRIO DETECTED. <br><br>Two outer stars are protecting a split core. Destroy the red and blue stars first, then break the center before it grows unstable.",
+    'easy_14': "MIMIC SIGNATURE DETECTED. <br><br>It changes shape every 15 seconds and copies bosses from the first five sectors. Do not trust what you see.",
+    'easy_15': "CURSE 0 ONLINE. <br><br>A blue zero is forming in the void. Its Termination 0 shots are slow, but one hit ends everything.",
     'hard_1': "Veteran difficulty authorized. <br><br>The enemy AI has adapted to standard tactics. Expect aggressive maneuvers.",
     'hard_2': "This is it. The Elite Terminator unit has been deployed. <br><br>Survival probability is near zero. Good luck, Commander.",
     'hard_3': "Elite Deep Sector. \n\nNo support available. You are on your own, Commander.",
@@ -275,7 +279,9 @@ const STAGE_MESSAGES = {
     'hard_10': "THE NEON VOID PROTOTYPE. <br><br>Command says the real Neon Void waits at Stage 100. This one is just a test weapon. <br><br>The moment it appears, space will expand. Do not blink.",
     'hard_11': "THE RIFT SENTINEL. <br><br>The prototype was only the door. This thing is the lock. Break it before the Void learns your flight pattern.",
     'hard_12': "THE PORTAL PROTOTYPE. <br><br>Space is no longer trustworthy. Lasers enter one gate and leave another. So can you. So can it.",
-    'hard_13': "THE ASTRAL TRIO. <br><br>Three stars, one shielded heart. Kill the orbiting red and blue stars before the center wakes up."
+    'hard_13': "THE ASTRAL TRIO. <br><br>Three stars, one shielded heart. Kill the orbiting red and blue stars before the center wakes up.",
+    'hard_14': "THE MIMIC. <br><br>It remembers the first five nightmares and wears them like masks. Every 15 seconds, the fight changes.",
+    'hard_15': "CURSE 0. <br><br>A null-blue zero with one command: terminate. Its bullets are slow. That is the only mercy."
 };
 
 function setCookie(name, value, days) { localStorage.setItem(name, value); }
@@ -424,7 +430,7 @@ const gameOverTitle = document.getElementById('game-over-title');
 const phaseDebug = document.getElementById('phase-debug');
 const waveText = document.getElementById('wave-announcement');
 
-const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, s: false, a: false, d: false };
+const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, s: false, a: false, d: false, ' ': false };
 const mouse = { x: width / 2, y: height - 150, down: false, targetX: width / 2, targetY: height - 150 };
 let isTouch = false;
 
@@ -773,7 +779,8 @@ window.addEventListener('keydown', e => {
         const k = e.key.toLowerCase();
         if (keys.hasOwnProperty(e.key)) keys[e.key] = true; 
         if (keys.hasOwnProperty(k)) keys[k] = true;
-        if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].indexOf(e.code) > -1) e.preventDefault();
+        if (k === 't') { cyclePlayerTarget(); e.preventDefault(); }
+        if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].indexOf(e.code) > -1) e.preventDefault();
     }
 });
 window.addEventListener('keyup', e => {
@@ -807,6 +814,7 @@ const RIFT_SEQUENCE = ['rift_lance', 'rift_orbit', 'rift_crush', 'rift_sawline',
 const PORTAL_SEQUENCE = ['portal_laser', 'portal_barrage', 'portal_shift', 'portal_laser', 'portal_barrage'];
 const ASTRAL_SEQUENCE = ['astral_orbit_fire', 'astral_outer_cross', 'astral_orbit_fire', 'astral_outer_cross'];
 const ASTRAL_CORE_SEQUENCE = ['astral_lasers', 'astral_starfall', 'astral_rapid_fire', 'astral_lasers'];
+const CURSE_SEQUENCE = ['curse_termination', 'curse_ring', 'curse_termination', 'curse_drift'];
 
 const DIFFICULTY = {
     SIM: { name: "SIMULATION", playerDamage: 16, swarmHp: 6, heavyHp: 25, laserHp: 18, bossHp: 1600, heavyAgile: false, enemyCountMult: 0.3, fireRateMult: 2.4, incomingDamageMult: 0.55, waveDelay: 150 },
@@ -897,6 +905,9 @@ class Bullet {
             this.color = '#ff00ff'; this.size = 2; this.damage = damage;
         } else if (type === 'juggernaut_shot') {
             this.color = '#ffaa00'; this.size = 6; this.damage = damage;
+        } else if (type === 'player_missile') {
+            this.color = '#aa66ff'; this.size = 6; this.damage = damage || currentSettings.playerDamage;
+            this.angle = Math.atan2(vy, vx); this.speed = Math.max(6, Math.hypot(vx, vy)); this.guidanceTimer = 150;
         } else if (type === 'boss_orb') {
             this.color = '#ffaa00'; this.size = 6; this.damage = 10;
         } else if (type === 'fireball') {
@@ -932,9 +943,20 @@ class Bullet {
             this.color = '#ffd700'; this.damage = 15; this.life = 350; this.warmup = 60;
         } else if (type === 'arch_hammer') {
             this.color = '#ffd700'; this.damage = 25;
+        } else if (type === 'termination_zero') {
+            this.color = '#33aaff'; this.size = 22; this.damage = 99999; this.life = 900;
         }
     }
     update() {
+        if (this.type === 'termination_zero') {
+            this.life--; if (this.life <= 0) this.active = false;
+            if (player.active && Math.hypot(this.x - player.x, this.y - player.y) < 26) {
+                player.hit(this.damage); this.active = false;
+            }
+            particles.push(new Particle(this.x, this.y, '#33aaff', 1.5, 3, 12));
+            this.x += this.vx; this.y += this.vy;
+            return;
+        }
         if (this.type === 'glitch_laser') {
             this.warmup--; this.life--; if(this.life <= 0) this.active = false; return;
         }
@@ -994,6 +1016,18 @@ class Bullet {
             return; 
         }
 
+        if (this.type === 'player_missile' && this.guidanceTimer > 0) {
+            if (!isValidTarget(this.targetRef)) this.targetRef = getNearestTarget(this.x, this.y);
+            if (this.targetRef) {
+                let dx = this.targetRef.x - this.x; let dy = this.targetRef.y - this.y;
+                let targetAngle = Math.atan2(dy, dx);
+                let diff = targetAngle - this.angle;
+                while (diff < -Math.PI) diff += Math.PI * 2; while (diff > Math.PI) diff -= Math.PI * 2;
+                this.angle += diff * 0.08; this.vx = Math.cos(this.angle) * this.speed; this.vy = Math.sin(this.angle) * this.speed;
+            }
+            this.guidanceTimer--;
+            particles.push(new Particle(this.x, this.y, '#aa66ff', 1, 3, 18));
+        }
         if ((this.type === 'missile' || this.type === 'glitch_missile') && player.active && this.guidanceTimer > 0) {
             let dx = player.x - this.x; let dy = player.y - this.y;
             let targetAngle = Math.atan2(dy, dx);
@@ -1056,10 +1090,24 @@ class Bullet {
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.strokeRect(-50, 0, 100, 60);
             ctx.restore();
             return;
-        } else if (this.type === 'juggernaut_shot') {
+        } else if (this.type === 'juggernaut_shot' || this.type === 'player_missile') {
             ctx.save(); ctx.translate(this.x, this.y);
+            if (this.type === 'player_missile') ctx.rotate(this.angle || Math.atan2(this.vy, this.vx));
             ctx.fillStyle = this.color; ctx.shadowBlur = 15; ctx.shadowColor = this.color;
-            ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI*2); ctx.fill();
+            if (this.type === 'player_missile') {
+                ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-7, 5); ctx.lineTo(-4, 0); ctx.lineTo(-7, -5); ctx.fill();
+            } else {
+                ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.restore();
+            return;
+        } else if (this.type === 'termination_zero') {
+            ctx.save(); ctx.translate(this.x, this.y);
+            ctx.shadowBlur = 25; ctx.shadowColor = '#33aaff';
+            ctx.strokeStyle = '#33aaff'; ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.stroke();
+            ctx.fillStyle = 'rgba(51,170,255,0.15)';
+            ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI*2); ctx.fill();
             ctx.restore();
             return;
         }
@@ -1381,11 +1429,73 @@ class Portal {
     }
 }
 
+function getTargetableEntities() {
+    const targets = enemies.filter(e => e && e.active && !e.isPhased);
+    if (boss && boss.active && boss.phase === 'fight') targets.push(boss);
+    return targets;
+}
+
+function isValidTarget(target) {
+    return !!target && target.active !== false && (!target.isPhased) && (target === boss || enemies.includes(target));
+}
+
+function getNearestTarget(x, y) {
+    const targets = getTargetableEntities();
+    let best = null;
+    let bestDist = Infinity;
+    targets.forEach(target => {
+        const d = Math.hypot(target.x - x, target.y - y);
+        if (d < bestDist) { best = target; bestDist = d; }
+    });
+    return best;
+}
+
+function getPlayerTarget() {
+    if (!isValidTarget(playerTargetLock)) playerTargetLock = getNearestTarget(player ? player.x : width / 2, player ? player.y : height / 2);
+    return playerTargetLock || getNearestTarget(player ? player.x : width / 2, player ? player.y : height / 2);
+}
+
+function cyclePlayerTarget() {
+    const targets = getTargetableEntities();
+    if (targets.length === 0) { playerTargetLock = null; return; }
+    targetCycleIndex = (targetCycleIndex + 1) % targets.length;
+    playerTargetLock = targets[targetCycleIndex];
+    waveText.innerText = "TARGET LOCK";
+    waveText.style.color = "#aa66ff";
+    waveText.style.opacity = 1;
+    waveText.style.transform = "scale(0.8)";
+    setTimeout(() => { if (waveText.innerText === "TARGET LOCK") waveText.style.opacity = 0; }, 700);
+}
+
+function fireAtTarget(x, y, speed, type, damage, target) {
+    const chosen = target || getNearestTarget(x, y);
+    const angle = chosen ? Math.atan2(chosen.y - y, chosen.x - x) : -Math.PI / 2;
+    const bullet = new Bullet(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, type, damage);
+    bullet.targetRef = chosen;
+    return bullet;
+}
+
+function handleCometRamCollision(ship) {
+    enemies.forEach(enemy => {
+        if (enemy && enemy.active && Math.hypot(ship.x - enemy.x, ship.y - enemy.y) < 46) {
+            if (enemy.unbreakable) enemy.active = false;
+            else if (typeof enemy.hit === 'function') enemy.hit(9999);
+            for(let i=0; i<12; i++) particles.push(new Particle(enemy.x, enemy.y, '#46b8ff', 5, 4, 24));
+        }
+    });
+    if (boss && boss.active && boss.phase === 'fight' && Math.hypot(ship.x - boss.x, ship.y - boss.y) < 110) {
+        boss.hit(ship.damage * 0.45);
+    }
+}
+
 class Player {
     constructor() {
         this.x = width / 2; this.y = height - 100;
         this.active = true; this.iframes = 0;
         this.portalCooldown = 0;
+        this.cometRamTimer = 0;
+        this.cometRamCooldown = 0;
+        this.cometRamCenter = { x: this.x, y: this.y };
         let baseHp = 100; let bonusHp = 0;
         const stats = getModeData(activeDifficultyMode); 
         const shipInfo = SHIPS[stats.currentShip];
@@ -1405,6 +1515,33 @@ class Player {
     update() {
         if (!this.active) return;
         if (gameState === STATE.PLAYING) {
+            const stats = getModeData(activeDifficultyMode);
+            if (stats.currentShip === 4 && keys[' '] && this.cometRamCooldown <= 0) {
+                this.cometRamTimer = 140;
+                this.cometRamCooldown = 620;
+                this.cometRamCenter = { x: this.x, y: this.y };
+                waveText.innerText = "COMET RAM";
+                waveText.style.color = "#46b8ff";
+                waveText.style.opacity = 1;
+                waveText.style.transform = "scale(0.85)";
+                setTimeout(() => { if (waveText.innerText === "COMET RAM") waveText.style.opacity = 0; }, 900);
+            }
+            if (this.cometRamCooldown > 0) this.cometRamCooldown--;
+            if (this.cometRamTimer > 0) {
+                this.cometRamTimer--;
+                this.iframes = Math.max(this.iframes, 8);
+                const t = (140 - this.cometRamTimer) * 0.22;
+                const radius = 68 + Math.sin(t * 0.7) * 34;
+                this.x = this.cometRamCenter.x + Math.cos(t) * radius + Math.cos(t * 2.3) * 44;
+                this.y = this.cometRamCenter.y + Math.sin(t * 1.4) * radius;
+                this.x = Math.max(20, Math.min(width - 20, this.x));
+                this.y = Math.max(20, Math.min(height - 20, this.y));
+                handleCometRamCollision(this);
+                mouse.targetX = this.x; mouse.targetY = this.y;
+                particles.push(new Particle(this.x, this.y, '#46b8ff', 4, 7, 18));
+                if (this.cometRamTimer <= 0) keys[' '] = false;
+                return;
+            }
             let dx = 0, dy = 0;
             if (keys.ArrowUp || keys.w) dy -= this.speed;
             if (keys.ArrowDown || keys.s) dy += this.speed;
@@ -1422,7 +1559,6 @@ class Player {
             this.y = Math.max(20, Math.min(height - 20, this.y));
             handlePortalTravel(this, 30, 'player');
 
-            const stats = getModeData(activeDifficultyMode);
             if (stats.currentShip === 0) {
                 if (frames % 6 === 0) {
                     bullets.push(new Bullet(this.x - 10, this.y - 10, 0, -15, 'player', this.damage));
@@ -1445,19 +1581,27 @@ class Player {
                     playSound('shoot');
                 }
             } else if (stats.currentShip === 3) {
-                if (frames % 7 === 0) {
-                    bullets.push(new Bullet(this.x, this.y - 18, 0, -17, 'player', this.damage * 1.05));
+                if (frames % 3 === 0) {
+                    const wiggle = Math.sin(frames * 0.35) * 2.8;
+                    bullets.push(new Bullet(this.x, this.y - 18, wiggle, -18, 'player', this.damage * 0.42));
                     playSound('shoot');
                 }
             } else if (stats.currentShip === 4) {
-                if (frames % 4 === 0) {
-                    bullets.push(new Bullet(this.x - 6, this.y - 16, -0.5, -19, 'phantom_laser', this.damage * 0.34));
-                    bullets.push(new Bullet(this.x + 6, this.y - 16, 0.5, -19, 'phantom_laser', this.damage * 0.34));
+                if (frames % 6 === 0) {
+                    bullets.push(new Bullet(this.x - 10, this.y - 10, 0, -15, 'player', this.damage * 0.82));
+                    bullets.push(new Bullet(this.x + 10, this.y - 10, 0, -15, 'player', this.damage * 0.82));
+                    if (frames % 30 === 0) bullets.push(fireAtTarget(this.x, this.y - 16, 8, 'player_missile', this.damage * 1.1, getNearestTarget(this.x, this.y)));
                     playSound('shoot');
                 }
             } else if (stats.currentShip === 5) {
-                if (frames % 12 === 0) {
-                    bullets.push(new Bullet(this.x, this.y - 18, 0, -20, 'juggernaut_shot', this.damage * 1.45));
+                const target = getPlayerTarget();
+                if (frames % 8 === 0) {
+                    bullets.push(fireAtTarget(this.x, this.y - 18, 18, 'juggernaut_shot', this.damage * 0.95, target));
+                    playSound('shoot');
+                }
+                if (frames % 72 === 0) {
+                    bullets.push(fireAtTarget(this.x - 10, this.y - 8, 8, 'player_missile', this.damage * 1.7, target));
+                    bullets.push(fireAtTarget(this.x + 10, this.y - 8, 8, 'player_missile', this.damage * 1.7, target));
                     playSound('shoot');
                 }
             }
@@ -1477,6 +1621,10 @@ class Player {
     }
     hit(damage) {
         if (this.iframes > 0 || !this.active) return;
+        const stats = getModeData(activeDifficultyMode);
+        if (stats.currentShip === 3) {
+            for(let i=0; i<8; i++) particles.push(new Particle(this.x, this.y, '#00ff88', 3, 3, 22));
+        }
         damage *= this.damageTakenMult * (currentSettings.incomingDamageMult || 1);
         this.hp -= damage; this.iframes = 30;
         playerHpEl.innerText = Math.max(0, Math.floor(this.hp));
@@ -1668,6 +1816,12 @@ class Boss {
         this.isRiftSentinel = false;
         this.isPortalPrototype = false;
         this.isAstralTrio = false;
+        this.isMimic = false;
+        this.isCurseZero = false;
+        this.mimicTimer = 0;
+        this.mimicForm = 'omega';
+        this.curseShotTimer = 0;
+        this.curseParticles = [];
         this.snakePath = []; 
         this.clones = []; 
         this.targetX = width / 2; 
@@ -1690,6 +1844,12 @@ class Boss {
         this.astralStars = [];
         this.astralCoreAwake = false;
         this.astralLaserAngles = [];
+    }
+
+    clearBossIdentityFlags() {
+        this.isPhaseTwo = false; this.isTerminator = false; this.isGlitch = false; this.isSnake = false; this.isHiveMother = false;
+        this.isSyntaxError = false; this.isNullEntity = false; this.isOblivion = false; this.isArchitect = false; this.isNeonVoid = false;
+        this.isRiftSentinel = false; this.isPortalPrototype = false; this.isAstralTrio = false; this.isCurseZero = false;
     }
 
     initAsStage2() {
@@ -1815,6 +1975,56 @@ class Boss {
         bossName.innerText = "THE ASTRAL TRIO"; bossName.style.color = "#cc99ff";
     }
 
+    initAsStage14() {
+        this.clearBossIdentityFlags();
+        this.isMimic = true;
+        this.damageMultiplier = isHardMode() ? 5.4 : 4.0;
+        this.maxHp = isHardMode() ? 42000 : 30000; this.hp = this.maxHp;
+        this.x = width / 2; this.y = -170; this.targetY = 170; this.rot = 0;
+        this.mimicTimer = 0; this.mimicForm = 'omega';
+        this.chooseMimicForm();
+        bossName.innerText = "THE MIMIC"; bossName.style.color = "#ffffff";
+    }
+
+    initAsStage15() {
+        this.clearBossIdentityFlags();
+        this.isCurseZero = true;
+        this.damageMultiplier = isHardMode() ? 7.0 : 5.0;
+        this.maxHp = isHardMode() ? 46000 : 33000; this.hp = this.maxHp;
+        this.x = width / 2; this.y = -170; this.targetY = 175; this.rot = 0;
+        this.curseParticles = [];
+        this.curseShotTimer = 0;
+        for(let i=0; i<70; i++) this.curseParticles.push({ angle: Math.random()*Math.PI*2, radius: 70 + Math.random()*100, speed: 0.008 + Math.random()*0.025, size: 2 + Math.random()*5 });
+        bossName.innerText = "CURSE 0"; bossName.style.color = "#33aaff";
+    }
+
+    chooseMimicForm() {
+        const forms = ['omega', 'terminator', 'glitch', 'snake', 'hive'];
+        this.mimicForm = forms[Math.floor(Math.random() * forms.length)];
+        this.isTerminator = this.mimicForm === 'terminator';
+        this.isGlitch = this.mimicForm === 'glitch';
+        this.isSnake = this.mimicForm === 'snake';
+        this.isHiveMother = this.mimicForm === 'hive';
+        this.isPhaseTwo = false;
+        this.shredderMode = false;
+        this.hiveSummonCounter = 0;
+        this.miniHives = [];
+        if (this.isSnake) { this.snakePath = []; for(let i=0; i<300; i++) this.snakePath.push({x: this.x, y: this.y}); }
+        this.sequenceIndex = 0;
+        this.startNextAttack();
+        waveText.innerText = "MIMIC: " + this.mimicForm.toUpperCase();
+        waveText.style.color = "#ffffff"; waveText.style.opacity = 1; waveText.style.transform = "scale(0.85)";
+        setTimeout(() => { if (waveText.innerText.startsWith("MIMIC:")) waveText.style.opacity = 0; }, 900);
+    }
+
+    fireTerminationZero() {
+        const angle = Math.atan2(player.y - this.y, player.x - this.x);
+        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*2.4, Math.sin(angle)*2.4, 'termination_zero'));
+        waveText.innerText = "TERMINATION 0";
+        waveText.style.color = "#33aaff"; waveText.style.opacity = 1; waveText.style.transform = "scale(0.85)";
+        setTimeout(() => { if (waveText.innerText === "TERMINATION 0") waveText.style.opacity = 0; }, 800);
+    }
+
     activate() { this.active = true; bossHud.style.opacity = 1; }
 
     getImperfectLaserAngle(missDistance) {
@@ -1841,7 +2051,29 @@ class Boss {
             return;
         }
 
-        if (this.isOblivion) {
+        if (this.isMimic) {
+            this.mimicTimer++;
+            if (this.mimicTimer >= 900) {
+                this.mimicTimer = 0;
+                this.chooseMimicForm();
+            }
+        }
+
+        if (this.isCurseZero) {
+            this.rot += 0.018;
+            this.x = width/2 + Math.sin(frames * 0.012) * 140;
+            this.y = this.targetY + Math.cos(frames * 0.018) * 34;
+            this.curseShotTimer++;
+            if (this.curseShotTimer >= 300) {
+                this.curseShotTimer = 0;
+                this.fireTerminationZero();
+            }
+            this.curseParticles.forEach(p => {
+                p.angle += p.speed;
+                if (Math.random() > 0.72) particles.push(new Particle(this.x + Math.cos(p.angle)*p.radius, this.y + Math.sin(p.angle)*p.radius, '#33aaff', 1, p.size, 16));
+            });
+        }
+        else if (this.isOblivion) {
             this.rot += 0.01;
             if (this.currentAttack === 'oblivion_beam') {
                 if (this.attackTimer < 60) this.laserActive = false;
@@ -2101,7 +2333,7 @@ class Boss {
         }
         
         this.attackTimer++;
-        if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isHiveMother && !this.isSyntaxError && !this.isNullEntity && !this.isOblivion && !this.isArchitect && !this.isNeonVoid && !this.isRiftSentinel && !this.isPortalPrototype && !this.isAstralTrio && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
+        if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isHiveMother && !this.isSyntaxError && !this.isNullEntity && !this.isOblivion && !this.isArchitect && !this.isNeonVoid && !this.isRiftSentinel && !this.isPortalPrototype && !this.isAstralTrio && !this.isCurseZero && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
               enemies.push(new SwarmEnemy(this.x - 40, this.y)); enemies.push(new SwarmEnemy(this.x + 40, this.y));
         }
         this.handleAttack();
@@ -2136,6 +2368,7 @@ class Boss {
         if(this.isRiftSentinel) seq = RIFT_SEQUENCE;
         if(this.isPortalPrototype) seq = PORTAL_SEQUENCE;
         if(this.isAstralTrio) seq = this.astralCoreAwake ? ASTRAL_CORE_SEQUENCE : ASTRAL_SEQUENCE;
+        if(this.isCurseZero) seq = CURSE_SEQUENCE;
         
         if (this.sequenceIndex >= seq.length) this.sequenceIndex = 0;
         this.currentAttack = seq[this.sequenceIndex];
@@ -2154,6 +2387,7 @@ class Boss {
         if(phaseName.startsWith("RIFT_")) phaseName = phaseName.replace("RIFT_", "");
         if(phaseName.startsWith("PORTAL_")) phaseName = phaseName.replace("PORTAL_", "");
         if(phaseName.startsWith("ASTRAL_")) phaseName = phaseName.replace("ASTRAL_", "");
+        if(phaseName.startsWith("CURSE_")) phaseName = phaseName.replace("CURSE_", "");
         
         phaseDebug.innerText = `PHASE: ${phaseName}`;
         this.laserCharge = 0; this.laserActive = false; this.redLines = []; this.laserAngle = Math.PI / 2;
@@ -2220,6 +2454,36 @@ class Boss {
                     bullets.push(new Bullet(this.x + 28, this.y, Math.cos(angle)*8, Math.sin(angle)*8, 'purple_fireball'));
                 }
                 if (this.attackTimer > 250) this.startNextAttack();
+                break;
+            case 'curse_termination':
+                if (this.attackTimer % 300 === 1) {
+                    this.fireTerminationZero();
+                }
+                if (this.attackTimer > 340) this.startNextAttack();
+                break;
+            case 'curse_ring':
+                if (this.attackTimer % 35 === 0 && this.attackTimer < 240) {
+                    for(let i=0; i<16; i++) {
+                        const angle = (Math.PI*2/16)*i + this.rot;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*5.5, Math.sin(angle)*5.5, 'boss_orb'));
+                    }
+                }
+                if (this.attackTimer % 150 === 1) {
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*2.2, Math.sin(angle)*2.2, 'termination_zero'));
+                }
+                if (this.attackTimer > 280) this.startNextAttack();
+                break;
+            case 'curse_drift':
+                if (this.attackTimer % 20 === 0 && this.attackTimer < 220) {
+                    const x = Math.random() * width;
+                    bullets.push(new Bullet(x, -30, (Math.random()-0.5)*2, 5, 'purple_fireball'));
+                }
+                if (this.attackTimer % 150 === 0) {
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*2.5, Math.sin(angle)*2.5, 'termination_zero'));
+                }
+                if (this.attackTimer > 260) this.startNextAttack();
                 break;
             case 'portal_laser':
                 if (portals.length < 2) createPortalField(5);
@@ -2798,6 +3062,31 @@ class Boss {
 
     draw() {
         if (!this.active) return;
+
+        if (this.isCurseZero) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.shadowBlur = 36; ctx.shadowColor = '#33aaff';
+            this.curseParticles.forEach((p, index) => {
+                const px = Math.cos(p.angle) * p.radius;
+                const py = Math.sin(p.angle * 1.15) * p.radius * 0.7;
+                ctx.globalAlpha = 0.25 + Math.sin(frames * 0.08 + index) * 0.2;
+                ctx.fillStyle = '#33aaff';
+                ctx.beginPath(); ctx.arc(px, py, p.size, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            ctx.rotate(this.rot);
+            ctx.lineWidth = 20;
+            ctx.strokeStyle = '#33aaff';
+            ctx.beginPath(); ctx.arc(0, 0, 72 + Math.sin(frames*0.08)*5, 0, Math.PI*2); ctx.stroke();
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(0, 0, 42, 0, Math.PI*2); ctx.stroke();
+            ctx.fillStyle = 'rgba(51,170,255,0.16)';
+            ctx.beginPath(); ctx.arc(0, 0, 90, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+            return;
+        }
 
         if (this.isAstralTrio) {
             ctx.save();
@@ -3677,9 +3966,49 @@ function spawnWaveEnemies(wave) {
     let maxDelay = 0; const countMult = currentSettings.enemyCountMult; const isHard = (isHardMode());
 
     // ===============================================
+    // STAGE 15 - CURSE 0
+    // ===============================================
+    if (currentLevelIndex === 15) {
+        if (wave === 1) {
+            for(let i=0; i<12; i++) setTimeout(() => enemies.push(new PhaserEnemy(Math.random()*width, -60)), i*220);
+            for(let i=0; i<4; i++) setTimeout(() => enemies.push(new LaserEnemy(Math.random()*width, -90)), i*650);
+            maxDelay = 3800;
+        } else if (wave >= 2 && wave <= 14) {
+            let count = 38 + wave * 3; let delay = 50;
+            for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*delay);
+            if (wave % 2 === 0) { enemies.push(new SpinnerEnemy(width*0.25, -150)); enemies.push(new SpinnerEnemy(width*0.75, -150)); }
+            if (wave % 3 === 0) { enemies.push(new PhaserEnemy(width*0.2, -80)); enemies.push(new PhaserEnemy(width*0.8, -80)); }
+            if (wave % 4 === 0) { enemies.push(new MineLayer(width*0.3, -80)); enemies.push(new MineLayer(width*0.7, -80)); }
+            if (wave > 9) { setTimeout(() => enemies.push(new RammerEnemy(player.x, -70)), 1300); setTimeout(() => enemies.push(new RammerEnemy(player.x, -70)), 2600); }
+            maxDelay = count * delay;
+        } else if (wave === 15) {
+            boss.activate(); boss.initAsStage15();
+        }
+    }
+    // ===============================================
+    // STAGE 14 - THE MIMIC
+    // ===============================================
+    else if (currentLevelIndex === 14) {
+        if (wave === 1) {
+            for(let i=0; i<10; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*180);
+            for(let i=0; i<3; i++) setTimeout(() => enemies.push(new HeavyStriker(Math.random()*width, -100)), i*650);
+            maxDelay = 3200;
+        } else if (wave >= 2 && wave <= 14) {
+            let count = 36 + wave * 2; let delay = 55;
+            for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*delay);
+            if (wave % 2 === 0) { enemies.push(new HeavyStriker(width*0.25, -120)); enemies.push(new HeavyStriker(width*0.75, -120)); }
+            if (wave % 3 === 0) { enemies.push(new SpinnerEnemy(width*0.3, -150)); enemies.push(new SpinnerEnemy(width*0.7, -150)); }
+            if (wave % 4 === 0) { enemies.push(new LaserEnemy(width*0.5, -90)); }
+            if (wave > 8) { setTimeout(() => enemies.push(new RammerEnemy(player.x, -70)), 1400); }
+            maxDelay = count * delay;
+        } else if (wave === 15) {
+            boss.activate(); boss.initAsStage14();
+        }
+    }
+    // ===============================================
     // STAGE 13 - THE ASTRAL TRIO
     // ===============================================
-    if (currentLevelIndex === 13) {
+    else if (currentLevelIndex === 13) {
         if (wave === 1) {
             for(let i=0; i<10; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*180);
             for(let i=0; i<4; i++) setTimeout(() => enemies.push(new SpinnerEnemy(Math.random()*width, -130)), i*650);
@@ -4406,7 +4735,7 @@ function animateGame(currentTime) {
                     b.update(); b.draw();
                     if (!b.active) { bullets.splice(i, 1); continue; }
                     
-                    if (b.type === 'player' || b.type === 'phantom_laser' || b.type === 'juggernaut_shot') {
+                        if (b.type === 'player' || b.type === 'phantom_laser' || b.type === 'juggernaut_shot' || b.type === 'player_missile') {
                         let hit = false;
                         if (boss.active) {
                             if (boss.isSnake) {
@@ -4481,6 +4810,9 @@ function animateGame(currentTime) {
                                     let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
                                     if (dist < 90) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#cc99ff', 3, 4, 16)); }
                                 }
+                            } else if (boss.isCurseZero) {
+                                let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
+                                if (dist < 92) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#33aaff', 3, 4, 16)); }
                             } else {
                                 let dx = b.x - boss.x; let dy = b.y - boss.y;
                                 if (Math.sqrt(dx*dx + dy*dy) < 60) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#ffaa00', 2, 2, 10)); }
