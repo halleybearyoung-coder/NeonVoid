@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Neon Void</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260526-stage30-ancient">
+    <link rel="stylesheet" href="style.css?v=20260527-stage49-core">
 </head>
 <body>
 
@@ -20,7 +20,7 @@
         <div class="dev-title">TEST PANEL</div>
         <div class="dev-row">
             <span>PASS</span>
-            <input type="password" id="dev-password" class="dev-input" placeholder="0818">
+            <input type="password" id="dev-password" class="dev-input" placeholder="ACCESS">
             <button class="dev-btn" onclick="unlockDevPanel()">OPEN</button>
         </div>
         <div class="dev-row">
@@ -204,6 +204,33 @@
                     <button id="btn-upg-magnet" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #aa66ff; color: #aa66ff;" onclick="upgradeMagnet()">UPGRADE</button>
                 </div>
 
+                <div class="upgrade-card card-shield">
+                    <div class="upgrade-title">SHIELD PLATING</div>
+                    <div class="level-bar-container" id="shield-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="shield-bonus" style="color: #7dff77;">-0% DMG</div>
+                    <button id="btn-upg-shield" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #7dff77; color: #7dff77;" onclick="upgradeShield()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-coolant">
+                    <div class="upgrade-title">COOLANT CORE</div>
+                    <div class="level-bar-container" id="coolant-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="coolant-bonus" style="color: #ff66cc;">+0% RATE</div>
+                    <button id="btn-upg-coolant" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #ff66cc; color: #ff66cc;" onclick="upgradeCoolant()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-missile">
+                    <div class="upgrade-title">MISSILE RACK</div>
+                    <div class="level-bar-container" id="missile-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="missile-bonus" style="color: #ff8844;">+0% MISSILE</div>
+                    <button id="btn-upg-missile" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #ff8844; color: #ff8844;" onclick="upgradeMissile()">UPGRADE</button>
+                </div>
+
                 <div class="upgrade-card card-special locked" id="special-card">
                     <div class="upgrade-title">HEAVY BEAM</div>
                     <div class="level-bar-container" id="beam-bar-container">
@@ -222,6 +249,6 @@
         <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
     </div>
 
-    <script src="script.js?v=20260526-stage30-ancient"></script>
+    <script src="script.js?v=20260527-stage49-core"></script>
 </body>
 </html>

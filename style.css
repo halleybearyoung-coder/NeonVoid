@@ -38,7 +38,7 @@ canvas {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 64px 20px 20px;
+    padding: 92px 20px 20px;
     box-sizing: border-box;
     z-index: 10;
 }
@@ -123,7 +123,7 @@ canvas {
     pointer-events: none;
     transition: opacity 0.5s;
     box-sizing: border-box;
-    padding: 68px 20px 24px;
+    padding: 92px 20px 24px;
     visibility: hidden;
 }
 .screen-overlay[style*="opacity: 1"] {
@@ -250,6 +250,9 @@ canvas {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
     gap: 16px 20px;
     max-width: 620px;
+    position: relative;
+    z-index: 90;
+    pointer-events: auto;
 }
 .btn {
     background: rgba(0, 0, 0, 0.6);
@@ -265,7 +268,7 @@ canvas {
     pointer-events: auto !important;
     backdrop-filter: blur(5px);
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-    z-index: 50;
+    z-index: 95;
     position: relative;
     touch-action: manipulation;
 }
@@ -313,7 +316,7 @@ canvas {
 }
 .hangar-toggle-btn {
     position: absolute;
-    top: 76px;
+    top: 92px;
     left: 28px;
     min-width: 190px;
     min-height: 58px;
@@ -326,7 +329,7 @@ canvas {
     text-transform: uppercase;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     transition: 0.3s;
-    z-index: 80;
+    z-index: 100;
     pointer-events: auto !important;
     touch-action: manipulation;
 }
@@ -344,15 +347,18 @@ canvas {
         linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 20px 20px;
-    padding: 40px;
+    padding: 28px 34px 34px;
     border: 1px solid #00aaaa;
     box-shadow: 0 0 50px rgba(0, 255, 255, 0.15), inset 0 0 100px rgba(0,0,0,0.8);
     clip-path: polygon(
         0 0, 100% 0, 100% calc(100% - 30px), 
         calc(100% - 30px) 100%, 30px 100%, 0 calc(100% - 30px)
     );
-    width: 85%;
-    max-width: 900px;
+    width: min(94%, 1180px);
+    max-width: 1180px;
+    max-height: calc(100vh - 42px);
+    overflow-y: auto;
+    margin-top: 34px;
     position: relative;
 }
 #hangar-content::before {
@@ -393,14 +399,16 @@ canvas {
 
 .upgrade-row {
     display: flex;
-    gap: 30px;
-    margin-bottom: 30px;
+    gap: 18px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
     justify-content: center;
+    max-width: 1060px;
 }
 .upgrade-card {
-    width: 220px;
-    padding: 20px;
+    width: 188px;
+    min-height: 188px;
+    padding: 16px;
     background: rgba(20, 25, 30, 0.9);
     border: 1px solid #334;
     border-top: 3px solid #444; 
@@ -415,6 +423,9 @@ canvas {
 .card-cannon { border-top-color: #00ffff; }
 .card-engine { border-top-color: #46b8ff; }
 .card-magnet { border-top-color: #aa66ff; }
+.card-shield { border-top-color: #7dff77; }
+.card-coolant { border-top-color: #ff66cc; }
+.card-missile { border-top-color: #ff8844; }
 .card-special { border-top-color: #ff4444; }
 
 .upgrade-card:hover {
@@ -426,11 +437,14 @@ canvas {
 .card-cannon:hover { border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
 .card-engine:hover { border-color: #46b8ff; box-shadow: 0 0 15px rgba(70, 184, 255, 0.24); }
 .card-magnet:hover { border-color: #aa66ff; box-shadow: 0 0 15px rgba(170, 102, 255, 0.24); }
+.card-shield:hover { border-color: #7dff77; box-shadow: 0 0 15px rgba(125, 255, 119, 0.24); }
+.card-coolant:hover { border-color: #ff66cc; box-shadow: 0 0 15px rgba(255, 102, 204, 0.24); }
+.card-missile:hover { border-color: #ff8844; box-shadow: 0 0 15px rgba(255, 136, 68, 0.24); }
 .card-special:hover:not(.locked) { border-color: #ff4444; box-shadow: 0 0 15px rgba(255, 68, 68, 0.2); }
 
 .upgrade-title {
     font-family: 'Courier New', monospace;
-    font-size: 16px;
+    font-size: 14px;
     color: #aaa;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -441,7 +455,7 @@ canvas {
     font-size: 14px; color: #fff; margin: 5px 0; font-weight: normal;
 }
 .highlight-val {
-    font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 10px;
+    font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 10px;
     text-shadow: 0 0 5px rgba(255,255,255,0.3);
 }
 
@@ -462,6 +476,9 @@ canvas {
 .card-cannon .level-segment.active { background: #00ffff; box-shadow: 0 0 5px #00ffff; border-color: #00ffff; }
 .card-engine .level-segment.active { background: #46b8ff; box-shadow: 0 0 5px #46b8ff; border-color: #46b8ff; }
 .card-magnet .level-segment.active { background: #aa66ff; box-shadow: 0 0 5px #aa66ff; border-color: #aa66ff; }
+.card-shield .level-segment.active { background: #7dff77; box-shadow: 0 0 5px #7dff77; border-color: #7dff77; }
+.card-coolant .level-segment.active { background: #ff66cc; box-shadow: 0 0 5px #ff66cc; border-color: #ff66cc; }
+.card-missile .level-segment.active { background: #ff8844; box-shadow: 0 0 5px #ff8844; border-color: #ff8844; }
 .card-special .level-segment.active { background: #ff4444; box-shadow: 0 0 5px #ff4444; border-color: #ff4444; }
 
 .locked { border-color: #333; color: #555; opacity: 0.6; pointer-events: none; border-top-color: #333; }
@@ -544,6 +561,38 @@ canvas {
 .simulation-theme .level-btn.locked { border-color: rgba(125, 255, 119, 0.28); color: rgba(125, 255, 119, 0.28); }
 .simulation-theme .btn { border-color: #7dff77; color: #7dff77; }
 .simulation-theme .btn:hover { background: #7dff77; color: #031203; }
+.simulation-theme .menu-hangar-btn,
+.simulation-theme .hangar-toggle-btn {
+    border-color: #7dff77;
+    color: #7dff77;
+    box-shadow: 0 0 14px rgba(125, 255, 119, 0.22);
+}
+
+body.simulation-mode #three-container,
+body.simulation-mode #gameCanvas {
+    filter: grayscale(0.55) sepia(0.8) hue-rotate(64deg) saturate(2.15) brightness(0.85);
+}
+
+body.simulation-mode #menu-screen,
+body.simulation-mode #ui-layer,
+body.simulation-mode #hangar-screen,
+body.simulation-mode #intro-screen,
+body.simulation-mode #game-over-screen {
+    filter: sepia(0.4) hue-rotate(62deg) saturate(1.5);
+}
+
+body.simulation-mode #player-hud .hud-text,
+body.simulation-mode #phase-debug,
+body.simulation-mode #boss-name,
+body.simulation-mode #wave-announcement {
+    color: #7dff77 !important;
+    text-shadow: 0 0 10px rgba(125, 255, 119, 0.9) !important;
+}
+
+body.simulation-mode #boss-health-bar {
+    background: linear-gradient(90deg, #0f5f18, #7dff77);
+    box-shadow: 0 0 15px #7dff77;
+}
 
 body.simulation-mode::after {
     content: '';

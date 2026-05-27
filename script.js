@@ -4,7 +4,7 @@ const STATE = {
     VICTORY_SEQUENCE: 'victory_sequence', HANGAR: 'hangar'
 };
 let gameState = STATE.MENU;
-const MAX_STAGE = 30;
+const MAX_STAGE = 49;
 const CAMPAIGN_MODES = ['sim', 'easy', 'hard', 'insane'];
 const MODE_LABELS = {
     sim: 'SIMULATION',
@@ -71,7 +71,17 @@ const MUSIC_TRACKS = [
     'assets/music/stage02-slim-chance.mp3',
     'assets/music/stage03-broken-glass.mp3',
     'assets/music/stage04-snake-den.mp3',
-    'Pressure_Threshold.mp3'
+    'Pressure_Threshold.mp3',
+    'assets/music/stage05-ship-swarm.mp3',
+    'assets/music/stage06-matrix-glitch.mp3',
+    'assets/music/stage01-omega-curse.mp3',
+    'assets/music/stage02-slim-chance.mp3',
+    'assets/music/stage03-broken-glass.mp3',
+    'assets/music/stage04-snake-den.mp3',
+    'assets/music/stage05-ship-swarm.mp3',
+    'assets/music/stage06-matrix-glitch.mp3',
+    'Pressure_Threshold.mp3',
+    'assets/music/stage01-omega-curse.mp3'
 ];
 const MUSIC_DEFAULT_VOLUME = 0.35;
 const EXPLOSION_SAMPLE_SRC = 'soundreality-explosion-fx-343683.mp3';
@@ -104,7 +114,7 @@ function setLevelMusic(level) {
 
 function startMusicTrack() {
     if (!musicUnlocked) return;
-    const src = MUSIC_TRACKS[currentMusicLevel];
+    const src = MUSIC_TRACKS[currentMusicLevel] || MUSIC_TRACKS[((currentMusicLevel - 1) % 6) + 1];
     if (!src) {
         if (musicAudio) musicAudio.pause();
         return;
@@ -309,6 +319,25 @@ const STAGE_MESSAGES = {
     'easy_28': "IRON COMET DETECTED. <br><br>A rusted weapons platform is using old engines to ram through the grid.",
     'easy_29': "NULL FLOWER BLOOMING. <br><br>Every petal is a cannon. Every cannon is rude.",
     'easy_30': "ANCIENT MODEL [0.023]. <br><br>The oldest Neon Void prototype has awakened. Beat it to unlock the Tanker ship.",
+    'easy_31': "CRYSTAL SENTRY ONLINE. <br><br>Its prism plates split every shot into glittering lanes.",
+    'easy_32': "NOVA LOOM DETECTED. <br><br>The machine is weaving slow suns into fast traps.",
+    'easy_33': "STATIC LEVIATHAN RISING. <br><br>A huge signal-beast is dragging lightning across the map.",
+    'easy_34': "CHROME ORACLE AWAKE. <br><br>Its mirrored eye predicts your path, then lies about it.",
+    'easy_35': "GRAVITY ANVIL DROPPING. <br><br>Everything nearby is getting pulled under its weight.",
+    'easy_36': "SIGNAL WRAITH PHASING. <br><br>It flickers out, then sends the bullets back in.",
+    'easy_37': "EMBER MATRIX BURNING. <br><br>The grid is hot enough to throw fire in patterns.",
+    'easy_38': "VORTEX MASON ACTIVE. <br><br>It builds walls out of spinning space.",
+    'easy_39': "PARALLAX JUDGE ARRIVING. <br><br>Two sights, one verdict, no easy lane.",
+    'easy_40': "SYSTEM CORE: NEON VOID. <br><br>Omega's purple giant is here. Bubble traps, flashbangs, mega bombs, and faster Termination 0 shots are all live. Win to unlock Alpha Core.",
+    'easy_41': "VIOLET DREADNOUGHT DETECTED. <br><br>A heavy purple warframe is pushing through the deep sector.",
+    'easy_42': "PRISM TYRANT ONLINE. <br><br>Every prism face is a different weapon.",
+    'easy_43': "ASHEN CHOIR FOUND. <br><br>The void is singing through burnt-blue rings.",
+    'easy_44': "CIRCUIT MONOLITH RISING. <br><br>Its square body is stamping lanes into the screen.",
+    'easy_45': "SINGULARITY HARVESTER ACTIVE. <br><br>It harvests safe space first.",
+    'easy_46': "HELIX MARAUDER SPINNING. <br><br>Stay out of the spiral crossfire.",
+    'easy_47': "UMBRA ATLAS LOCKED ON. <br><br>It carries the battlefield like a weapon.",
+    'easy_48': "CROWN OF KNIVES DESCENDING. <br><br>Every point of the crown wants to become a bullet.",
+    'easy_49': "PROTOTYPE GATEKEEPER ONLINE. <br><br>The last gate before the next era is guarded by a brutal hybrid frame.",
     'hard_1': "Veteran difficulty authorized. <br><br>The enemy AI has adapted to standard tactics. Expect aggressive maneuvers.",
     'hard_2': "This is it. The Elite Terminator unit has been deployed. <br><br>Survival probability is near zero. Good luck, Commander.",
     'hard_3': "Elite Deep Sector. \n\nNo support available. You are on your own, Commander.",
@@ -338,7 +367,26 @@ const STAGE_MESSAGES = {
     'hard_27': "FINAL CALIBRATION. <br><br>The Void wants one last measurement. Make it regret asking.",
     'hard_28': "IRON COMET. <br><br>A corroded ram platform with cannons older than your ship and twice as angry.",
     'hard_29': "NULL FLOWER. <br><br>A rotating blossom of void artillery. Do not stand where beauty points.",
-    'hard_30': "NEON VOID ANCIENT MODEL [0.023]. <br><br>Half rusted hull, half forgotten machine god. Win and claim the Tanker."
+    'hard_30': "NEON VOID ANCIENT MODEL [0.023]. <br><br>Half rusted hull, half forgotten machine god. Win and claim the Tanker.",
+    'hard_31': "CRYSTAL SENTRY. <br><br>It cuts the battlefield into prism lanes.",
+    'hard_32': "NOVA LOOM. <br><br>Its star-thread patterns are faster now.",
+    'hard_33': "STATIC LEVIATHAN. <br><br>The signal-beast drags storms behind it.",
+    'hard_34': "CHROME ORACLE. <br><br>The mirror predicts you just long enough to punish you.",
+    'hard_35': "GRAVITY ANVIL. <br><br>Heavy, cruel, and determined to pull you into the shot.",
+    'hard_36': "SIGNAL WRAITH. <br><br>It flickers through the grid and leaves fire behind.",
+    'hard_37': "EMBER MATRIX. <br><br>The whole screen is becoming a furnace diagram.",
+    'hard_38': "VORTEX MASON. <br><br>It builds rotating traps while it fights.",
+    'hard_39': "PARALLAX JUDGE. <br><br>Two sights, one verdict, zero forgiveness.",
+    'hard_40': "SYSTEM CORE: NEON VOID. <br><br>Omega's purple giant is here. It traps, blinds, pulls, bombs, and fires faster Termination 0 shots. Win and claim Alpha Core.",
+    'hard_41': "VIOLET DREADNOUGHT. <br><br>The deep sector has started sending capital ships.",
+    'hard_42': "PRISM TYRANT. <br><br>Every face fires a different death pattern.",
+    'hard_43': "ASHEN CHOIR. <br><br>The burnt-blue rings are singing in sync.",
+    'hard_44': "CIRCUIT MONOLITH. <br><br>It writes walls like code.",
+    'hard_45': "SINGULARITY HARVESTER. <br><br>Safe space is now raw material.",
+    'hard_46': "HELIX MARAUDER. <br><br>The spiral guns are awake.",
+    'hard_47': "UMBRA ATLAS. <br><br>It carries gravity, lasers, and a grudge.",
+    'hard_48': "CROWN OF KNIVES. <br><br>The crown points everywhere at once.",
+    'hard_49': "PROTOTYPE GATEKEEPER. <br><br>A hybrid gateframe is guarding whatever comes next."
 };
 
 function setCookie(name, value, days) { localStorage.setItem(name, value); }
@@ -579,7 +627,8 @@ const SHIPS = [
     { id: 4, name: "COMET", color: "#46b8ff", cost: 7800, hpMult: 0.6, spd: 12.0, dmgTakenMult: 1.35, desc: "HASTE / WEAK NEEDLES" },
     { id: 5, name: "ECLIPSE", color: "#aa66ff", cost: 12000, hpMult: 0.82, spd: 8.0, dmgTakenMult: 1.15, desc: "FOCUS BEAM / LOW COVERAGE" },
     { id: 6, name: "ALPHA RADIANCE", color: "#ffd966", cost: 999999, hpMult: 1.05, spd: 8.6, dmgTakenMult: 0.9, desc: "STAGE 20 REWARD / ABILITY SHIP", rewardOnly: true },
-    { id: 7, name: "TANKER", color: "#b9c0c8", cost: 999999, hpMult: 2.2, spd: 3.8, dmgTakenMult: 0.62, desc: "STAGE 30 REWARD / HUGE SHELLS / RAM", rewardOnly: true }
+    { id: 7, name: "TANKER", color: "#b9c0c8", cost: 999999, hpMult: 2.2, spd: 3.8, dmgTakenMult: 0.62, desc: "STAGE 30 REWARD / HUGE SHELLS / RAM", rewardOnly: true },
+    { id: 8, name: "ALPHA CORE", color: "#b000ff", cost: 999999, hpMult: 1.35, spd: 8.8, dmgTakenMult: 0.72, desc: "STAGE 40 REWARD / PURPLE CORE SHIP", rewardOnly: true }
 ];
 let previewShipIndex = 0;
 
@@ -795,6 +844,40 @@ function drawShipAsset(ctx, type, isHologram) {
         ctx.beginPath(); ctx.arc(0, -12, 5, 0, Math.PI*2); ctx.fill();
         ctx.strokeStyle = '#ff8844'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(-18, 28); ctx.lineTo(18, 28); ctx.stroke();
+    } else if (type === 8) {
+        ctx.shadowColor = '#b000ff';
+        ctx.shadowBlur = isHologram ? 30 : 18;
+
+        ctx.save();
+        ctx.rotate(frames * 0.018);
+        ctx.strokeStyle = '#b000ff'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(0, 0, 42, 14, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.rotate(Math.PI / 3);
+        ctx.beginPath(); ctx.ellipse(0, 0, 38, 12, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+
+        ctx.fillStyle = '#120018';
+        ctx.beginPath();
+        for(let i=0; i<12; i++) {
+            const a = -Math.PI / 2 + i * Math.PI / 6;
+            const r = i % 2 === 0 ? 34 : 16;
+            ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke();
+
+        const core = ctx.createRadialGradient(0, 0, 2, 0, 0, 22);
+        core.addColorStop(0, '#ffffff');
+        core.addColorStop(0.35, '#d9a7ff');
+        core.addColorStop(1, '#6400aa');
+        ctx.fillStyle = core;
+        ctx.beginPath(); ctx.arc(0, 0, 20 + Math.sin(frames * 0.12) * 2, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = '#b000ff';
+        ctx.beginPath(); ctx.arc(-18, 20, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(18, 20, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0, -22, 4, 0, Math.PI*2); ctx.fill();
     }
     ctx.restore();
 }
@@ -1030,6 +1113,29 @@ const FINAL_CALIBRATION_SEQUENCE = ['calibration_scan', 'calibration_barrage', '
 const IRON_COMET_SEQUENCE = ['iron_ram', 'iron_shells', 'iron_missiles', 'iron_ram'];
 const NULL_FLOWER_SEQUENCE = ['flower_petals', 'flower_bloom', 'flower_seedfall', 'flower_petals'];
 const ANCIENT_MODEL_SEQUENCE = ['ancient_lasers', 'ancient_ram', 'ancient_pull', 'ancient_termination', 'ancient_missiles'];
+const ASCENDANT_SEQUENCE = ['ascendant_signature', 'ascendant_storm', 'ascendant_lanes', 'ascendant_summon'];
+const SYSTEM_CORE_VOID_SEQUENCE = ['core_huge_laser', 'core_fireball_ring', 'core_bubble_trap', 'core_mega_bombs', 'core_flashbang', 'core_termination'];
+
+const ASCENDANT_CONFIGS = {
+    31: { name: 'CRYSTAL SENTRY', color: '#7df9ff', accent: '#d8ffff', shape: 'prism', style: 'fan' },
+    32: { name: 'NOVA LOOM', color: '#ffcc44', accent: '#ff66cc', shape: 'loom', style: 'rain' },
+    33: { name: 'STATIC LEVIATHAN', color: '#66ffee', accent: '#4466ff', shape: 'leviathan', style: 'rail' },
+    34: { name: 'CHROME ORACLE', color: '#ffffff', accent: '#99bbff', shape: 'oracle', style: 'mirror' },
+    35: { name: 'GRAVITY ANVIL', color: '#aa66ff', accent: '#222244', shape: 'anvil', style: 'pull' },
+    36: { name: 'SIGNAL WRAITH', color: '#55ff99', accent: '#ffffff', shape: 'wraith', style: 'phase' },
+    37: { name: 'EMBER MATRIX', color: '#ff6633', accent: '#ffd966', shape: 'matrix', style: 'spiral' },
+    38: { name: 'VORTEX MASON', color: '#33aaff', accent: '#b000ff', shape: 'mason', style: 'walls' },
+    39: { name: 'PARALLAX JUDGE', color: '#ff66cc', accent: '#33aaff', shape: 'judge', style: 'dual' },
+    41: { name: 'VIOLET DREADNOUGHT', color: '#9b4dff', accent: '#ff66ff', shape: 'dreadnought', style: 'missiles' },
+    42: { name: 'PRISM TYRANT', color: '#7df9ff', accent: '#ffcc44', shape: 'tyrant', style: 'fan' },
+    43: { name: 'ASHEN CHOIR', color: '#7aa2ff', accent: '#dddddd', shape: 'choir', style: 'zero' },
+    44: { name: 'CIRCUIT MONOLITH', color: '#66ff66', accent: '#003300', shape: 'monolith', style: 'walls' },
+    45: { name: 'SINGULARITY HARVESTER', color: '#b000ff', accent: '#111111', shape: 'harvester', style: 'pull' },
+    46: { name: 'HELIX MARAUDER', color: '#ff8844', accent: '#46b8ff', shape: 'helix', style: 'spiral' },
+    47: { name: 'UMBRA ATLAS', color: '#5555ff', accent: '#000000', shape: 'atlas', style: 'rail' },
+    48: { name: 'CROWN OF KNIVES', color: '#ffd966', accent: '#ff3030', shape: 'knives', style: 'rain' },
+    49: { name: 'PROTOTYPE GATEKEEPER', color: '#ffffff', accent: '#b000ff', shape: 'gatekeeper', style: 'dual' }
+};
 
 const DIFFICULTY = {
     SIM: { name: "SIMULATION", playerDamage: 16, swarmHp: 6, heavyHp: 25, laserHp: 18, bossHp: 1600, heavyAgile: false, enemyCountMult: 0.3, fireRateMult: 2.4, incomingDamageMult: 0.55, waveDelay: 150 },
@@ -1158,6 +1264,8 @@ class Bullet {
             this.life = 140; this.fireTimer = 0; this.initialVx = vx; 
         } else if (type === 'mine') {
             this.color = '#ff0000'; this.size = 10; this.damage = 25; this.life = 600;
+        } else if (type === 'mega_mine') {
+            this.color = '#b000ff'; this.size = 30; this.damage = 52; this.life = 720;
         } else if (type === 'green_digit') {
             this.color = '#00ff00'; this.size = 8; this.damage = 15;
             this.digit = Math.random() > 0.5 ? '1' : '0';
@@ -1215,14 +1323,15 @@ class Bullet {
             if (Math.random() > 0.5) particles.push(new Particle(this.x + (Math.random()-0.5)*100, this.y + 30, '#ffd700', 2, 4, 20));
             return;
         }
-        if (this.type === 'mine') {
+        if (this.type === 'mine' || this.type === 'mega_mine') {
             this.y += 0.5;
             if (this.y > height + 50) this.active = false;
-            if (player.active && Math.hypot(this.x - player.x, this.y - player.y) < 25) { 
+            const mineRadius = this.type === 'mega_mine' ? 55 : 25;
+            if (player.active && Math.hypot(this.x - player.x, this.y - player.y) < mineRadius) {
                 player.hit(this.damage); this.active = false;
-                for(let i=0; i<30; i++) particles.push(new Particle(this.x, this.y, '#ff4400', 6, 5, 40));
-                for(let i=0; i<20; i++) particles.push(new Particle(this.x, this.y, '#00ff00', 8, 3, 50));
-                for(let i=0; i<15; i++) particles.push(new Particle(this.x, this.y, '#bbbbbb', 3, 15 + Math.random()*10, 70));
+                for(let i=0; i<45; i++) particles.push(new Particle(this.x, this.y, this.type === 'mega_mine' ? '#b000ff' : '#ff4400', 8, 6, 48));
+                for(let i=0; i<22; i++) particles.push(new Particle(this.x, this.y, '#ffffff', 8, 4, 42));
+                for(let i=0; i<18; i++) particles.push(new Particle(this.x, this.y, '#bbbbbb', 3, 15 + Math.random()*14, 70));
             }
             return;
         }
@@ -1371,11 +1480,20 @@ class Bullet {
             ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.arc(this.x, this.y, this.size + Math.sin(frames*0.2)*5, 0, Math.PI*2); ctx.stroke();
             ctx.restore();
-        } else if (this.type === 'mine') {
-            ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000'; ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(this.x, this.y, 10, 0, Math.PI*2); ctx.stroke();
-            ctx.fillStyle = `rgba(255, 0, 0, ${0.5 + Math.sin(frames*0.1)*0.5})`;
-            ctx.beginPath(); ctx.arc(this.x, this.y, 6, 0, Math.PI*2); ctx.fill(); ctx.restore();
+                } else if (this.type === 'mine' || this.type === 'mega_mine') {
+                    ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#ff0000'; ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2;
+                    const radius = this.type === 'mega_mine' ? 30 : 10;
+                    ctx.shadowColor = this.type === 'mega_mine' ? '#b000ff' : '#ff0000';
+                    ctx.strokeStyle = this.type === 'mega_mine' ? '#ff66ff' : '#00ff00';
+                    ctx.beginPath(); ctx.arc(this.x, this.y, radius, 0, Math.PI*2); ctx.stroke();
+                    ctx.fillStyle = this.type === 'mega_mine' ? `rgba(176, 0, 255, ${0.45 + Math.sin(frames*0.1)*0.4})` : `rgba(255, 0, 0, ${0.5 + Math.sin(frames*0.1)*0.5})`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, radius * 0.62, 0, Math.PI*2); ctx.fill();
+                    if (this.type === 'mega_mine') {
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.beginPath(); ctx.moveTo(this.x - radius, this.y); ctx.lineTo(this.x + radius, this.y); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(this.x, this.y - radius); ctx.lineTo(this.x, this.y + radius); ctx.stroke();
+                    }
+                    ctx.restore();
         } else if (this.type === 'green_digit') {
             ctx.font = "bold 16px monospace";
             ctx.fillText(this.digit, this.x - 4, this.y + 4);
@@ -1819,6 +1937,12 @@ class Player {
             this.x = Math.max(20, Math.min(width - 20, this.x));
             this.y = Math.max(20, Math.min(height - 20, this.y));
             handlePortalTravel(this, 30, 'player');
+            if (boss && boss.isSystemCoreVoid && boss.bubbleTrapTimer > 0 && boss.bubbleTrap) {
+                this.x += (boss.bubbleTrap.x - this.x) * 0.75;
+                this.y += (boss.bubbleTrap.y - this.y) * 0.75;
+                mouse.targetX = this.x;
+                mouse.targetY = this.y;
+            }
 
             if (stats.currentFusion) {
                 this.updateFusionWeapons(stats);
@@ -1887,6 +2011,8 @@ class Player {
                     bullets.push(fireAtTarget(this.x + 24, this.y - 4, 7, 'player_missile', this.damage * 1.6, target));
                     playSound('shoot');
                 }
+            } else if (stats.currentShip === 8) {
+                this.updateAlphaCore();
             }
             this.updateHeavyBeam(stats);
         }
@@ -1939,6 +2065,7 @@ class Player {
             if (frames % 92 === 0) bullets.push(fireAtTarget(this.x, this.y - 10, 7, 'player_missile', this.damage * 1.3, target));
             if (frames % 26 === 0 || frames % 92 === 0) playSound('shoot');
         }
+        if (ids.includes(8)) this.updateAlphaCore(0.72);
     }
     updateHeavyBeam(stats) {
         const beamLvl = getShipUpgrades(stats).beamLvl;
@@ -1995,6 +2122,53 @@ class Player {
             const target = getPlayerTarget();
             const angle = target ? Math.atan2(target.y - this.y, target.x - this.x) : -Math.PI / 2;
             bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*22, Math.sin(angle)*22, 'phantom_laser', this.damage * 1.6));
+        }
+    }
+    updateAlphaCore(multiplier = 1) {
+        const target = getPlayerTarget();
+        if (frames % 4 === 0) {
+            bullets.push(fireAtTarget(this.x, this.y - 20, 18, 'purple_fireball', this.damage * 0.9 * multiplier, target));
+            bullets.push(new Bullet(this.x - 14, this.y - 8, -0.8, -16, 'phantom_laser', this.damage * 0.55 * multiplier));
+            bullets.push(new Bullet(this.x + 14, this.y - 8, 0.8, -16, 'phantom_laser', this.damage * 0.55 * multiplier));
+            playSound('shoot');
+        }
+        if (frames % 42 === 0) {
+            bullets.push(fireAtTarget(this.x - 18, this.y - 2, 8.5, 'player_missile', this.damage * 1.35 * multiplier, target));
+            bullets.push(fireAtTarget(this.x + 18, this.y - 2, 8.5, 'player_missile', this.damage * 1.35 * multiplier, target));
+        }
+        if (keys.q && this.alphaPulseCooldown <= 0) {
+            this.alphaPulseCooldown = 220;
+            keys.q = false;
+            for(let i=0; i<36; i++) {
+                const angle = (Math.PI * 2 / 36) * i;
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*11, Math.sin(angle)*11, 'purple_fireball', this.damage * 0.9 * multiplier));
+            }
+            for(let i=0; i<50; i++) particles.push(new Particle(this.x, this.y, '#b000ff', 8, 5, 42));
+        }
+        if (keys.e && this.alphaVoidCooldown <= 0) {
+            this.alphaVoidCooldown = 300;
+            keys.e = false;
+            const baseAngle = target ? Math.atan2(target.y - this.y, target.x - this.x) : -Math.PI / 2;
+            for(let i=-4; i<=4; i++) {
+                const angle = baseAngle + i * 0.16;
+                bullets.push(new Bullet(this.x, this.y - 14, Math.cos(angle)*15, Math.sin(angle)*15, 'alpha_fireball', this.damage * 1.35 * multiplier));
+            }
+            waveText.innerText = "CORE FIREBALLS";
+            waveText.style.color = "#b000ff"; waveText.style.opacity = 1; waveText.style.transform = "scale(0.9)";
+            setTimeout(() => { if (waveText.innerText === "CORE FIREBALLS") waveText.style.opacity = 0; }, 900);
+        }
+        if (keys.r && this.alphaLanceCooldown <= 0) {
+            this.alphaLanceCooldown = 520;
+            this.alphaLanceTimer = 95;
+            keys.r = false;
+            waveText.innerText = "VOID LANCE";
+            waveText.style.color = "#b000ff"; waveText.style.opacity = 1; waveText.style.transform = "scale(0.9)";
+            setTimeout(() => { if (waveText.innerText === "VOID LANCE") waveText.style.opacity = 0; }, 900);
+        }
+        if (this.alphaLanceTimer > 0 && frames % 2 === 0) {
+            const lanceTarget = getPlayerTarget();
+            const angle = lanceTarget ? Math.atan2(lanceTarget.y - this.y, lanceTarget.x - this.x) : -Math.PI / 2;
+            bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*24, Math.sin(angle)*24, 'heavy_beam', this.damage * 1.55 * multiplier));
         }
     }
     draw() {
@@ -2243,6 +2417,12 @@ class Boss {
         this.isIronComet = false;
         this.isNullFlower = false;
         this.isAncientModel = false;
+        this.isAscendantBoss = false;
+        this.isSystemCoreVoid = false;
+        this.ascendantStage = 0;
+        this.ascendantConfig = null;
+        this.bubbleTrapTimer = 0;
+        this.bubbleTrap = null;
         this.mimicTimer = 0;
         this.mimicForm = 'omega';
         this.curseShotTimer = 0;
@@ -2285,6 +2465,7 @@ class Boss {
         this.isPulseDragon = false; this.isStarForge = false; this.isRealityWarden = false; this.isGoldenRift = false; this.isNeonVoidV2 = false;
         this.isFractureEngine = false; this.isBinaryHydra = false; this.isStarlessCrown = false; this.isOmegaMirror = false; this.isQuantumTyrant = false;
         this.isAbyssChoir = false; this.isFinalCalibration = false; this.isIronComet = false; this.isNullFlower = false; this.isAncientModel = false;
+        this.isAscendantBoss = false; this.isSystemCoreVoid = false;
     }
 
     initAsStage2() {
@@ -2624,6 +2805,82 @@ class Boss {
         flashOverlay.style.transition = 'opacity 2.5s ease-out'; flashOverlay.style.opacity = 0;
     }
 
+    initAsAscendantStage(stage) {
+        this.clearBossIdentityFlags();
+        this.isAscendantBoss = true;
+        this.ascendantStage = stage;
+        this.ascendantConfig = ASCENDANT_CONFIGS[stage];
+        const tier = stage - 30;
+        this.damageMultiplier = (isHardMode() ? 14.5 : 11.2) + tier * 0.34;
+        this.maxHp = (isHardMode() ? 220000 : 162000) + tier * (isHardMode() ? 14500 : 10500);
+        this.hp = this.maxHp;
+        this.x = width / 2; this.y = -280; this.targetY = 172 + (stage % 4) * 8; this.rot = 0;
+        this.customNodes = Array.from({length: 6 + (stage % 5)}, (_, i) => ({
+            angle: i * Math.PI * 2 / (6 + (stage % 5)),
+            radius: 82 + (i % 3) * 23
+        }));
+        bossName.innerText = this.ascendantConfig.name;
+        bossName.style.color = this.ascendantConfig.color;
+    }
+
+    initAsStage31() { this.initAsAscendantStage(31); }
+    initAsStage32() { this.initAsAscendantStage(32); }
+    initAsStage33() { this.initAsAscendantStage(33); }
+    initAsStage34() { this.initAsAscendantStage(34); }
+    initAsStage35() { this.initAsAscendantStage(35); }
+    initAsStage36() { this.initAsAscendantStage(36); }
+    initAsStage37() { this.initAsAscendantStage(37); }
+    initAsStage38() { this.initAsAscendantStage(38); }
+    initAsStage39() { this.initAsAscendantStage(39); }
+
+    initAsStage40() {
+        this.clearBossIdentityFlags();
+        this.isSystemCoreVoid = true;
+        setArenaScale(2);
+        this.damageMultiplier = isHardMode() ? 18.0 : 13.5;
+        this.maxHp = isHardMode() ? 420000 : 310000; this.hp = this.maxHp;
+        this.x = width / 2; this.y = -360; this.targetY = height * 0.25; this.rot = 0;
+        this.shieldHp = isHardMode() ? 20000 : 14500; this.maxShieldHp = this.shieldHp;
+        this.bubbleTrapTimer = 0; this.bubbleTrap = null;
+        this.voidParticles = [];
+        this.voidLines = [];
+        for(let i=0; i<150; i++) {
+            this.voidParticles.push({
+                angle: Math.random() * Math.PI * 2,
+                radius: 170 + Math.random() * 390,
+                speed: 0.004 + Math.random() * 0.018,
+                size: 2 + Math.random() * 8,
+                drift: Math.random() * Math.PI * 2,
+                color: Math.random() > 0.45 ? '#b000ff' : '#2b0038'
+            });
+        }
+        for(let i=0; i<28; i++) {
+            this.voidLines.push({
+                angle: Math.random() * Math.PI * 2,
+                radius: 160 + Math.random() * 340,
+                length: 90 + Math.random() * 210,
+                speed: 0.006 + Math.random() * 0.016,
+                alpha: 0.28 + Math.random() * 0.52
+            });
+        }
+        bossShieldContainer.style.display = "block"; bossShieldBar.style.width = "100%";
+        bossName.innerText = "SYSTEM CORE: NEON VOID"; bossName.style.color = "#b000ff";
+        waveText.innerText = "PURPLE CORE ASCENDED"; waveText.style.color = "#b000ff"; waveText.style.opacity = 1; waveText.style.transform = "scale(1)";
+        setTimeout(() => { waveText.style.opacity = 0; }, 1800);
+        flashOverlay.style.transition = 'none'; flashOverlay.style.opacity = 1; void flashOverlay.offsetWidth;
+        flashOverlay.style.transition = 'opacity 2.5s ease-out'; flashOverlay.style.opacity = 0;
+    }
+
+    initAsStage41() { this.initAsAscendantStage(41); }
+    initAsStage42() { this.initAsAscendantStage(42); }
+    initAsStage43() { this.initAsAscendantStage(43); }
+    initAsStage44() { this.initAsAscendantStage(44); }
+    initAsStage45() { this.initAsAscendantStage(45); }
+    initAsStage46() { this.initAsAscendantStage(46); }
+    initAsStage47() { this.initAsAscendantStage(47); }
+    initAsStage48() { this.initAsAscendantStage(48); }
+    initAsStage49() { this.initAsAscendantStage(49); }
+
     chooseMimicForm() {
         const forms = ['omega', 'terminator', 'glitch', 'snake', 'hive'];
         this.mimicForm = forms[Math.floor(Math.random() * forms.length)];
@@ -2818,6 +3075,30 @@ class Boss {
                 if (this.attackTimer > 220) this.startNextAttack();
             }
         }
+        else if (this.isSystemCoreVoid) {
+            this.rot += 0.02;
+            this.x = width/2 + Math.sin(frames * 0.009) * (width * 0.18);
+            this.y = this.targetY + Math.cos(frames * 0.013) * (height * 0.05);
+            this.voidParticles.forEach(p => {
+                p.angle += p.speed;
+                p.drift += 0.026;
+                p.radius += Math.sin(p.drift) * 0.65;
+            });
+            this.voidLines.forEach(l => { l.angle -= l.speed; });
+            if (this.bubbleTrapTimer > 0 && this.bubbleTrap && player.active) {
+                this.bubbleTrapTimer--;
+                player.x += (this.bubbleTrap.x - player.x) * 0.45;
+                player.y += (this.bubbleTrap.y - player.y) * 0.45;
+                mouse.targetX = player.x; mouse.targetY = player.y;
+                if (this.bubbleTrapTimer === 35) {
+                    player.iframes = 0;
+                    player.hit(18 * this.damageMultiplier);
+                    createShockwave(player.x, player.y);
+                } else {
+                    player.iframes = Math.max(player.iframes, 2);
+                }
+            }
+        }
         else if (this.isNeonVoid) {
             this.rot += 0.024;
             this.voidGlitchTimer++;
@@ -2930,6 +3211,20 @@ class Boss {
                 player.y += (this.y - player.y) * 0.006;
             }
         }
+        else if (this.isAscendantBoss) {
+            const cfg = this.ascendantConfig || ASCENDANT_CONFIGS[31];
+            this.rot += 0.014 + (this.ascendantStage % 5) * 0.003;
+            const swing = cfg.style === 'pull' ? width * 0.08 : width * (0.12 + (this.ascendantStage % 3) * 0.025);
+            this.x = width/2 + Math.sin(frames * (0.008 + (this.ascendantStage % 4) * 0.0015) + this.ascendantStage) * swing;
+            this.y = this.targetY + Math.cos(frames * 0.013 + this.ascendantStage) * (28 + (this.ascendantStage % 3) * 8);
+            if (cfg.style === 'pull' && this.currentAttack === 'ascendant_signature' && player.active) {
+                const pull = this.ascendantStage === 45 ? 0.028 : 0.018;
+                player.x += (this.x - player.x) * pull;
+                player.y += (this.y - player.y) * pull;
+                mouse.targetX += (this.x - player.x) * 0.004;
+                mouse.targetY += (this.y - player.y) * 0.004;
+            }
+        }
         else if (this.isFractureEngine || this.isBinaryHydra || this.isStarlessCrown || this.isOmegaMirror || this.isQuantumTyrant || this.isAbyssChoir || this.isFinalCalibration || this.isNullFlower) {
             this.rot += this.isFinalCalibration ? 0.03 : 0.018;
             const swing = this.isBinaryHydra ? width * 0.18 : width * 0.13;
@@ -3008,7 +3303,7 @@ class Boss {
         }
         
         this.attackTimer++;
-        if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isHiveMother && !this.isSyntaxError && !this.isNullEntity && !this.isOblivion && !this.isArchitect && !this.isNeonVoid && !this.isRiftSentinel && !this.isPortalPrototype && !this.isAstralTrio && !this.isCurseZero && !this.isPulseDragon && !this.isStarForge && !this.isRealityWarden && !this.isGoldenRift && !this.isFractureEngine && !this.isBinaryHydra && !this.isStarlessCrown && !this.isOmegaMirror && !this.isQuantumTyrant && !this.isAbyssChoir && !this.isFinalCalibration && !this.isIronComet && !this.isNullFlower && !this.isAncientModel && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
+        if (!this.isTerminator && !this.isGlitch && !this.isSnake && !this.isHiveMother && !this.isSyntaxError && !this.isNullEntity && !this.isOblivion && !this.isArchitect && !this.isNeonVoid && !this.isRiftSentinel && !this.isPortalPrototype && !this.isAstralTrio && !this.isCurseZero && !this.isPulseDragon && !this.isStarForge && !this.isRealityWarden && !this.isGoldenRift && !this.isFractureEngine && !this.isBinaryHydra && !this.isStarlessCrown && !this.isOmegaMirror && !this.isQuantumTyrant && !this.isAbyssChoir && !this.isFinalCalibration && !this.isIronComet && !this.isNullFlower && !this.isAncientModel && !this.isAscendantBoss && !this.isSystemCoreVoid && frames % Math.floor(this.spawnRate) === 0 && this.currentAttack !== 'laser' && this.phase === 'fight') {
               enemies.push(new SwarmEnemy(this.x - 40, this.y)); enemies.push(new SwarmEnemy(this.x + 40, this.y));
         }
         this.handleAttack();
@@ -3059,6 +3354,8 @@ class Boss {
         if(this.isIronComet) seq = IRON_COMET_SEQUENCE;
         if(this.isNullFlower) seq = NULL_FLOWER_SEQUENCE;
         if(this.isAncientModel) seq = ANCIENT_MODEL_SEQUENCE;
+        if(this.isAscendantBoss) seq = ASCENDANT_SEQUENCE;
+        if(this.isSystemCoreVoid) seq = SYSTEM_CORE_VOID_SEQUENCE;
         
         if (this.sequenceIndex >= seq.length) this.sequenceIndex = 0;
         this.currentAttack = seq[this.sequenceIndex];
@@ -3092,6 +3389,8 @@ class Boss {
         if(phaseName.startsWith("IRON_")) phaseName = phaseName.replace("IRON_", "");
         if(phaseName.startsWith("FLOWER_")) phaseName = phaseName.replace("FLOWER_", "");
         if(phaseName.startsWith("ANCIENT_")) phaseName = phaseName.replace("ANCIENT_", "");
+        if(phaseName.startsWith("ASCENDANT_")) phaseName = phaseName.replace("ASCENDANT_", "");
+        if(phaseName.startsWith("CORE_")) phaseName = phaseName.replace("CORE_", "");
         
         phaseDebug.innerText = `PHASE: ${phaseName}`;
         this.laserCharge = 0; this.laserActive = false; this.redLines = []; this.laserAngle = Math.PI / 2;
@@ -3101,6 +3400,155 @@ class Boss {
 
     handleAttack() {
         switch(this.currentAttack) {
+            case 'core_huge_laser':
+                if (this.attackTimer < 85) {
+                    if (this.attackTimer === 1) this.laserNearMissOffset = null;
+                    this.laserActive = false;
+                    this.laserCharge = this.attackTimer / 85;
+                    this.laserAngle = this.getImperfectLaserAngle(95);
+                } else if (this.attackTimer < 185) {
+                    this.laserActive = true;
+                    const dx = player.x - this.x; const dy = player.y - this.y;
+                    const rAngle = -this.laserAngle + Math.PI/2;
+                    const rx = dx * Math.cos(rAngle) - dy * Math.sin(rAngle);
+                    const ry = dx * Math.sin(rAngle) + dy * Math.cos(rAngle);
+                    if (Math.abs(rx) < 62 && ry > 0) player.hit(2.6 * this.damageMultiplier);
+                } else {
+                    this.laserActive = false;
+                    if (this.attackTimer > 240) this.startNextAttack();
+                }
+                break;
+            case 'core_flashbang':
+                if (this.attackTimer === 42) {
+                    flashOverlay.style.transition = 'none'; flashOverlay.style.opacity = 0.92; void flashOverlay.offsetWidth;
+                    flashOverlay.style.transition = 'opacity 1.35s ease-out'; flashOverlay.style.opacity = 0;
+                    for(let i=0; i<30; i++) {
+                        const angle = (Math.PI * 2 / 30) * i + this.rot;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*8.2, Math.sin(angle)*8.2, 'purple_fireball'));
+                    }
+                }
+                if (this.attackTimer % 18 === 0 && this.attackTimer < 230) {
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x) + (Math.random()-0.5) * 0.7;
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*9, Math.sin(angle)*9, 'fireball'));
+                }
+                if (this.attackTimer > 285) this.startNextAttack();
+                break;
+            case 'core_bubble_trap':
+                if (this.attackTimer === 35 && player.active) {
+                    this.bubbleTrap = { x: player.x, y: player.y };
+                    this.bubbleTrapTimer = 125;
+                    waveText.innerText = "BUBBLE TRAP";
+                    waveText.style.color = "#b000ff"; waveText.style.opacity = 1; waveText.style.transform = "scale(0.9)";
+                    setTimeout(() => { if (waveText.innerText === "BUBBLE TRAP") waveText.style.opacity = 0; }, 900);
+                }
+                if (this.attackTimer > 210) { this.bubbleTrapTimer = 0; this.bubbleTrap = null; this.startNextAttack(); }
+                break;
+            case 'core_fireball_ring':
+                if (this.attackTimer % 34 === 0 && this.attackTimer < 270) {
+                    for(let i=0; i<34; i++) {
+                        const angle = (Math.PI * 2 / 34) * i + this.rot;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*7.4, Math.sin(angle)*7.4, i % 2 ? 'purple_fireball' : 'fireball'));
+                    }
+                }
+                if (this.attackTimer > 320) this.startNextAttack();
+                break;
+            case 'core_mega_bombs':
+                if (this.attackTimer % 46 === 10 && this.attackTimer < 260) {
+                    bullets.push(new Bullet(120 + Math.random() * (width - 240), -80, 0, 0, 'mega_mine'));
+                    bullets.push(new Bullet(this.x + (Math.random()-0.5)*240, this.y + 90, 0, 0, 'mega_mine'));
+                }
+                if (this.attackTimer % 20 === 0 && this.attackTimer < 250) {
+                    bullets.push(new Bullet(Math.random()*width, -60, (Math.random()-0.5)*4, 12, 'purple_fireball'));
+                }
+                if (this.attackTimer > 315) this.startNextAttack();
+                break;
+            case 'core_termination':
+                if (this.attackTimer % 42 === 8 && this.attackTimer < 260) {
+                    for(let i=-1; i<=1; i++) {
+                        const angle = Math.atan2(player.y - this.y, player.x - this.x) + i * 0.18;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*4.2, Math.sin(angle)*4.2, 'termination_zero'));
+                    }
+                }
+                if (this.attackTimer % 18 === 0 && this.attackTimer < 250) {
+                    const angle = this.rot + this.attackTimer * 0.025;
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*9, Math.sin(angle)*9, 'purple_fireball'));
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle + Math.PI)*9, Math.sin(angle + Math.PI)*9, 'purple_fireball'));
+                }
+                if (this.attackTimer > 310) this.startNextAttack();
+                break;
+            case 'ascendant_signature': {
+                const cfg = this.ascendantConfig || ASCENDANT_CONFIGS[31];
+                if (cfg.style === 'fan' && this.attackTimer % 24 === 0 && this.attackTimer < 260) {
+                    const base = Math.atan2(player.y - this.y, player.x - this.x);
+                    for(let i=-4; i<=4; i++) bullets.push(new Bullet(this.x, this.y, Math.cos(base + i*0.14)*8.2, Math.sin(base + i*0.14)*8.2, 'boss_orb'));
+                } else if (cfg.style === 'rain' && this.attackTimer % 7 === 0 && this.attackTimer < 245) {
+                    bullets.push(new Bullet(Math.random()*width, -70, (Math.random()-0.5)*4, 12 + Math.random()*6, cfg.color === '#ffd966' ? 'fireball' : 'purple_fireball'));
+                } else if (cfg.style === 'rail' && this.attackTimer % 70 === 20 && this.attackTimer < 260) {
+                    bullets.push(new Bullet(player.x + (Math.random()-0.5)*160, 0, 0, 0, 'glitch_laser'));
+                    bullets.push(new Bullet(0, player.y + (Math.random()-0.5)*130, 1, 0, 'glitch_laser'));
+                } else if (cfg.style === 'mirror' && this.attackTimer % 32 === 0 && this.attackTimer < 250) {
+                    [this.x, width - this.x].forEach(x => bullets.push(new Bullet(x, this.y, (player.x - x) * 0.025, (player.y - this.y) * 0.025, 'boss_orb')));
+                } else if (cfg.style === 'pull' && this.attackTimer % 22 === 0 && this.attackTimer < 250) {
+                    for(let i=0; i<12; i++) {
+                        const angle = (Math.PI*2/12)*i + this.rot;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*6.8, Math.sin(angle)*6.8, 'purple_fireball'));
+                    }
+                } else if (cfg.style === 'phase' && this.attackTimer % 46 === 0 && this.attackTimer < 260) {
+                    this.x = 80 + Math.random() * (width - 160); this.y = 90 + Math.random() * (height * 0.42);
+                    for(let i=0; i<16; i++) bullets.push(new Bullet(this.x, this.y, Math.cos(i*Math.PI/8)*7, Math.sin(i*Math.PI/8)*7, 'boss_orb'));
+                } else if (cfg.style === 'spiral' && this.attackTimer % 6 === 0 && this.attackTimer < 240) {
+                    const angle = this.attackTimer * 0.16;
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*8.4, Math.sin(angle)*8.4, 'fireball'));
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle + Math.PI)*8.4, Math.sin(angle + Math.PI)*8.4, 'purple_fireball'));
+                } else if (cfg.style === 'walls' && this.attackTimer % 85 === 18 && this.attackTimer < 260) {
+                    bullets.push(new Bullet(player.x, player.y - 210, 0, 5.5, 'arch_wall_h'));
+                    bullets.push(new Bullet(player.x - 210, player.y, 5.5, 0, 'arch_wall_v'));
+                } else if (cfg.style === 'dual' && this.attackTimer % 28 === 0 && this.attackTimer < 260) {
+                    [-90, 90].forEach(offset => {
+                        const angle = Math.atan2(player.y - this.y, player.x - (this.x + offset));
+                        bullets.push(new Bullet(this.x + offset, this.y, Math.cos(angle)*8.5, Math.sin(angle)*8.5, offset < 0 ? 'fireball' : 'purple_fireball'));
+                    });
+                } else if (cfg.style === 'missiles' && this.attackTimer % 18 === 0 && this.attackTimer < 260) {
+                    bullets.push(new Bullet(this.x - 90, this.y + 28, -3, -3, 'missile'));
+                    bullets.push(new Bullet(this.x + 90, this.y + 28, 3, -3, 'missile'));
+                } else if (cfg.style === 'zero' && this.attackTimer % 86 === 12 && this.attackTimer < 270) {
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*2.9, Math.sin(angle)*2.9, 'termination_zero'));
+                }
+                if (this.attackTimer > 310) this.startNextAttack();
+                break;
+            }
+            case 'ascendant_storm':
+                if (this.attackTimer % 18 === 0 && this.attackTimer < 260) {
+                    const count = 10 + (this.ascendantStage % 7);
+                    for(let i=0; i<count; i++) {
+                        const angle = (Math.PI * 2 / count) * i + this.rot;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*7.2, Math.sin(angle)*7.2, i % 2 ? 'boss_orb' : 'purple_fireball'));
+                    }
+                }
+                if (this.attackTimer > 305) this.startNextAttack();
+                break;
+            case 'ascendant_lanes':
+                if (this.attackTimer % 72 === 20 && this.attackTimer < 250) {
+                    const lanes = 3 + (this.ascendantStage % 3);
+                    for(let i=0; i<lanes; i++) bullets.push(new Bullet((i + 0.5) * width / lanes, 0, 0, 0, 'glitch_laser'));
+                }
+                if (this.attackTimer > 295) this.startNextAttack();
+                break;
+            case 'ascendant_summon':
+                if (this.attackTimer % 65 === 5 && this.attackTimer < 260) {
+                    const enemyType = this.ascendantStage % 4;
+                    if (enemyType === 0) enemies.push(new MineLayer(width * (0.25 + Math.random()*0.5), -90));
+                    else if (enemyType === 1) enemies.push(new SpinnerEnemy(width * (0.2 + Math.random()*0.6), -150));
+                    else if (enemyType === 2) enemies.push(new PhaserEnemy(width * (0.2 + Math.random()*0.6), -90));
+                    else enemies.push(new HeavyStriker(width * (0.2 + Math.random()*0.6), -120));
+                }
+                if (this.attackTimer % 25 === 0 && this.attackTimer < 250) {
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x) + (Math.random()-0.5)*0.45;
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*8, Math.sin(angle)*8, 'boss_orb'));
+                }
+                if (this.attackTimer > 310) this.startNextAttack();
+                break;
             case 'fracture_drill':
                 if (this.attackTimer % 14 === 0 && this.attackTimer < 250) {
                     const angle = this.rot + this.attackTimer * 0.05;
@@ -4157,8 +4605,193 @@ class Boss {
         this.drawRedLineAttack();
     }
 
+    drawSystemCoreNeonVoid() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        this.voidParticles.forEach((p, index) => {
+            const px = Math.cos(p.angle) * (p.radius + Math.sin(p.drift) * 18);
+            const py = Math.sin(p.angle * 1.1) * (p.radius * 0.52);
+            ctx.globalAlpha = 0.25 + Math.sin(frames * 0.07 + index) * 0.2;
+            ctx.shadowBlur = 18; ctx.shadowColor = p.color; ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(px, py, p.size, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        this.voidLines.forEach(l => {
+            const x1 = Math.cos(l.angle) * l.radius;
+            const y1 = Math.sin(l.angle) * l.radius * 0.58;
+            const x2 = Math.cos(l.angle + 0.22) * (l.radius + l.length);
+            const y2 = Math.sin(l.angle + 0.22) * (l.radius + l.length) * 0.58;
+            ctx.globalAlpha = l.alpha;
+            ctx.strokeStyle = '#b000ff'; ctx.shadowBlur = 24; ctx.shadowColor = '#b000ff'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        });
+        ctx.globalAlpha = 1;
+
+        if (this.currentAttack === 'core_huge_laser') {
+            ctx.save(); ctx.rotate(this.laserAngle - Math.PI / 2);
+            if (!this.laserActive) {
+                ctx.strokeStyle = `rgba(176, 0, 255, ${0.18 + this.laserCharge * 0.5})`;
+                ctx.lineWidth = 4 + this.laserCharge * 10; ctx.setLineDash([22, 14]);
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, height * 1.8); ctx.stroke();
+                ctx.fillStyle = `rgba(176, 0, 255, ${this.laserCharge})`;
+                ctx.beginPath(); ctx.arc(0, 90, 20 + this.laserCharge * 36, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.shadowBlur = 62; ctx.shadowColor = '#b000ff';
+                const beamWidth = 122 + Math.sin(frames * 0.45) * 12;
+                ctx.fillStyle = 'rgba(176, 0, 255, 0.86)'; ctx.fillRect(-beamWidth/2, 0, beamWidth, height * 1.8);
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(-beamWidth/7, 0, beamWidth/3.5, height * 1.8);
+            }
+            ctx.restore();
+        }
+
+        if (this.bubbleTrapTimer > 0 && this.bubbleTrap) {
+            ctx.save();
+            ctx.translate(this.bubbleTrap.x - this.x, this.bubbleTrap.y - this.y);
+            ctx.strokeStyle = `rgba(176, 0, 255, ${0.55 + Math.sin(frames * 0.18) * 0.25})`;
+            ctx.fillStyle = 'rgba(80, 0, 110, 0.18)';
+            ctx.shadowBlur = 28; ctx.shadowColor = '#b000ff'; ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.arc(0, 0, 56, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.restore();
+        }
+
+        ctx.save();
+        ctx.rotate(this.rot);
+        ctx.shadowBlur = 70; ctx.shadowColor = '#b000ff';
+        ctx.strokeStyle = '#5c5c68'; ctx.lineWidth = 14;
+        ctx.beginPath(); ctx.arc(0, 0, 178, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = '#b000ff'; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.ellipse(0, 0, 248, 58, Math.sin(frames * 0.018) * 0.35, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(0, 0, 220, 44, -Math.sin(frames * 0.021) * 0.45, 0, Math.PI * 2); ctx.stroke();
+        for(let i=0; i<8; i++) {
+            const a = i * Math.PI / 4;
+            ctx.strokeStyle = i % 2 ? '#777' : '#b000ff';
+            ctx.lineWidth = i % 2 ? 7 : 4;
+            ctx.beginPath(); ctx.moveTo(Math.cos(a)*80, Math.sin(a)*80); ctx.lineTo(Math.cos(a)*178, Math.sin(a)*178); ctx.stroke();
+        }
+        ctx.restore();
+
+        [-250, -190, 190, 250].forEach((offset, index) => {
+            ctx.save(); ctx.translate(offset, index % 2 ? 42 : -42); ctx.rotate((offset < 0 ? 0 : Math.PI) + Math.sin(frames * 0.035 + index) * 0.18);
+            ctx.fillStyle = '#25212d'; ctx.strokeStyle = '#b000ff'; ctx.lineWidth = 4; ctx.shadowBlur = 20; ctx.shadowColor = '#b000ff';
+            ctx.fillRect(-22, -14, 86, 28); ctx.strokeRect(-22, -14, 86, 28);
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(68, 0, 8 + Math.sin(frames*0.2)*2, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+        });
+
+        const core = ctx.createRadialGradient(0, 0, 6, 0, 0, 128);
+        core.addColorStop(0, '#ffffff');
+        core.addColorStop(0.28, '#d9a7ff');
+        core.addColorStop(0.6, '#b000ff');
+        core.addColorStop(1, '#180020');
+        ctx.shadowBlur = 90; ctx.shadowColor = '#b000ff'; ctx.fillStyle = core;
+        ctx.beginPath(); ctx.arc(0, 0, 112 + Math.sin(frames * 0.08) * 8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#050005'; ctx.beginPath(); ctx.arc(0, 0, 42 + Math.sin(frames * 0.11) * 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.62)'; ctx.lineWidth = 3;
+        for(let i=0; i<7; i++) {
+            ctx.beginPath(); ctx.arc(0, 0, 40 + i * 12, frames*0.035 + i, frames*0.035 + i + Math.PI); ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    drawAscendantBoss() {
+        const cfg = this.ascendantConfig || ASCENDANT_CONFIGS[31];
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.shadowBlur = 42; ctx.shadowColor = cfg.color;
+        ctx.strokeStyle = cfg.color; ctx.lineWidth = 5;
+        ctx.fillStyle = cfg.accent === '#000000' ? '#07000c' : 'rgba(12, 12, 20, 0.92)';
+
+        if (cfg.shape === 'prism') {
+            ctx.rotate(this.rot);
+            ctx.beginPath(); ctx.moveTo(0,-120); ctx.lineTo(82,-22); ctx.lineTo(48,96); ctx.lineTo(-48,96); ctx.lineTo(-82,-22); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.strokeStyle = cfg.accent; ctx.beginPath(); ctx.moveTo(0,-120); ctx.lineTo(0,96); ctx.moveTo(-82,-22); ctx.lineTo(82,-22); ctx.stroke();
+        } else if (cfg.shape === 'loom') {
+            ctx.rotate(this.rot * 0.7);
+            for(let i=0;i<7;i++){ ctx.rotate(Math.PI/7); ctx.strokeRect(32,-5,110,10); }
+            ctx.beginPath(); ctx.arc(0,0,74,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        } else if (cfg.shape === 'leviathan') {
+            for(let i=12;i>0;i--){ const x=Math.sin(frames*0.035+i)*i*13; const y=i*12-80; ctx.beginPath(); ctx.arc(x,y,32-i,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
+            ctx.beginPath(); ctx.moveTo(0,-110); ctx.lineTo(76,-30); ctx.lineTo(38,42); ctx.lineTo(-38,42); ctx.lineTo(-76,-30); ctx.closePath(); ctx.fill(); ctx.stroke();
+        } else if (cfg.shape === 'oracle') {
+            ctx.rotate(this.rot * 0.4);
+            ctx.beginPath(); ctx.ellipse(0,0,118,70,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = cfg.color; ctx.beginPath(); ctx.arc(0,0,34 + Math.sin(frames*0.09)*5,0,Math.PI*2); ctx.fill();
+        } else if (cfg.shape === 'anvil') {
+            ctx.beginPath(); ctx.moveTo(-110,-60); ctx.lineTo(110,-60); ctx.lineTo(70,20); ctx.lineTo(36,98); ctx.lineTo(-36,98); ctx.lineTo(-70,20); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = cfg.color; ctx.fillRect(-72,-76,144,22);
+        } else if (cfg.shape === 'wraith') {
+            ctx.globalAlpha = 0.82 + Math.sin(frames*0.18)*0.12;
+            ctx.beginPath(); ctx.moveTo(0,-116); ctx.quadraticCurveTo(90,-20,42,96); ctx.quadraticCurveTo(0,58,-42,96); ctx.quadraticCurveTo(-90,-20,0,-116); ctx.fill(); ctx.stroke();
+            ctx.globalAlpha = 1;
+        } else if (cfg.shape === 'matrix') {
+            ctx.rotate(this.rot);
+            for(let x=-72;x<=72;x+=48){ for(let y=-72;y<=72;y+=48){ ctx.strokeRect(x-15,y-15,30,30); } }
+            ctx.fillRect(-34,-34,68,68); ctx.strokeRect(-34,-34,68,68);
+        } else if (cfg.shape === 'mason') {
+            ctx.rotate(this.rot);
+            for(let i=0;i<6;i++){ ctx.rotate(Math.PI/3); ctx.fillRect(42,-14,86,28); ctx.strokeRect(42,-14,86,28); }
+            ctx.beginPath(); ctx.arc(0,0,52,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        } else if (cfg.shape === 'judge') {
+            ctx.beginPath(); ctx.moveTo(0,-112); ctx.lineTo(98,0); ctx.lineTo(0,112); ctx.lineTo(-98,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+            [-38,38].forEach((x,i)=>{ ctx.fillStyle=i?cfg.accent:cfg.color; ctx.beginPath(); ctx.arc(x,-8,20,0,Math.PI*2); ctx.fill(); });
+        } else if (cfg.shape === 'dreadnought') {
+            ctx.beginPath(); ctx.roundRect(-132,-58,264,116,18); ctx.fill(); ctx.stroke();
+            [-96,-36,36,96].forEach(x=>{ ctx.fillStyle='#222'; ctx.fillRect(x-12,44,24,46); ctx.strokeRect(x-12,44,24,46); });
+        } else if (cfg.shape === 'tyrant') {
+            ctx.rotate(this.rot);
+            ctx.beginPath();
+            for(let i=0;i<12;i++){ const a=i*Math.PI/6; const r=i%2?68:126; ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r); } ctx.closePath(); ctx.fill(); ctx.stroke();
+        } else if (cfg.shape === 'choir') {
+            for(let i=0;i<6;i++){ const a=i*Math.PI/3+this.rot; ctx.beginPath(); ctx.arc(Math.cos(a)*100,Math.sin(a)*54,24,0,Math.PI*2); ctx.stroke(); }
+            ctx.beginPath(); ctx.arc(0,0,68,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        } else if (cfg.shape === 'monolith') {
+            ctx.fillRect(-58,-118,116,236); ctx.strokeRect(-58,-118,116,236);
+            for(let y=-88;y<=88;y+=44){ ctx.strokeStyle=cfg.accent; ctx.beginPath(); ctx.moveTo(-58,y); ctx.lineTo(58,y); ctx.stroke(); ctx.strokeStyle=cfg.color; }
+        } else if (cfg.shape === 'harvester') {
+            ctx.rotate(this.rot);
+            ctx.beginPath(); ctx.arc(0,0,88,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            for(let i=0;i<4;i++){ ctx.rotate(Math.PI/2); ctx.beginPath(); ctx.moveTo(54,0); ctx.lineTo(142,-22); ctx.lineTo(116,30); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+        } else if (cfg.shape === 'helix') {
+            for(let i=0;i<14;i++){ const a=i*0.55+this.rot; ctx.beginPath(); ctx.arc(Math.cos(a)*72, (i-7)*14, 18, 0, Math.PI*2); ctx.fill(); ctx.stroke(); }
+        } else if (cfg.shape === 'atlas') {
+            ctx.beginPath(); ctx.arc(0,0,92,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.strokeStyle = cfg.accent === '#000000' ? '#5555ff' : cfg.accent;
+            ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(0,0,128,frames*0.02,frames*0.02+Math.PI*1.4); ctx.stroke();
+        } else if (cfg.shape === 'knives') {
+            ctx.rotate(this.rot);
+            for(let i=0;i<16;i++){ ctx.rotate(Math.PI/8); ctx.beginPath(); ctx.moveTo(34,0); ctx.lineTo(138,-10); ctx.lineTo(138,10); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+            ctx.beginPath(); ctx.arc(0,0,56,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        } else {
+            ctx.rotate(this.rot * 0.7);
+            ctx.strokeRect(-118,-86,236,172);
+            ctx.beginPath(); ctx.arc(0,0,92,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.strokeStyle = cfg.accent; ctx.beginPath(); ctx.arc(0,0,130,0,Math.PI*2); ctx.stroke();
+        }
+
+        this.customNodes.forEach(node => {
+            const a = node.angle + this.rot;
+            ctx.fillStyle = cfg.color;
+            ctx.beginPath(); ctx.arc(Math.cos(a)*node.radius, Math.sin(a)*node.radius*0.72, 7, 0, Math.PI*2); ctx.fill();
+        });
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0,0,18 + Math.sin(frames * 0.12) * 3, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+
     draw() {
         if (!this.active) return;
+
+        if (this.isSystemCoreVoid) {
+            this.drawSystemCoreNeonVoid();
+            return;
+        }
+
+        if (this.isAscendantBoss) {
+            this.drawAscendantBoss();
+            return;
+        }
 
         if (this.isCurseZero) {
             ctx.save();
@@ -5272,16 +5905,8 @@ function startWave(wave) {
 
 function startLateStageBoss(stage) {
     boss.activate();
-    if (stage === 21) boss.initAsStage21();
-    else if (stage === 22) boss.initAsStage22();
-    else if (stage === 23) boss.initAsStage23();
-    else if (stage === 24) boss.initAsStage24();
-    else if (stage === 25) boss.initAsStage25();
-    else if (stage === 26) boss.initAsStage26();
-    else if (stage === 27) boss.initAsStage27();
-    else if (stage === 28) boss.initAsStage28();
-    else if (stage === 29) boss.initAsStage29();
-    else if (stage === 30) boss.initAsStage30();
+    const initName = `initAsStage${stage}`;
+    if (typeof boss[initName] === 'function') boss[initName]();
     bossHealthBar.style.width = "100%";
 }
 
@@ -5289,19 +5914,20 @@ function spawnWaveEnemies(wave) {
     let maxDelay = 0; const countMult = currentSettings.enemyCountMult; const isHard = (isHardMode());
 
     // ===============================================
-    // STAGES 21-30 - VOID ASCENSION
+    // STAGES 21-49 - VOID ASCENSION
     // ===============================================
-    if (currentLevelIndex >= 21 && currentLevelIndex <= 30) {
+    if (currentLevelIndex >= 21 && currentLevelIndex <= 49) {
         if (wave === 1) {
-            for(let i=0; i<12 + currentLevelIndex - 20; i++) setTimeout(() => enemies.push(new PhaserEnemy(Math.random()*width, -80)), i*150);
+            for(let i=0; i<12 + Math.min(28, currentLevelIndex - 20); i++) setTimeout(() => enemies.push(new PhaserEnemy(Math.random()*width, -80)), i*140);
             for(let i=0; i<4; i++) setTimeout(() => enemies.push(new HeavyStriker(Math.random()*width, -120)), i*540);
             maxDelay = 4200;
         } else if (wave >= 2 && wave <= 14) {
-            let count = 56 + wave * 4 + (currentLevelIndex - 20) * 5; let delay = Math.max(30, 42 - (currentLevelIndex - 20));
+            let count = 56 + wave * 4 + Math.min(29, currentLevelIndex - 20) * 4; let delay = Math.max(22, 42 - Math.floor((currentLevelIndex - 20) / 2));
             for(let i=0; i<count; i++) setTimeout(() => enemies.push(new SwarmEnemy(Math.random()*width, -50)), i*delay);
             if (wave % 2 === 0) { enemies.push(new LaserEnemy(width*0.18, -100)); enemies.push(new LaserEnemy(width*0.82, -100)); }
             if (wave % 3 === 0) { enemies.push(new SpinnerEnemy(width*0.25, -160)); enemies.push(new SpinnerEnemy(width*0.75, -160)); }
             if (wave % 4 === 0) { enemies.push(new MineLayer(width*0.22, -90)); enemies.push(new MineLayer(width*0.78, -90)); }
+            if (currentLevelIndex >= 40 && wave % 5 === 0) { bullets.push(new Bullet(width * 0.35, -80, 0, 0, 'mega_mine')); bullets.push(new Bullet(width * 0.65, -80, 0, 0, 'mega_mine')); }
             if (wave > 5) { setTimeout(() => enemies.push(new RammerEnemy(player.x, -80)), 1200); setTimeout(() => enemies.push(new PhaserEnemy(Math.random()*width, -100)), 2300); }
             if (wave > 10) { setTimeout(() => enemies.push(new HeavyStriker(Math.random()*width, -140)), 3200); setTimeout(() => enemies.push(new RammerEnemy(player.x, -80)), 4100); }
             maxDelay = count * delay;
@@ -5934,7 +6560,7 @@ function buyOrEquipShip() {
         updateHangarUI();
     } else {
         if (ship.rewardOnly) {
-            alert(ship.id === 7 ? "Clear Stage 30 to unlock Tanker." : "Clear Stage 20 to unlock Alpha Radiance.");
+            alert(ship.id === 8 ? "Clear Stage 40 to unlock Alpha Core." : (ship.id === 7 ? "Clear Stage 30 to unlock Tanker." : "Clear Stage 20 to unlock Alpha Radiance."));
             return;
         }
         if (stats.stars >= shipCost) {
@@ -6022,7 +6648,7 @@ function updateHangarUI() {
             equipBtn.style.color = ship.color;
         }
     } else {
-        equipBtn.innerText = ship.rewardOnly ? (ship.id === 7 ? "CLEAR STAGE 30" : "CLEAR STAGE 20") : `UNLOCK (${getHangarCost(ship.cost, currentHangarMode)} ✦)`;
+        equipBtn.innerText = ship.rewardOnly ? (ship.id === 8 ? "CLEAR STAGE 40" : (ship.id === 7 ? "CLEAR STAGE 30" : "CLEAR STAGE 20")) : `UNLOCK (${getHangarCost(ship.cost, currentHangarMode)} ✦)`;
         equipBtn.style.opacity = 1;
         equipBtn.style.borderColor = ship.color;
         equipBtn.style.color = ship.color;
@@ -6156,14 +6782,17 @@ function updateUI() {
 
 function updateAlphaAbilityHud() {
     if (!alphaAbilitiesEl) return;
-    if (!player || !player.active || !loadoutHasShip(getModeData(activeDifficultyMode), 6) || gameState !== STATE.PLAYING) {
+    const stats = getModeData(activeDifficultyMode);
+    const hasAlphaRadiance = loadoutHasShip(stats, 6);
+    const hasAlphaCore = loadoutHasShip(stats, 8);
+    if (!player || !player.active || (!hasAlphaRadiance && !hasAlphaCore) || gameState !== STATE.PLAYING) {
         alphaAbilitiesEl.style.display = 'none';
         alphaAbilitiesEl.innerText = '';
         return;
     }
     alphaAbilitiesEl.style.display = 'block';
     const fmt = (framesLeft) => framesLeft <= 0 ? 'READY' : Math.ceil(framesLeft / 60) + 's';
-    alphaAbilitiesEl.innerText = `ALPHA: Q Pulse ${fmt(player.alphaPulseCooldown)} | E Fireballs ${fmt(player.alphaVoidCooldown)} | R Solar Lance ${fmt(player.alphaLanceCooldown)}`;
+    alphaAbilitiesEl.innerText = `${hasAlphaCore ? 'ALPHA CORE' : 'ALPHA'}: Q Pulse ${fmt(player.alphaPulseCooldown)} | E Fireballs ${fmt(player.alphaVoidCooldown)} | R Lance ${fmt(player.alphaLanceCooldown)}`;
 }
 
 function launchMission(mode, levelIndex) {
@@ -6256,6 +6885,12 @@ function gameOver(win) {
             changedData = true;
             gameOverTitle.innerText = "TANKER UNLOCKED";
             gameOverTitle.style.color = "#b9c0c8";
+        }
+        if (currentLevelIndex === 40 && !stats.unlockedShips.includes(8)) {
+            stats.unlockedShips.push(8);
+            changedData = true;
+            gameOverTitle.innerText = "ALPHA CORE UNLOCKED";
+            gameOverTitle.style.color = "#b000ff";
         }
         let cap = MAX_STAGE; 
         if (currentLevelIndex === stats.maxStage && stats.maxStage < cap) {
@@ -6420,6 +7055,12 @@ function animateGame(currentTime) {
                             } else if (boss.isGoldenRift) {
                                 let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
                                 if (dist < 132) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#ffd966', 3, 4, 16)); }
+                            } else if (boss.isSystemCoreVoid) {
+                                let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
+                                if (dist < 205) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, '#b000ff', 4, 5, 18)); }
+                            } else if (boss.isAscendantBoss) {
+                                let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
+                                if (dist < 135) { boss.hit(b.damage); b.active = false; hit = true; particles.push(new Particle(b.x, b.y, boss.ascendantConfig ? boss.ascendantConfig.color : '#ffffff', 3, 4, 16)); }
                             } else if (boss.isFractureEngine || boss.isBinaryHydra || boss.isStarlessCrown || boss.isOmegaMirror || boss.isQuantumTyrant || boss.isAbyssChoir || boss.isFinalCalibration || boss.isIronComet || boss.isNullFlower || boss.isAncientModel) {
                                 let dist = Math.hypot(b.x - boss.x, b.y - boss.y);
                                 const radius = boss.isAncientModel ? 150 : (boss.isIronComet ? 118 : 125);
@@ -6577,11 +7218,13 @@ function devUnlockAlpha() {
     if (!requireDevAccess()) return;
     const stats = getModeData(activeDifficultyMode);
     if (!stats.unlockedShips.includes(6)) stats.unlockedShips.push(6);
-    stats.currentShip = 6;
+    if (!stats.unlockedShips.includes(7)) stats.unlockedShips.push(7);
+    if (!stats.unlockedShips.includes(8)) stats.unlockedShips.push(8);
+    stats.currentShip = 8;
     saveData();
     updateUI();
     if (gameState === STATE.HANGAR) {
-        previewShipIndex = 6;
+        previewShipIndex = 8;
         updateHangarUI();
     }
 }
