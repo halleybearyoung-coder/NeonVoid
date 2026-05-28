@@ -145,6 +145,29 @@ canvas {
     opacity: 0; 
     pointer-events: none;
 }
+#level-select-screen, #simulation-level-select-screen, #expert-level-select-screen, #insane-level-select-screen {
+    display: block;
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    padding-top: 112px;
+    padding-bottom: 64px;
+    text-align: center;
+}
+#level-select-screen .title-text,
+#simulation-level-select-screen .title-text,
+#expert-level-select-screen .title-text,
+#insane-level-select-screen .title-text {
+    margin-top: 0;
+    font-size: clamp(34px, 5vw, 64px);
+}
+#level-select-screen > .btn,
+#simulation-level-select-screen > .btn,
+#expert-level-select-screen > .btn,
+#insane-level-select-screen > .btn {
+    margin-bottom: 44px;
+}
 #hangar-screen {
     justify-content: flex-start;
     overflow-y: auto;
@@ -272,6 +295,12 @@ canvas {
     position: relative;
     touch-action: manipulation;
 }
+.btn,
+.level-btn,
+.menu-hangar-btn,
+.hangar-toggle-btn {
+    touch-action: manipulation;
+}
 #menu-screen .btn {
     min-width: 250px;
     min-height: 74px;
@@ -365,6 +394,46 @@ canvas {
     content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     border: 1px solid transparent;
     pointer-events: none;
+}
+.hangar-tabs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+.hangar-tab {
+    min-width: 130px;
+    padding: 12px 18px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #9aa;
+    border: 1px solid #355;
+    font-family: inherit;
+    font-weight: 800;
+    letter-spacing: 2px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+.hangar-tab.active {
+    color: #00ffff;
+    border-color: #00ffff;
+    box-shadow: 0 0 18px rgba(0, 255, 255, 0.22);
+}
+.hangar-tab-panel {
+    display: none;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.hangar-tab-panel.active {
+    display: flex;
+}
+.merge-card {
+    width: min(520px, 90%);
+    min-height: 160px;
+    margin: 16px auto 24px;
+    border-top-color: #ffd966;
 }
 
 .hologram-container {
@@ -487,16 +556,17 @@ canvas {
 .level-grid {
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 18px;
     margin-bottom: 40px;
     flex-wrap: wrap;
-    max-width: 800px;
+    max-width: 1040px;
     position: relative;
     z-index: 60;
+    padding-bottom: 110px;
 }
 .level-btn {
-    width: 100px;
-    height: 100px;
+    width: 92px;
+    height: 92px;
     border-radius: 10%;
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid #444;
@@ -636,6 +706,9 @@ body.simulation-mode::after {
     line-height: 1.6;
     margin-bottom: 30px;
     min-height: 100px;
+    max-height: min(46vh, 430px);
+    overflow-y: auto;
+    padding-right: 10px;
     text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
 }
 .radio-footer {
@@ -669,6 +742,32 @@ body.simulation-mode::after {
 .controls-hint {
     margin-top: 20px; font-size: 14px;
     color: rgba(255,255,255,0.5); font-family: monospace;
+}
+.coming-soon-teaser {
+    display: none;
+    position: absolute;
+    bottom: 22px;
+    width: calc(100% - 40px);
+    text-align: center;
+    color: #ffd966;
+    font-family: monospace;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px #ffd966;
+}
+.coming-soon-teaser.visible {
+    display: block;
+}
+.coming-soon-teaser span {
+    color: #b9c0c8;
+    font-size: 12px;
+}
+.infinite-wave-btn {
+    flex-basis: 100%;
+    max-width: 360px;
+    margin: 14px auto 0;
+    border-color: #ffd966;
+    color: #ffd966;
 }
 
 #brand-badge {
