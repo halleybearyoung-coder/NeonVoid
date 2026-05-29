@@ -177,6 +177,11 @@ canvas {
     background: rgba(0, 0, 0, 0.85);
     opacity: 0;
     overflow: hidden;
+    z-index: 90;
+}
+#retry-btn {
+    position: relative;
+    z-index: 95;
 }
 #game-over-screen.boss-defeat::before,
 #game-over-screen.boss-defeat::after {

@@ -1206,28 +1206,7 @@ function animateThree(currentTime = 0) {
         glitchBossMesh.material.color.setHSL(hue, 1, 0.5);
     } else if (glitchBossMesh) { glitchBossMesh.visible = false; }
 
-    if (boss && boss.active && boss.isAscendantBoss && (boss.ascendantStage === 90 || boss.ascendantStage === 100) && voidBossMesh && !isSupernovaExploding) {
-        const isTrueVoid = boss.ascendantStage === 100;
-        voidBossMesh.visible = true;
-        voidBossMesh.rotation.x += 0.005;
-        voidBossMesh.rotation.y += 0.01;
-        voidBossMesh.rotation.z += isTrueVoid ? 0.006 : 0.003;
-        voidBossMesh.position.x += (((boss.x / width) * 120 - 60) - voidBossMesh.position.x) * 0.22;
-        voidBossMesh.position.y += ((-(boss.y / height) * 60 + 30) - voidBossMesh.position.y) * 0.22;
-        const scale = isTrueVoid ? 1.75 : 1.55;
-        voidBossMesh.scale.set(scale, scale, scale);
-        const shellColor = isTrueVoid ? 0xb000ff : 0xff2020;
-        voidBossMesh.children.forEach((child, index) => {
-            const data = child.userData || {};
-            child.rotation.x += isTrueVoid ? data.spinX * 1.35 : data.spinX;
-            child.rotation.y += isTrueVoid ? data.spinY * 1.35 : data.spinY;
-            child.rotation.z += isTrueVoid ? data.spinZ * 1.35 : data.spinZ;
-            if (child.material && child.material.color) child.material.color.setHex(shellColor);
-            child.visible = true;
-            const pulse = Math.sin(Date.now() * 0.003 + index * 1.7) * (data.pulse || 0.02);
-            child.scale.setScalar(1 + pulse);
-        });
-    } else if (voidBossMesh) {
+    if (voidBossMesh) {
         voidBossMesh.visible = false;
     }
 
@@ -2838,6 +2817,57 @@ function drawPrototypeVoidSkin(palette, rot, glitching, scale = 1) {
         ctx.globalAlpha = 1;
     }
     ctx.restore();
+}
+
+function drawLockedVoidWireframe(color, rot, scale = 1) {
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.rotate(rot * 0.25);
+    ctx.globalAlpha = 0.92;
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = color;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2.2;
+
+    const nodes = [];
+    const nodeCount = 18;
+    for (let i = 0; i < nodeCount; i++) {
+        const band = i % 3;
+        const angle = rot + i * Math.PI * 2 / nodeCount;
+        const radius = 205 + band * 28 + Math.sin(frames * 0.026 + i) * 9;
+        nodes.push({
+            x: Math.cos(angle) * radius,
+            y: Math.sin(angle * 1.08) * radius * (0.64 + band * 0.05)
+        });
+    }
+
+    for (let i = 0; i < nodeCount; i++) {
+        const a = nodes[i];
+        const b = nodes[(i + 1) % nodeCount];
+        const c = nodes[(i + 5) % nodeCount];
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+        if (i % 2 === 0) {
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(c.x, c.y);
+            ctx.stroke();
+            ctx.globalAlpha = 0.92;
+        }
+    }
+
+    nodes.forEach((node, i) => {
+        ctx.globalAlpha = i % 3 === 0 ? 1 : 0.72;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, i % 3 === 0 ? 5 : 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.restore();
+    ctx.globalAlpha = 1;
 }
 
 class Boss {
@@ -5680,6 +5710,7 @@ class Boss {
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath(); ctx.arc(-42, 0, 11, 0, Math.PI*2); ctx.fill();
             } else if (cfg.shape === 'void-home') {
+                drawLockedVoidWireframe('#ff2020', this.rot, 0.86);
                 drawPrototypeVoidSkin({
                     particle: '#ff2020',
                     darkParticle: '#330000',
@@ -5692,6 +5723,7 @@ class Boss {
                     ringAlt: 'rgba(90, 0, 0, 0.68)'
                 }, this.rot, frames % 130 > 112, 0.82);
             } else if (cfg.shape === 'void-true') {
+                drawLockedVoidWireframe('#b000ff', this.rot, 1.02);
                 drawPrototypeVoidSkin({
                     particle: '#b000ff',
                     darkParticle: '#3a003f',
@@ -8153,7 +8185,14 @@ function gameOver(win) {
     gameOverScreen.classList.toggle('boss-defeat', defeatedByBoss);
     gameOverTitle.innerText = win ? "STAGE CLEARED" : (defeatedByBoss ? `DEFEATED BY ${bossName.innerText}` : "MISSION FAILED");
     gameOverTitle.style.color = win ? "#00ff00" : "#ff0000"; waveText.style.opacity = 0;
-    if (!win) fadeOutMusic();
+    if (!win) {
+        fadeOutMusic();
+        bullets = [];
+        enemies = [];
+        portals = [];
+        if (boss) boss.active = false;
+        bossHud.style.opacity = 0;
+    }
 
     if (win) {
         const stats = getModeData(activeDifficultyMode);
