@@ -26,7 +26,7 @@ let currentLevelIndex = 1;
 let activeDifficultyMode = 'easy';
 let currentHangarMode = 'easy';
 let hangarReturnToMenu = false;
-let introTimer = 30;
+let introTimer = 180;
 let introInterval = null;
 let cookiesAccepted = false;
 let levelSelectReadyAt = 0;
@@ -414,7 +414,7 @@ const STAGE_MESSAGES = {
 
 const LATE_STAGE_NAMES = {
     60: 'NEON VOID FRACTURE SHELL', 61: 'SPECTRAL ANVIL', 62: 'DATA REAPER', 63: 'OBSIDIAN LATTICE', 64: 'SUNLESS PALADIN',
-    65: 'GRAVITY WIDOW', 66: 'RUSTED ORACLE', 67: 'CIRCUIT SAINT', 68: 'ECHO TYRANT', 69: 'VOID FANG RELAY',
+    65: 'GRAVITY WIDOW', 66: 'RUSTED ORACLE', 67: 'DT TANK', 68: 'ECHO TYRANT', 69: 'VOID FANG RELAY',
     70: 'NEON VOID WAR ORBIT', 71: 'PRISM EXECUTOR', 72: 'MOLTEN MONOLITH', 73: 'SILENCE ENGINE', 74: 'PARADOX MASON',
     75: 'VOLTAGE CHOIR', 76: 'HOLLOW KNIGHT ARRAY', 77: 'EMBER HELIX', 78: 'BLACK ICE FURNACE', 79: 'NULL BLADE CROWN',
     80: 'NEON VOID ECLIPSE ENGINE', 81: 'SAPPHIRE GRINDER', 82: 'BINARY PALACE', 83: 'DARKSTAR LOOM', 84: 'CHROME DRIFTER',
@@ -434,6 +434,8 @@ for (let stage = 60; stage <= 100; stage++) {
     STAGE_MESSAGES[`easy_${stage}`] = `${name}. <br><br>${milestone}${reward}`;
     STAGE_MESSAGES[`hard_${stage}`] = `${name} [ELITE]. <br><br>${milestone} Expect less recovery time between patterns.${reward}`;
 }
+STAGE_MESSAGES.easy_67 = "DT TANK. <br><br>Sector Alpha intelligence confirms the pilot is Dylan Tang, widely known in our offices as Dylan Villain. He is a super elite space-tank driver, and somehow he is only 10 years old after a youth-ray incident rewrote his body without touching his combat memory. <br><br>Do not laugh at the age report. The tank is real, the driver is dangerous, and his cannon patterns are built for close-range pressure.";
+STAGE_MESSAGES.hard_67 = "DT TANK [ELITE]. <br><br>Dylan Tang, the so-called Dylan Villain, is fielding the elite tank frame himself. The youth ray made him young again, but every old battlefield reflex stayed in place. <br><br>Expect armor plates, cannon bursts, and a driver who fights like he has something to prove.";
 
 function buildTransmission(mode, levelIndex, baseMessage) {
     const label = MODE_LABELS[mode] || MODE_LABELS.easy;
@@ -575,6 +577,27 @@ const SHIELD_UPGRADES = { costs: [500, 1000, 1900, 3600, 6800, 12000, 19000, 285
 const COOLANT_UPGRADES = { costs: [600, 1200, 2300, 4300, 8000, 14000, 22000, 33000], bonuses: [0.025, 0.03, 0.035, 0.04, 0.045, 0.055, 0.065, 0.08] };
 const MISSILE_UPGRADES = { costs: [650, 1300, 2500, 4800, 9000, 16000, 25000, 38000], bonuses: [0.08, 0.09, 0.1, 0.11, 0.13, 0.15, 0.17, 0.2] };
 const HEAVY_BEAM_UPGRADES = { costs: [2000, 4200, 8500, 16000, 28000], bonuses: [1, 2, 3, 4, 5] };
+
+function expandUpgradeCapacity(config, extraLevels, costGrowth, bonusGrowth) {
+    for (let i = 0; i < extraLevels; i++) {
+        const lastCost = config.costs[config.costs.length - 1];
+        const lastBonus = config.bonuses[config.bonuses.length - 1];
+        config.costs.push(Math.round(lastCost * costGrowth + 500 + i * 70));
+        config.bonuses.push(Number((lastBonus * bonusGrowth).toFixed(3)));
+    }
+}
+
+[
+    [HEALTH_UPGRADES, 1.18, 1.075],
+    [CANNON_UPGRADES, 1.2, 1.055],
+    [ENGINE_UPGRADES, 1.17, 1.035],
+    [MAGNET_UPGRADES, 1.16, 1.045],
+    [SHIELD_UPGRADES, 1.18, 1.035],
+    [COOLANT_UPGRADES, 1.18, 1.03],
+    [MISSILE_UPGRADES, 1.18, 1.04],
+    [HEAVY_BEAM_UPGRADES, 1.22, 1.06]
+].forEach(([config, costGrowth, bonusGrowth]) => expandUpgradeCapacity(config, 50, costGrowth, bonusGrowth));
+
 const ECONOMY_MULTIPLIERS = { sim: 1.0, easy: 1.3, hard: 2.4, insane: 4.5 };
 const BASE_FUSION_COST = 18000;
 
@@ -723,7 +746,8 @@ const SHIPS = [
     { id: 6, name: "ALPHA RADIANCE", color: "#ffd966", cost: 999999, hpMult: 1.05, spd: 8.6, dmgTakenMult: 0.9, desc: "STAGE 20 REWARD / ABILITY SHIP", rewardOnly: true },
     { id: 7, name: "TANKER", color: "#b9c0c8", cost: 999999, hpMult: 2.2, spd: 3.8, dmgTakenMult: 0.62, desc: "STAGE 30 REWARD / HUGE SHELLS / RAM", rewardOnly: true },
     { id: 8, name: "ALPHA CORE", color: "#b000ff", cost: 999999, hpMult: 1.35, spd: 8.8, dmgTakenMult: 0.72, desc: "STAGE 40 REWARD / PURPLE CORE SHIP", rewardOnly: true },
-    { id: 9, name: "NEON ALPHA", color: "#ff3030", cost: 999999, hpMult: 1.55, spd: 9.4, dmgTakenMult: 0.58, desc: "STAGE 90 REWARD / RED VOID MINIATURE", rewardOnly: true }
+    { id: 9, name: "NEON ALPHA", color: "#ff3030", cost: 999999, hpMult: 2.4, spd: 12.5, dmgTakenMult: 0.2, desc: "STAGE 90 REWARD / RED VOID OVERDRIVE", rewardOnly: true },
+    { id: 10, name: "GOD SHIP", color: "#ffffff", cost: 9999999, hpMult: 9999, spd: 14, dmgTakenMult: 0, desc: "DEV ONLY / INFINITE HULL", rewardOnly: true, devOnly: true }
 ];
 let previewShipIndex = 0;
 
@@ -1003,6 +1027,30 @@ function drawShipAsset(ctx, type, isHologram) {
         ctx.fillStyle = '#050505';
         ctx.fillRect(-26, 16, 10, 18);
         ctx.fillRect(16, 16, 10, 18);
+    } else if (type === 10) {
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = isHologram ? 36 : 24;
+        ctx.save();
+        ctx.rotate(frames * 0.04);
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+        for(let i=0; i<4; i++) {
+            ctx.rotate(Math.PI / 4);
+            ctx.beginPath(); ctx.ellipse(0, 0, 48 - i * 5, 18 + i * 2, 0, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.restore();
+        ctx.fillStyle = '#080808';
+        ctx.beginPath();
+        for(let i=0; i<16; i++) {
+            const a = -Math.PI / 2 + i * Math.PI / 8;
+            const r = i % 2 === 0 ? 40 : 14;
+            ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#ffd966'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0, 0, 22 + Math.sin(frames * 0.2) * 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffd966';
+        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
     }
     ctx.restore();
 }
@@ -1080,6 +1128,16 @@ function initThreeMenu() {
         const voidCoreMat = new THREE.MeshBasicMaterial({ color: 0x330000, transparent: true, opacity: 0.92 });
         voidBossCoreMesh = new THREE.Mesh(voidCoreGeo, voidCoreMat);
         voidBossMesh.add(voidBossCoreMesh);
+        const redRingGeo = new THREE.TorusGeometry(28, 0.8, 8, 96);
+        const redRingMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true, transparent: true, opacity: 0.55 });
+        const redRing = new THREE.Mesh(redRingGeo, redRingMat);
+        redRing.rotation.x = Math.PI / 2.8; redRing.userData.voidStage = 90;
+        voidBossMesh.add(redRing);
+        const trueShellGeo = new THREE.DodecahedronGeometry(28, 1);
+        const trueShellMat = new THREE.MeshBasicMaterial({ color: 0xff66ff, wireframe: true, transparent: true, opacity: 0.45 });
+        const trueShell = new THREE.Mesh(trueShellGeo, trueShellMat);
+        trueShell.userData.voidStage = 100;
+        voidBossMesh.add(trueShell);
         scene.add(voidBossMesh);
 
         const snGeo = new THREE.SphereGeometry(1, 32, 32);
@@ -1163,7 +1221,14 @@ function animateThree() {
         voidBossMesh.scale.set(scale, scale, scale);
         const shellColor = isTrueVoid ? 0xb000ff : 0xff2020;
         voidBossMesh.children.forEach((child, index) => {
-            if (child.material && child.material.color) child.material.color.setHex(index === 2 ? (isTrueVoid ? 0x230033 : 0x330000) : shellColor);
+            if (child.userData.voidStage) child.visible = child.userData.voidStage === boss.ascendantStage;
+            else child.visible = true;
+            if (child.material && child.material.color) {
+                const core = index === 2;
+                child.material.color.setHex(core ? (isTrueVoid ? 0x230033 : 0x330000) : (child.userData.voidStage === 100 ? 0xff66ff : shellColor));
+            }
+            const pulse = 1 + Math.sin(Date.now() * (isTrueVoid ? 0.006 : 0.004) + index) * 0.08;
+            child.scale.set(pulse, pulse, pulse);
         });
     } else if (voidBossMesh) {
         voidBossMesh.visible = false;
@@ -1320,7 +1385,7 @@ Object.assign(ASCENDANT_CONFIGS, {
     64: { name: 'SUNLESS PALADIN', color: '#ffd966', accent: '#222222', shape: 'paladin', style: 'missiles' },
     65: { name: 'GRAVITY WIDOW', color: '#ff66cc', accent: '#aa66ff', shape: 'harvester', style: 'pull' },
     66: { name: 'RUSTED ORACLE', color: '#b86f42', accent: '#46b8ff', shape: 'oracle', style: 'mirror' },
-    67: { name: 'CIRCUIT SAINT', color: '#7dff77', accent: '#ffffff', shape: 'cathedral', style: 'rail' },
+    67: { name: 'DT TANK', color: '#ff3030', accent: '#ffd966', shape: 'dt-tank', style: 'dt_tank' },
     68: { name: 'ECHO TYRANT', color: '#33aaff', accent: '#ff66cc', shape: 'tyrant', style: 'dual' },
     69: { name: 'VOID FANG RELAY', color: '#ff8844', accent: '#b000ff', shape: 'relay', style: 'zero' },
     70: { name: 'NEON VOID WAR ORBIT', color: '#ff3030', accent: '#ffaa00', shape: 'void-orbit', style: 'spiral' },
@@ -1452,6 +1517,8 @@ class Bullet {
             this.color = '#ff4444'; this.size = 10; this.damage = damage;
         } else if (type === 'tanker_shell') {
             this.color = '#b9c0c8'; this.size = 15; this.damage = damage;
+        } else if (type === 'god_bullet') {
+            this.color = '#ffffff'; this.size = 30; this.damage = damage || 250;
         } else if (type === 'player_missile') {
             this.color = '#aa66ff'; this.size = 6; this.damage = damage || currentSettings.playerDamage;
             this.angle = Math.atan2(vy, vx); this.speed = Math.max(6, Math.hypot(vx, vy)); this.guidanceTimer = 150;
@@ -1646,7 +1713,7 @@ class Bullet {
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.strokeRect(-50, 0, 100, 60);
             ctx.restore();
             return;
-        } else if (this.type === 'juggernaut_shot' || this.type === 'player_missile' || this.type === 'alpha_fireball' || this.type === 'heavy_beam' || this.type === 'tanker_shell') {
+        } else if (this.type === 'juggernaut_shot' || this.type === 'player_missile' || this.type === 'alpha_fireball' || this.type === 'heavy_beam' || this.type === 'tanker_shell' || this.type === 'god_bullet') {
             ctx.save(); ctx.translate(this.x, this.y);
             if (this.type === 'player_missile' || this.type === 'heavy_beam') ctx.rotate(this.angle || Math.atan2(this.vy, this.vx));
             ctx.fillStyle = this.color; ctx.shadowBlur = 15; ctx.shadowColor = this.color;
@@ -1659,6 +1726,11 @@ class Bullet {
             } else if (this.type === 'tanker_shell') {
                 ctx.beginPath(); ctx.arc(0, 0, this.size, 0, Math.PI*2); ctx.fill();
                 ctx.strokeStyle = '#ff8844'; ctx.lineWidth = 3; ctx.stroke();
+            } else if (this.type === 'god_bullet') {
+                ctx.shadowBlur = 35; ctx.shadowColor = '#ffffff';
+                ctx.beginPath(); ctx.arc(0, 0, this.size, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#ffd966'; ctx.lineWidth = 5; ctx.stroke();
+                ctx.fillStyle = '#ffd966'; ctx.beginPath(); ctx.arc(0, 0, this.size * 0.35, 0, Math.PI*2); ctx.fill();
             } else {
                 ctx.beginPath(); ctx.arc(0, 0, this.size, 0, Math.PI*2); ctx.fill();
             }
@@ -2096,7 +2168,7 @@ class Player {
         bonusHp = totalUpgradeBonus(HEALTH_UPGRADES, hpLevel);
         this.maxHp = (baseHp + bonusHp) * shipInfo.hpMult; 
         this.hp = this.maxHp;
-        playerHpEl.innerText = Math.floor(this.hp);
+        playerHpEl.innerText = shipInfo.id === 10 ? "∞" : Math.floor(this.hp);
 
         const cannonLevel = shipUpgrades.cannonLvl;
         const bonusDamage = totalUpgradeBonus(CANNON_UPGRADES, cannonLevel);
@@ -2240,14 +2312,22 @@ class Player {
                 this.updateAlphaCore();
             } else if (stats.currentShip === 9) {
                 const target = getPlayerTarget();
-                if (frames % this.rate(4) === 0) {
-                    bullets.push(fireAtTarget(this.x, this.y - 20, 20, 'phantom_laser', this.damage * 0.85, target));
-                    bullets.push(new Bullet(this.x - 16, this.y - 8, -2, -18, 'player', this.damage * 0.5));
-                    bullets.push(new Bullet(this.x + 16, this.y - 8, 2, -18, 'player', this.damage * 0.5));
+                if (frames % this.rate(2) === 0) {
+                    bullets.push(fireAtTarget(this.x, this.y - 24, 24, 'phantom_laser', this.damage * 1.25, target));
+                    bullets.push(new Bullet(this.x - 18, this.y - 10, -2.5, -20, 'player', this.damage * 0.8));
+                    bullets.push(new Bullet(this.x + 18, this.y - 10, 2.5, -20, 'player', this.damage * 0.8));
                     playSound('shoot');
                 }
-                if (frames % this.rate(48) === 0) {
-                    for(let i=-1; i<=1; i++) bullets.push(fireAtTarget(this.x + i * 12, this.y, 9, 'player_missile', this.damage * 1.8, target));
+                if (frames % this.rate(24) === 0) {
+                    for(let i=-2; i<=2; i++) bullets.push(fireAtTarget(this.x + i * 12, this.y, 11, 'player_missile', this.damage * 2.2, target));
+                }
+            } else if (stats.currentShip === 10) {
+                const target = getPlayerTarget();
+                if (frames % 2 === 0) {
+                    bullets.push(fireAtTarget(this.x, this.y - 28, 24, 'god_bullet', 300, target));
+                    bullets.push(new Bullet(this.x - 28, this.y - 8, -2, -20, 'god_bullet', 260));
+                    bullets.push(new Bullet(this.x + 28, this.y - 8, 2, -20, 'god_bullet', 260));
+                    playSound('shoot');
                 }
             }
             this.updateHeavyBeam(stats);
@@ -2442,6 +2522,11 @@ class Player {
     hit(damage) {
         if (this.iframes > 0 || !this.active) return;
         const stats = getModeData(activeDifficultyMode);
+        if (stats.currentShip === 10) {
+            playerHpEl.innerText = "∞";
+            for(let i=0; i<8; i++) particles.push(new Particle(this.x, this.y, '#ffffff', 3, 3, 18));
+            return;
+        }
         if (stats.currentShip === 3) {
             for(let i=0; i<8; i++) particles.push(new Particle(this.x, this.y, '#00ff88', 3, 3, 22));
         }
@@ -3861,6 +3946,18 @@ class Boss {
                     if (this.attackTimer % 78 === 20 && this.attackTimer < 260) {
                         const angle = Math.atan2(player.y - this.y, player.x - this.x);
                         bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*4.8, Math.sin(angle)*4.8, 'termination_zero'));
+                    }
+                } else if (cfg.style === 'dt_tank') {
+                    if (this.attackTimer % 34 === 4 && this.attackTimer < 260) {
+                        const base = Math.atan2(player.y - this.y, player.x - this.x);
+                        for(let i=-1; i<=1; i++) bullets.push(new Bullet(this.x, this.y + 40, Math.cos(base+i*0.14)*8.5, Math.sin(base+i*0.14)*8.5, 'bullet_god_medium'));
+                    }
+                    if (this.attackTimer % 52 === 12 && this.attackTimer < 260) {
+                        bullets.push(new Bullet(this.x - 74, this.y, -3, -3, 'missile'));
+                        bullets.push(new Bullet(this.x + 74, this.y, 3, -3, 'missile'));
+                    }
+                    if (this.attackTimer % 90 === 20 && this.attackTimer < 260) {
+                        bullets.push(new Bullet(player.x, -80, 0, 14, 'arch_hammer'));
                     }
                 } else if (cfg.style === 'spine' && this.attackTimer % 16 === 0 && this.attackTimer < 260) {
                     [-2,-1,0,1,2].forEach(i => bullets.push(new Bullet(this.x + i*40, this.y, i*0.8, 9, 'spine_laser')));
@@ -5283,6 +5380,69 @@ class Boss {
             ctx.beginPath(); ctx.arc(0, 0, (trueVoid ? 58 : 42) + Math.sin(frames * 0.12) * (trueVoid ? 8 : 5), 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#fff';
             ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
+            if (cfg.shape === 'void-red') {
+                ctx.strokeStyle = '#ff8844'; ctx.lineWidth = 6;
+                ctx.beginPath(); ctx.arc(0, 0, 150, Math.sin(frames*0.02), Math.sin(frames*0.02) + Math.PI * 1.25); ctx.stroke();
+                ctx.fillStyle = '#330000';
+                [-120, 120].forEach(x => { ctx.fillRect(x - 16, -52, 32, 104); ctx.strokeRect(x - 16, -52, 32, 104); });
+            } else if (cfg.shape === 'void-orbit') {
+                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 4;
+                for(let i=0;i<8;i++) {
+                    const a = this.rot + i * Math.PI / 4;
+                    ctx.beginPath(); ctx.arc(Math.cos(a)*162, Math.sin(a)*86, 16 + (i%2)*8, 0, Math.PI*2); ctx.stroke();
+                }
+            } else if (cfg.shape === 'void-eclipse') {
+                ctx.fillStyle = 'rgba(0,0,0,0.78)';
+                ctx.beginPath(); ctx.arc(32 + Math.sin(frames*0.03)*18, 0, 82, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#ff3030'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, 178, 0, Math.PI*2); ctx.stroke();
+            } else if (cfg.shape === 'void-home') {
+                ctx.strokeStyle = '#ff3030'; ctx.lineWidth = 2;
+                for(let i=0;i<18;i++) {
+                    const a = this.rot + i * Math.PI * 2 / 18;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(a) * 170, Math.sin(a) * 94);
+                    ctx.lineTo(Math.cos(a + 0.35) * 218, Math.sin(a + 0.35) * 122);
+                    ctx.stroke();
+                }
+            } else if (trueVoid) {
+                ctx.strokeStyle = '#ff66ff'; ctx.lineWidth = 4;
+                for(let i=0;i<10;i++) {
+                    const a = -this.rot * 0.8 + i * Math.PI / 5;
+                    ctx.beginPath(); ctx.rect(Math.cos(a)*185 - 14, Math.sin(a)*110 - 14, 28, 28); ctx.stroke();
+                }
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(-220, 0); ctx.bezierCurveTo(-80, -170, 80, 170, 220, 0); ctx.stroke();
+            }
+        } else if (cfg.shape === 'dt-tank') {
+            ctx.rotate(Math.sin(frames * 0.025) * 0.08);
+            ctx.fillStyle = '#2a1010';
+            ctx.beginPath();
+            ctx.moveTo(-118,-62); ctx.lineTo(118,-62); ctx.lineTo(92,54); ctx.lineTo(36,108); ctx.lineTo(-36,108); ctx.lineTo(-92,54);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#4b1a1a';
+            ctx.fillRect(-86, -82, 172, 34);
+            ctx.strokeStyle = cfg.accent; ctx.lineWidth = 3; ctx.strokeRect(-86, -82, 172, 34);
+            ctx.fillStyle = '#151515';
+            ctx.fillRect(-122, -42, 26, 100);
+            ctx.fillRect(96, -42, 26, 100);
+            ctx.fillStyle = cfg.color;
+            for(let i=0;i<5;i++) {
+                ctx.fillRect(-132, -36 + i * 20, 18, 10);
+                ctx.fillRect(114, -36 + i * 20, 18, 10);
+            }
+            ctx.save();
+            const aim = player && player.active ? Math.atan2(player.y - this.y, player.x - this.x) : Math.PI / 2;
+            ctx.rotate(aim - Math.PI / 2);
+            ctx.fillStyle = '#333333';
+            ctx.fillRect(-18, -4, 36, 116);
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(-24, 90, 48, 24);
+            ctx.restore();
+            ctx.fillStyle = cfg.accent;
+            ctx.beginPath(); ctx.arc(0, 0, 34 + Math.sin(frames * 0.12) * 3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(0, -4, 10, 0, Math.PI*2); ctx.fill();
         } else if (cfg.shape === 'prism') {
             ctx.rotate(this.rot);
             ctx.beginPath(); ctx.moveTo(0,-120); ctx.lineTo(82,-22); ctx.lineTo(48,96); ctx.lineTo(-48,96); ctx.lineTo(-82,-22); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -7287,7 +7447,7 @@ function buyOrEquipShip() {
         updateHangarUI();
     } else {
         if (ship.rewardOnly) {
-            alert(ship.id === 9 ? "Clear Stage 90 to unlock Neon Alpha." : (ship.id === 8 ? "Clear Stage 40 to unlock Alpha Core." : (ship.id === 7 ? "Clear Stage 30 to unlock Tanker." : "Clear Stage 20 to unlock Alpha Radiance.")));
+            alert(ship.devOnly ? "God Ship can only be unlocked from the dev panel." : (ship.id === 9 ? "Clear Stage 90 to unlock Neon Alpha." : (ship.id === 8 ? "Clear Stage 40 to unlock Alpha Core." : (ship.id === 7 ? "Clear Stage 30 to unlock Tanker." : "Clear Stage 20 to unlock Alpha Radiance."))));
             return;
         }
         if (stats.stars >= shipCost) {
@@ -7386,7 +7546,7 @@ function updateHangarUI() {
             equipBtn.style.color = ship.color;
         }
     } else {
-        equipBtn.innerText = ship.rewardOnly ? (ship.id === 9 ? "CLEAR STAGE 90" : (ship.id === 8 ? "CLEAR STAGE 40" : (ship.id === 7 ? "CLEAR STAGE 30" : "CLEAR STAGE 20"))) : `UNLOCK (${getHangarCost(ship.cost, currentHangarMode)} ✦)`;
+        equipBtn.innerText = ship.devOnly ? "DEV ONLY" : (ship.rewardOnly ? (ship.id === 9 ? "CLEAR STAGE 90" : (ship.id === 8 ? "CLEAR STAGE 40" : (ship.id === 7 ? "CLEAR STAGE 30" : "CLEAR STAGE 20"))) : `UNLOCK (${getHangarCost(ship.cost, currentHangarMode)} ✦)`);
         equipBtn.style.opacity = 1;
         equipBtn.style.borderColor = ship.color;
         equipBtn.style.color = ship.color;
@@ -7625,7 +7785,7 @@ function startIntro(mode, levelIndex) {
     const fallbackMode = mode === 'sim' ? 'easy' : (mode === 'insane' ? 'hard' : mode);
     const msg = STAGE_MESSAGES[key] || STAGE_MESSAGES[`${fallbackMode}_${levelIndex}`] || "Transmission unclear. Proceed with caution.";
     document.getElementById('radio-content').innerHTML = buildTransmission(mode, levelIndex, msg);
-    introTimer = 30; document.getElementById('intro-countdown').innerText = introTimer;
+    introTimer = 180; document.getElementById('intro-countdown').innerText = introTimer;
     if(introInterval) clearInterval(introInterval);
     introInterval = setInterval(() => { introTimer--; document.getElementById('intro-countdown').innerText = introTimer; if(introTimer <= 0) skipIntro(); }, 1000);
 }
@@ -7788,7 +7948,7 @@ function animateGame(currentTime) {
                     b.update(); b.draw();
                     if (!b.active) { bullets.splice(i, 1); continue; }
                     
-                        if (b.type === 'player' || b.type === 'phantom_laser' || b.type === 'juggernaut_shot' || b.type === 'player_missile' || b.type === 'alpha_fireball' || b.type === 'heavy_beam' || b.type === 'tanker_shell') {
+                        if (b.type === 'player' || b.type === 'phantom_laser' || b.type === 'juggernaut_shot' || b.type === 'player_missile' || b.type === 'alpha_fireball' || b.type === 'heavy_beam' || b.type === 'tanker_shell' || b.type === 'god_bullet') {
                         let hit = false;
                         if (boss.active) {
                             if (boss.isSnake) {
@@ -7904,7 +8064,8 @@ function animateGame(currentTime) {
                         }
                         if (!hit) {
                             enemies.forEach(e => {
-                                if (e && e.active && Math.abs(b.x - e.x) < 20 && Math.abs(b.y - e.y) < 20) { e.hit(b.damage); b.active = false; }
+                                const hitBox = b.type === 'god_bullet' ? 78 : 20;
+                                if (e && e.active && Math.abs(b.x - e.x) < hitBox && Math.abs(b.y - e.y) < hitBox) { e.hit(b.type === 'god_bullet' ? 99999 : b.damage); b.active = false; }
                             });
                         }
                     } else {
@@ -8054,11 +8215,12 @@ function devUnlockAlpha() {
     if (!stats.unlockedShips.includes(7)) stats.unlockedShips.push(7);
     if (!stats.unlockedShips.includes(8)) stats.unlockedShips.push(8);
     if (!stats.unlockedShips.includes(9)) stats.unlockedShips.push(9);
-    stats.currentShip = 9;
+    if (!stats.unlockedShips.includes(10)) stats.unlockedShips.push(10);
+    stats.currentShip = 10;
     saveData();
     updateUI();
     if (gameState === STATE.HANGAR) {
-        previewShipIndex = 9;
+        previewShipIndex = 10;
         updateHangarUI();
     }
 }

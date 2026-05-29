@@ -556,10 +556,12 @@ canvas {
 .level-grid {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 18px;
-    margin-bottom: 40px;
+    margin: 0 auto 40px;
     flex-wrap: wrap;
     max-width: 1040px;
+    width: min(92vw, 1040px);
     position: relative;
     z-index: 60;
     padding-bottom: 110px;
