@@ -434,7 +434,7 @@ for (let stage = 60; stage <= 100; stage++) {
     STAGE_MESSAGES[`easy_${stage}`] = `${name}. <br><br>${milestone}${reward}`;
     STAGE_MESSAGES[`hard_${stage}`] = `${name} [ELITE]. <br><br>${milestone} Expect less recovery time between patterns.${reward}`;
 }
-STAGE_MESSAGES.easy_67 = "DT TANK. <br><br>Sector Alpha intelligence confirms the pilot is Dylan Tang, widely known in our offices as Dylan Villain. He is a super elite space-tank driver, and somehow he is only 10 years old after a youth-ray incident rewrote his body without touching his combat memory. <br><br>Do not laugh at the age report. The tank is real, the driver is dangerous, and his cannon patterns are built for close-range pressure.";
+STAGE_MESSAGES.easy_67 = "DT TANK. <br><br>Sector Alpha intelligence confirms the pilot is Dylan Tang, widely known in our offices as Dylan Villain. He is a super elite space-tank driver who was enrolled to the military school - Laser Beam-burst, and somehow he is only 10 years old after a youth-ray incident rewrote his body without touching his combat memory. <br><br>Do not laugh at the age report. The tank is real, the driver is dangerous, and his cannon patterns are built for close-range pressure.";
 STAGE_MESSAGES.hard_67 = "DT TANK [ELITE]. <br><br>Dylan Tang, the so-called Dylan Villain, is fielding the elite tank frame himself. The youth ray made him young again, but every old battlefield reflex stayed in place. <br><br>Expect armor plates, cannon bursts, and a driver who fights like he has something to prove.";
 
 function buildTransmission(mode, levelIndex, baseMessage) {
@@ -8501,7 +8501,7 @@ function toggleDevPanel() {
 
 function unlockDevPanel() {
     const input = document.getElementById('dev-password');
-    if (input.value === '0818') {
+    if (input.value === '0911') {
         devUnlocked = true;
         input.value = '';
         waveText.innerText = "DEV ACCESS GRANTED";
