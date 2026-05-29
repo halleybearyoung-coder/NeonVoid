@@ -1067,6 +1067,7 @@ function initThreeMenu() {
         camera.position.z = 50;
 
         renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.domElement.id = 'menuCanvas';
         container.appendChild(renderer.domElement);
@@ -1115,28 +1116,18 @@ function initThreeMenu() {
 
         voidBossMesh = new THREE.Group();
         voidBossMesh.visible = false;
-        voidBossMesh.position.z = -28;
-        const voidShellGeo = new THREE.IcosahedronGeometry(13, 1);
-        const voidShellMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, transparent: true, opacity: 0.95 });
+        voidBossMesh.position.z = -18;
+        const voidShellGeo = new THREE.IcosahedronGeometry(10, 1);
+        const voidShellMat = new THREE.MeshBasicMaterial({
+            color: 0xff0000,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.92,
+            depthWrite: false
+        });
         const voidShell = new THREE.Mesh(voidShellGeo, voidShellMat);
-        voidShell.userData = { role: 'warpShell', spinX: 0.006, spinY: 0.012, spinZ: 0.004, pulse: 0.08 };
+        voidShell.userData = { role: 'warpShell', spinX: 0.008, spinY: 0.014, spinZ: 0.006, pulse: 0.025 };
         voidBossMesh.add(voidShell);
-        const voidWrapGeo = new THREE.DodecahedronGeometry(16, 1);
-        const voidWrapMat = new THREE.MeshBasicMaterial({ color: 0xff5533, wireframe: true, transparent: true, opacity: 0.7 });
-        const voidWrap = new THREE.Mesh(voidWrapGeo, voidWrapMat);
-        voidWrap.userData = { role: 'warpShell', spinX: -0.004, spinY: 0.008, spinZ: -0.01, pulse: 0.13 };
-        voidBossMesh.add(voidWrap);
-        const voidBandGeo = new THREE.TorusKnotGeometry(17, 0.9, 160, 10);
-        const voidBandMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true, transparent: true, opacity: 0.9 });
-        const voidBand = new THREE.Mesh(voidBandGeo, voidBandMat);
-        voidBand.userData = { role: 'warpBand', spinX: 0.01, spinY: -0.006, spinZ: 0.016, pulse: 0.1 };
-        voidBossMesh.add(voidBand);
-        const voidHaloGeo = new THREE.TorusGeometry(21, 0.65, 8, 128);
-        const voidHaloMat = new THREE.MeshBasicMaterial({ color: 0xff2020, wireframe: true, transparent: true, opacity: 0.86 });
-        const voidHalo = new THREE.Mesh(voidHaloGeo, voidHaloMat);
-        voidHalo.rotation.x = Math.PI / 2.5;
-        voidHalo.userData = { role: 'warpHalo', spinX: 0.002, spinY: 0.018, spinZ: 0.02, pulse: 0.16 };
-        voidBossMesh.add(voidHalo);
         scene.add(voidBossMesh);
 
         const snGeo = new THREE.SphereGeometry(1, 32, 32);
@@ -1190,8 +1181,15 @@ function triggerSupernova() {
     supernovaParticles.material.opacity = 1; supernovaParticles.visible = true;
 }
 
-function animateThree() {
+function animateThree(currentTime = 0) {
     requestAnimationFrame(animateThree);
+    if (currentTime) {
+        if (!lastThreeFrameTime) lastThreeFrameTime = currentTime;
+        const threeElapsed = currentTime - lastThreeFrameTime;
+        if (threeElapsed < FRAME_MIN_TIME) return;
+        lastThreeFrameTime = currentTime - (threeElapsed % (1000 / TARGET_FPS));
+    }
+
     if ((gameState === STATE.MENU || gameState === STATE.LEVEL_SELECT || gameState === STATE.HANGAR || gameState === STATE.INTRO || gameState === STATE.WELCOME) && menuCore) {
         menuCore.rotation.x += 0.005; menuCore.rotation.y += 0.01; menuCore.visible = true;
         if(glitchBossMesh) glitchBossMesh.visible = false;
@@ -1216,20 +1214,18 @@ function animateThree() {
         voidBossMesh.rotation.z += isTrueVoid ? 0.006 : 0.003;
         voidBossMesh.position.x += (((boss.x / width) * 120 - 60) - voidBossMesh.position.x) * 0.22;
         voidBossMesh.position.y += ((-(boss.y / height) * 60 + 30) - voidBossMesh.position.y) * 0.22;
-        const scale = isTrueVoid ? 8.8 : 7.8;
+        const scale = isTrueVoid ? 1.75 : 1.55;
         voidBossMesh.scale.set(scale, scale, scale);
         const shellColor = isTrueVoid ? 0xb000ff : 0xff2020;
-        const accentColor = isTrueVoid ? 0xff66ff : 0xffaa00;
         voidBossMesh.children.forEach((child, index) => {
             const data = child.userData || {};
             child.rotation.x += isTrueVoid ? data.spinX * 1.35 : data.spinX;
             child.rotation.y += isTrueVoid ? data.spinY * 1.35 : data.spinY;
             child.rotation.z += isTrueVoid ? data.spinZ * 1.35 : data.spinZ;
-            if (child.material && child.material.color) child.material.color.setHex(data.role === 'warpBand' || data.role === 'warpHalo' ? accentColor : shellColor);
+            if (child.material && child.material.color) child.material.color.setHex(shellColor);
             child.visible = true;
-            const wobble = Math.sin(Date.now() * 0.004 + index * 1.7) * (data.pulse || 0.08);
-            const stretch = Math.cos(Date.now() * 0.003 + index) * (isTrueVoid ? 0.18 : 0.12);
-            child.scale.set(1 + wobble + stretch, 1 - wobble * 0.6, 1 + wobble * 0.9 - stretch * 0.5);
+            const pulse = Math.sin(Date.now() * 0.003 + index * 1.7) * (data.pulse || 0.02);
+            child.scale.setScalar(1 + pulse);
         });
     } else if (voidBossMesh) {
         voidBossMesh.visible = false;
@@ -8208,6 +8204,7 @@ function gameOver(win) {
 }
 
 let lastFrameTime = 0;
+let lastThreeFrameTime = 0;
 const TARGET_FPS = 60;
 const FRAME_MIN_TIME = (1000 / TARGET_FPS) - (1000 / TARGET_FPS) * 0.1; // Allow slight jitter
 
