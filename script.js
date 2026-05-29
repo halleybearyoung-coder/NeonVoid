@@ -7994,13 +7994,13 @@ function unlockDevPanel() {
         waveText.style.color = "#ff00ff"; waveText.style.opacity = 1; waveText.style.transform = "scale(0.8)";
         setTimeout(() => { if (waveText.innerText === "DEV ACCESS GRANTED") waveText.style.opacity = 0; }, 900);
     } else {
-        alert("Wrong dev password.");
+        alert("If you used the password >:3 you are such a fool.");
     }
 }
 
 function requireDevAccess() {
     if (devUnlocked) return true;
-    alert("Enter password 0818 to use DEV.");
+    alert("If you're feeling stuck try using password - >:3.");
     return false;
 }
 
