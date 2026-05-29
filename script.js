@@ -8224,7 +8224,7 @@ function gameOver(win) {
         if (currentLevelIndex === 100) {
             stats.infiniteUnlocked = true;
             changedData = true;
-            gameOverTitle.innerHTML = "SECTOR ALPHA VICTORY<br><span style=\"font-size:22px;color:#b9c0c8;letter-spacing:1px;\">... wait a minute, whats tha-<br>[connection terminated]<br>[sector office terminated by sector beta dreadnaught]<br><br><span style=\"color:#ffd966;\">COMING SOON - Galaxias Polemos I</span><br>Galaxy War 1</span>";
+            gameOverTitle.innerHTML = "SECTOR ALPHA VICTORY<br><span style=\"font-size:22px;color:#b9c0c8;letter-spacing:1px;\"> we've finally won! The galaxy is now free from Neon Void's torment... wait a minute, whats tha-<br>[connection terminated]<br>[sector office terminated by sector beta dreadnaught]<br><br><span style=\"color:#ffd966;\">COMING SOON - Galaxias Polemos I</span><br>Galaxy War 1</span>";
             gameOverTitle.style.color = "#b000ff";
         }
         if (currentLevelIndex >= 10 && currentLevelIndex % 10 === 0) {
