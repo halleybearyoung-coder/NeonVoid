@@ -1116,28 +1116,10 @@ function initThreeMenu() {
         voidBossMesh = new THREE.Group();
         voidBossMesh.visible = false;
         voidBossMesh.position.z = -28;
-        const voidShellGeo = new THREE.IcosahedronGeometry(18, 2);
-        const voidShellMat = new THREE.MeshBasicMaterial({ color: 0xff2020, wireframe: true, transparent: true, opacity: 0.62 });
+        const voidShellGeo = new THREE.IcosahedronGeometry(10, 1);
+        const voidShellMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, transparent: true, opacity: 0.82 });
         const voidShell = new THREE.Mesh(voidShellGeo, voidShellMat);
         voidBossMesh.add(voidShell);
-        const voidKnotGeo = new THREE.TorusKnotGeometry(22, 2.2, 140, 12);
-        const voidKnotMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, transparent: true, opacity: 0.7 });
-        const voidKnot = new THREE.Mesh(voidKnotGeo, voidKnotMat);
-        voidBossMesh.add(voidKnot);
-        const voidCoreGeo = new THREE.SphereGeometry(9, 24, 24);
-        const voidCoreMat = new THREE.MeshBasicMaterial({ color: 0x330000, transparent: true, opacity: 0.92 });
-        voidBossCoreMesh = new THREE.Mesh(voidCoreGeo, voidCoreMat);
-        voidBossMesh.add(voidBossCoreMesh);
-        const redRingGeo = new THREE.TorusGeometry(28, 0.8, 8, 96);
-        const redRingMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true, transparent: true, opacity: 0.55 });
-        const redRing = new THREE.Mesh(redRingGeo, redRingMat);
-        redRing.rotation.x = Math.PI / 2.8; redRing.userData.voidStage = 90;
-        voidBossMesh.add(redRing);
-        const trueShellGeo = new THREE.DodecahedronGeometry(28, 1);
-        const trueShellMat = new THREE.MeshBasicMaterial({ color: 0xff66ff, wireframe: true, transparent: true, opacity: 0.45 });
-        const trueShell = new THREE.Mesh(trueShellGeo, trueShellMat);
-        trueShell.userData.voidStage = 100;
-        voidBossMesh.add(trueShell);
         scene.add(voidBossMesh);
 
         const snGeo = new THREE.SphereGeometry(1, 32, 32);
@@ -1212,23 +1194,18 @@ function animateThree() {
     if (boss && boss.active && boss.isAscendantBoss && (boss.ascendantStage === 90 || boss.ascendantStage === 100) && voidBossMesh && !isSupernovaExploding) {
         const isTrueVoid = boss.ascendantStage === 100;
         voidBossMesh.visible = true;
-        voidBossMesh.rotation.x += isTrueVoid ? 0.026 : 0.018;
-        voidBossMesh.rotation.y += isTrueVoid ? 0.042 : 0.03;
-        voidBossMesh.rotation.z += isTrueVoid ? 0.014 : 0.008;
+        voidBossMesh.rotation.x += 0.005;
+        voidBossMesh.rotation.y += 0.01;
+        voidBossMesh.rotation.z += isTrueVoid ? 0.006 : 0.003;
         voidBossMesh.position.x += (((boss.x / width) * 120 - 60) - voidBossMesh.position.x) * 0.22;
         voidBossMesh.position.y += ((-(boss.y / height) * 60 + 30) - voidBossMesh.position.y) * 0.22;
-        const scale = isTrueVoid ? 5.9 : 4.8;
+        const scale = isTrueVoid ? 13.2 : 11.6;
         voidBossMesh.scale.set(scale, scale, scale);
         const shellColor = isTrueVoid ? 0xb000ff : 0xff2020;
-        voidBossMesh.children.forEach((child, index) => {
-            if (child.userData.voidStage) child.visible = child.userData.voidStage === boss.ascendantStage;
-            else child.visible = true;
-            if (child.material && child.material.color) {
-                const core = index === 2;
-                child.material.color.setHex(core ? (isTrueVoid ? 0x230033 : 0x330000) : (child.userData.voidStage === 100 ? 0xff66ff : shellColor));
-            }
-            const pulse = 1 + Math.sin(Date.now() * (isTrueVoid ? 0.006 : 0.004) + index) * 0.08;
-            child.scale.set(pulse, pulse, pulse);
+        voidBossMesh.children.forEach(child => {
+            if (child.material && child.material.color) child.material.color.setHex(shellColor);
+            child.visible = true;
+            child.scale.set(1, 1, 1);
         });
     } else if (voidBossMesh) {
         voidBossMesh.visible = false;
@@ -2692,6 +2669,84 @@ class HeavyStriker {
             drops.push(new Drop(this.x, this.y, 'health'));
         }
     }
+}
+
+function drawPrototypeVoidSkin(palette, rot, glitching, scale = 1) {
+    ctx.save();
+    ctx.scale(scale, scale);
+    for(let i=0; i<96; i++) {
+        const angle = i * 2.399 + frames * (0.004 + (i % 7) * 0.0018);
+        const radius = 185 + ((i * 37) % 320) + Math.sin(frames * 0.035 + i) * 22;
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle * 1.12) * radius * 0.58;
+        ctx.globalAlpha = 0.22 + Math.sin(frames * 0.08 + i) * 0.18;
+        ctx.shadowBlur = 18; ctx.shadowColor = i % 3 ? palette.particle : palette.darkParticle;
+        ctx.fillStyle = i % 3 ? palette.particle : palette.darkParticle;
+        ctx.beginPath(); ctx.arc(px, py, 2 + (i % 6), 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    for(let i=0; i<20; i++) {
+        const angle = i * Math.PI * 2 / 20 - frames * (0.006 + (i % 4) * 0.002);
+        const radius = 190 + (i % 5) * 48 + Math.sin(frames * 0.03 + i) * 8;
+        const x1 = Math.cos(angle) * radius;
+        const y1 = Math.sin(angle * 1.07) * radius * 0.62;
+        const x2 = Math.cos(angle + 0.17) * (radius + 105 + (i % 4) * 22);
+        const y2 = Math.sin((angle + 0.17) * 1.07) * (radius + 105 + (i % 4) * 22) * 0.62;
+        ctx.globalAlpha = 0.28 + (i % 5) * 0.08;
+        ctx.strokeStyle = palette.line;
+        ctx.shadowBlur = 24; ctx.shadowColor = palette.line;
+        ctx.lineWidth = 2.4 + Math.sin(frames * 0.12 + i) * 1.2;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.save();
+    ctx.rotate(rot);
+    const pulse = 1 + Math.sin(frames * 0.08) * 0.09;
+    const spriteSize = 380 * pulse;
+    ctx.shadowBlur = 80; ctx.shadowColor = palette.line;
+    const gradient = ctx.createRadialGradient(0, 0, 30, 0, 0, spriteSize / 2);
+    gradient.addColorStop(0, palette.center);
+    gradient.addColorStop(0.45, palette.inner);
+    gradient.addColorStop(0.7, palette.outer);
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath(); ctx.arc(0, 0, spriteSize / 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = palette.hole;
+    ctx.beginPath(); ctx.arc(0, 0, spriteSize * 0.22, 0, Math.PI * 2); ctx.fill();
+    if (glitching) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = palette.line;
+        ctx.fillRect(-spriteSize * 0.42, -spriteSize * 0.12, spriteSize * 0.84, 7);
+        ctx.fillRect(-spriteSize * 0.35, spriteSize * 0.08, spriteSize * 0.7, 5);
+        ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+
+    ctx.shadowBlur = 34; ctx.shadowColor = palette.line;
+    for(let i=0; i<5; i++) {
+        ctx.save();
+        ctx.rotate(rot * (i % 2 === 0 ? 1 : -1) + i * Math.PI / 5);
+        ctx.strokeStyle = i % 2 === 0 ? palette.ring : palette.ringAlt;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 210 + i*34, 58 + i*18, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    if (glitching) {
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = palette.line;
+        for(let i=0; i<9; i++) {
+            const y = Math.sin(frames * 0.33 + i * 2.1) * 165;
+            const x = Math.cos(frames * 0.19 + i) * 85;
+            ctx.fillRect(x - 210, y, 420, 4 + (i % 4));
+        }
+        ctx.globalAlpha = 1;
+    }
+    ctx.restore();
 }
 
 class Boss {
@@ -5397,39 +5452,57 @@ class Boss {
 
         if (cfg.shape && cfg.shape.startsWith('void')) {
             if (cfg.shape === 'void-red') {
-                ctx.rotate(this.rot * 0.18);
                 ctx.strokeStyle = '#ff3355'; ctx.lineWidth = 5;
-                for(let i=0; i<6; i++) {
-                    ctx.rotate(Math.PI / 3);
+                const plates = [
+                    [-142,-96,-52,-122,-18,-70,-102,-46],
+                    [58,-118,154,-84,102,-28,28,-54],
+                    [-178,8,-92,-22,-68,48,-154,76],
+                    [86,8,188,34,142,94,58,56],
+                    [-84,104,-12,58,34,98,-38,148]
+                ];
+                plates.forEach((pts, idx) => {
+                    ctx.save(); ctx.rotate(Math.sin(frames * 0.018 + idx) * 0.08);
+                    ctx.fillStyle = idx % 2 ? '#240000' : '#120000';
                     ctx.beginPath();
-                    ctx.moveTo(64, -22); ctx.lineTo(184, -48); ctx.lineTo(146, 20); ctx.lineTo(72, 34);
-                    ctx.stroke();
+                    ctx.moveTo(pts[0], pts[1]);
+                    for(let i=2; i<pts.length; i+=2) ctx.lineTo(pts[i], pts[i+1]);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.restore();
+                });
+                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 2.5;
+                for(let i=0; i<8; i++) {
+                    const a = this.rot * 0.4 + i * Math.PI / 4;
+                    ctx.beginPath(); ctx.moveTo(Math.cos(a)*54, Math.sin(a)*34); ctx.lineTo(Math.cos(a)*156, Math.sin(a)*92); ctx.stroke();
                 }
                 ctx.fillStyle = '#190000';
                 ctx.beginPath();
-                for(let i=0; i<12; i++) {
-                    const a = i * Math.PI / 6;
-                    const r = i % 2 ? 62 : 122 + Math.sin(frames * 0.04 + i) * 10;
+                for(let i=0; i<10; i++) {
+                    const a = i * Math.PI / 5 + this.rot * 0.08;
+                    const r = i % 2 ? 48 : 84 + Math.sin(frames * 0.04 + i) * 10;
                     ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
                 }
                 ctx.closePath(); ctx.fill(); ctx.stroke();
-                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.arc(0, 0, 76, 0, Math.PI * 2); ctx.stroke();
                 ctx.fillStyle = '#ff3355';
                 ctx.beginPath(); ctx.arc(0, 0, 36 + Math.sin(frames * 0.18) * 5, 0, Math.PI * 2); ctx.fill();
             } else if (cfg.shape === 'void-orbit') {
                 ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 5;
                 ctx.beginPath(); ctx.ellipse(0, 0, 218, 82, this.rot * 0.35, 0, Math.PI * 2); ctx.stroke();
                 ctx.beginPath(); ctx.ellipse(0, 0, 122, 188, -this.rot * 0.25, 0, Math.PI * 2); ctx.stroke();
-                for(let i=0;i<10;i++) {
-                    const a = this.rot * 0.9 + i * Math.PI * 2 / 10;
-                    const ox = Math.cos(a) * 176;
-                    const oy = Math.sin(a) * 76;
+                for(let i=0;i<8;i++) {
+                    const a = this.rot * 0.9 + i * Math.PI * 2 / 8;
+                    const ox = Math.cos(a) * 184;
+                    const oy = Math.sin(a) * 82;
+                    ctx.save(); ctx.translate(ox, oy); ctx.rotate(a + Math.PI / 4);
                     ctx.fillStyle = i % 2 ? '#330000' : '#ff3030';
-                    ctx.beginPath(); ctx.arc(ox, oy, 18 + (i % 3) * 5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                    ctx.fillRect(-18, -18, 36, 36); ctx.strokeRect(-18, -18, 36, 36);
+                    ctx.restore();
                 }
                 ctx.fillStyle = '#270000';
-                ctx.beginPath(); ctx.roundRect(-76, -76, 152, 152, 24); ctx.fill(); ctx.stroke();
+                ctx.save(); ctx.rotate(Math.PI / 4 + this.rot * 0.16);
+                ctx.fillRect(-72, -72, 144, 144); ctx.strokeRect(-72, -72, 144, 144);
+                ctx.restore();
+                ctx.strokeStyle = '#ff3030'; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.moveTo(-150, 0); ctx.lineTo(150, 0); ctx.moveTo(0, -150); ctx.lineTo(0, 150); ctx.stroke();
                 ctx.fillStyle = '#ff3030';
                 ctx.beginPath(); ctx.arc(0, 0, 42 + Math.sin(frames * 0.13) * 6, 0, Math.PI*2); ctx.fill();
             } else if (cfg.shape === 'void-eclipse') {
@@ -5446,63 +5519,41 @@ class Boss {
                 ctx.beginPath(); ctx.arc(30 + Math.sin(frames*0.03)*20, 0, 94, 0, Math.PI*2); ctx.fill();
                 ctx.strokeStyle = '#ff3030'; ctx.lineWidth = 5;
                 ctx.beginPath(); ctx.arc(0, 0, 128, 0, Math.PI*2); ctx.stroke();
+                ctx.fillStyle = '#080008';
+                for(let i=0; i<7; i++) {
+                    const a = -Math.PI * 0.75 + i * Math.PI * 0.25;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(a) * 108, Math.sin(a) * 108);
+                    ctx.lineTo(Math.cos(a + 0.08) * 174, Math.sin(a + 0.08) * 174);
+                    ctx.lineTo(Math.cos(a + 0.16) * 108, Math.sin(a + 0.16) * 108);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                }
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath(); ctx.arc(-42, 0, 11, 0, Math.PI*2); ctx.fill();
             } else if (cfg.shape === 'void-home') {
-                ctx.save();
-                ctx.rotate(this.rot * 0.5);
-                ctx.strokeStyle = '#ff1d1d'; ctx.lineWidth = 2;
-                for(let i=0;i<28;i++) {
-                    const a = i * Math.PI * 2 / 28;
-                    const b = a + Math.sin(frames * 0.02 + i) * 0.4;
-                    ctx.beginPath();
-                    ctx.moveTo(Math.cos(a) * 70, Math.sin(a) * 42);
-                    ctx.lineTo(Math.cos(b) * 232, Math.sin(b) * 142);
-                    ctx.stroke();
-                }
-                ctx.restore();
-                ctx.fillStyle = '#050000';
-                ctx.beginPath();
-                for(let i=0; i<18; i++) {
-                    const a = -Math.PI/2 + i * Math.PI/9 + this.rot * 0.1;
-                    const r = i % 2 ? 76 : 142;
-                    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
-                }
-                ctx.closePath(); ctx.fill(); ctx.stroke();
-                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 7;
-                ctx.beginPath(); ctx.ellipse(0, 0, 190, 58, this.rot * 0.25, 0, Math.PI*2); ctx.stroke();
-                ctx.fillStyle = '#ff1d1d';
-                ctx.beginPath(); ctx.arc(0, 0, 48 + Math.sin(frames*0.16)*7, 0, Math.PI*2); ctx.fill();
+                drawPrototypeVoidSkin({
+                    particle: '#ff2020',
+                    darkParticle: '#330000',
+                    line: '#ff2020',
+                    center: '#050000',
+                    inner: '#210000',
+                    outer: '#ff2020',
+                    hole: '#050000',
+                    ring: 'rgba(255, 32, 32, 0.78)',
+                    ringAlt: 'rgba(90, 0, 0, 0.68)'
+                }, this.rot, frames % 130 > 112, 0.82);
             } else if (cfg.shape === 'void-true') {
-                ctx.save();
-                ctx.rotate(-this.rot * 0.28);
-                ctx.strokeStyle = '#b000ff'; ctx.lineWidth = 5;
-                for(let i=0; i<9; i++) {
-                    ctx.beginPath(); ctx.ellipse(0, 0, 238 - i * 16, 54 + i * 18, i * 0.33, 0, Math.PI*2); ctx.stroke();
-                }
-                ctx.restore();
-                ctx.save();
-                ctx.rotate(this.rot * 0.64);
-                for(let i=0; i<14; i++) {
-                    const a = i * Math.PI * 2 / 14;
-                    ctx.strokeStyle = i % 2 ? '#ff66ff' : '#ffffff';
-                    ctx.strokeRect(Math.cos(a)*176 - 14, Math.sin(a)*112 - 14, 28, 28);
-                }
-                ctx.restore();
-                ctx.fillStyle = 'rgba(18,0,30,0.96)';
-                ctx.beginPath();
-                for(let i=0; i<32; i++) {
-                    const a = -Math.PI/2 + i * Math.PI/16 + Math.sin(frames*0.012) * 0.2;
-                    const r = i % 2 ? 78 : (i % 4 === 0 ? 162 : 132);
-                    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
-                }
-                ctx.closePath(); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = '#b000ff';
-                ctx.beginPath(); ctx.arc(0, 0, 62 + Math.sin(frames * 0.18) * 9, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#ff66ff'; ctx.lineWidth = 4;
-                ctx.beginPath(); ctx.moveTo(-220, 0); ctx.bezierCurveTo(-80, -170, 80, 170, 220, 0); ctx.stroke();
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+                drawPrototypeVoidSkin({
+                    particle: '#b000ff',
+                    darkParticle: '#3a003f',
+                    line: '#b000ff',
+                    center: '#050007',
+                    inner: '#180020',
+                    outer: '#7a00ff',
+                    hole: '#050005',
+                    ring: 'rgba(176, 0, 255, 0.72)',
+                    ringAlt: 'rgba(70, 0, 90, 0.65)'
+                }, this.rot, frames % 110 > 88, 1.02);
             }
         } else if (cfg.shape === 'hao-jet') {
             const aim = player && player.active ? Math.atan2(player.y - this.y, player.x - this.x) : Math.PI / 2;
