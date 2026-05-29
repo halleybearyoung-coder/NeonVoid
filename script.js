@@ -332,7 +332,7 @@ const STAGE_MESSAGES = {
     'easy_38': "VORTEX MASON ACTIVE. <br><br>It builds walls out of spinning space.",
     'easy_39': "PARALLAX JUDGE ARRIVING. <br><br>Two sights, one verdict, no easy lane.",
     'easy_40': "SYSTEM CORE: NEON VOID. <br><br>Omega's purple giant is here. Bubble traps, flashbangs, mega bombs, and faster Termination 0 shots are all live. Win to unlock Alpha Core.",
-    'easy_41': "VIOLET DREADNOUGHT DETECTED. <br><br>A heavy purple warframe is pushing through the deep sector.",
+    'easy_41': "HAO ZHANG SCRAMBLE. <br><br>Sector Alpha picked up a tiny transponder from the military school Basic - Independent Free-skills. Yes, Command also noticed the initials. Hao Zhang is launching in a quick, agile fighter jet with way too much confidence and a flight path that refuses to sit still.",
     'easy_42': "PRISM TYRANT ONLINE. <br><br>Every prism face is a different weapon.",
     'easy_43': "ASHEN CHOIR FOUND. <br><br>The void is singing through burnt-blue rings.",
     'easy_44': "CIRCUIT MONOLITH RISING. <br><br>Its square body is stamping lanes into the screen.",
@@ -391,7 +391,7 @@ const STAGE_MESSAGES = {
     'hard_38': "VORTEX MASON. <br><br>It builds rotating traps while it fights.",
     'hard_39': "PARALLAX JUDGE. <br><br>Two sights, one verdict, zero forgiveness.",
     'hard_40': "SYSTEM CORE: NEON VOID. <br><br>Omega's purple giant is here. It traps, blinds, pulls, bombs, and fires faster Termination 0 shots. Win and claim Alpha Core.",
-    'hard_41': "VIOLET DREADNOUGHT. <br><br>The deep sector has started sending capital ships.",
+    'hard_41': "HAO ZHANG [ELITE SCRAMBLE]. <br><br>The Basic - Independent Free-skills ace has permission to fly. Hao Zhang's jet is light, twitchy, and built for fast strafes instead of heavy armor. If he starts showing off, punish the turn before the missiles arrive.",
     'hard_42': "PRISM TYRANT. <br><br>Every face fires a different death pattern.",
     'hard_43': "ASHEN CHOIR. <br><br>The burnt-blue rings are singing in sync.",
     'hard_44': "CIRCUIT MONOLITH. <br><br>It writes walls like code.",
@@ -1357,7 +1357,7 @@ const ASCENDANT_CONFIGS = {
     37: { name: 'EMBER MATRIX', color: '#ff6633', accent: '#ffd966', shape: 'matrix', style: 'spiral' },
     38: { name: 'VORTEX MASON', color: '#33aaff', accent: '#b000ff', shape: 'mason', style: 'walls' },
     39: { name: 'PARALLAX JUDGE', color: '#ff66cc', accent: '#33aaff', shape: 'judge', style: 'dual' },
-    41: { name: 'VIOLET DREADNOUGHT', color: '#9b4dff', accent: '#ff66ff', shape: 'dreadnought', style: 'missiles' },
+    41: { name: 'HAO ZHANG', color: '#46b8ff', accent: '#ffd966', shape: 'hao-jet', style: 'hao_jet' },
     42: { name: 'PRISM TYRANT', color: '#7df9ff', accent: '#ffcc44', shape: 'tyrant', style: 'fan' },
     43: { name: 'ASHEN CHOIR', color: '#7aa2ff', accent: '#dddddd', shape: 'choir', style: 'zero' },
     44: { name: 'CIRCUIT MONOLITH', color: '#66ff66', accent: '#003300', shape: 'monolith', style: 'walls' },
@@ -1378,7 +1378,7 @@ const ASCENDANT_CONFIGS = {
 };
 
 Object.assign(ASCENDANT_CONFIGS, {
-    60: { name: 'NEON VOID FRACTURE SHELL', color: '#ff3355', accent: '#660000', shape: 'void-red', style: 'pull' },
+    60: { name: 'NEON VOID FRACTURE SHELL', color: '#ff3355', accent: '#660000', shape: 'void-red', style: 'void_fracture' },
     61: { name: 'SPECTRAL ANVIL', color: '#7df9ff', accent: '#ff3030', shape: 'anvil', style: 'fan' },
     62: { name: 'DATA REAPER', color: '#55ff99', accent: '#ffffff', shape: 'wraith', style: 'phase' },
     63: { name: 'OBSIDIAN LATTICE', color: '#b000ff', accent: '#33aaff', shape: 'matrix', style: 'walls' },
@@ -1388,7 +1388,7 @@ Object.assign(ASCENDANT_CONFIGS, {
     67: { name: 'DT TANK', color: '#ff3030', accent: '#ffd966', shape: 'dt-tank', style: 'dt_tank' },
     68: { name: 'ECHO TYRANT', color: '#33aaff', accent: '#ff66cc', shape: 'tyrant', style: 'dual' },
     69: { name: 'VOID FANG RELAY', color: '#ff8844', accent: '#b000ff', shape: 'relay', style: 'zero' },
-    70: { name: 'NEON VOID WAR ORBIT', color: '#ff3030', accent: '#ffaa00', shape: 'void-orbit', style: 'spiral' },
+    70: { name: 'NEON VOID WAR ORBIT', color: '#ff3030', accent: '#ffaa00', shape: 'void-orbit', style: 'void_orbit' },
     71: { name: 'PRISM EXECUTOR', color: '#ffffff', accent: '#7df9ff', shape: 'prism', style: 'fan' },
     72: { name: 'MOLTEN MONOLITH', color: '#ff6633', accent: '#ffd966', shape: 'monolith', style: 'rain' },
     73: { name: 'SILENCE ENGINE', color: '#7aa2ff', accent: '#000000', shape: 'atlas', style: 'zero' },
@@ -1398,7 +1398,7 @@ Object.assign(ASCENDANT_CONFIGS, {
     77: { name: 'EMBER HELIX', color: '#ff8844', accent: '#46b8ff', shape: 'helix', style: 'spiral' },
     78: { name: 'BLACK ICE FURNACE', color: '#46b8ff', accent: '#111111', shape: 'furnace', style: 'pull' },
     79: { name: 'NULL BLADE CROWN', color: '#ffd966', accent: '#ff3030', shape: 'knives', style: 'dual' },
-    80: { name: 'NEON VOID ECLIPSE ENGINE', color: '#cc33ff', accent: '#ff3030', shape: 'void-eclipse', style: 'rail' },
+    80: { name: 'NEON VOID ECLIPSE ENGINE', color: '#cc33ff', accent: '#ff3030', shape: 'void-eclipse', style: 'void_eclipse' },
     81: { name: 'SAPPHIRE GRINDER', color: '#33aaff', accent: '#ffffff', shape: 'sawmaster', style: 'fan' },
     82: { name: 'BINARY PALACE', color: '#7dff77', accent: '#222222', shape: 'cathedral', style: 'walls' },
     83: { name: 'DARKSTAR LOOM', color: '#ff66cc', accent: '#b000ff', shape: 'loom', style: 'rain' },
@@ -1408,7 +1408,7 @@ Object.assign(ASCENDANT_CONFIGS, {
     87: { name: 'SHATTERED LEVIATHAN', color: '#66ffee', accent: '#ff8844', shape: 'leviathan', style: 'spiral' },
     88: { name: 'OMEN GATEKEEPER', color: '#b000ff', accent: '#ffd966', shape: 'gatekeeper', style: 'dual' },
     89: { name: 'RED SIGNAL RELAY', color: '#ff3030', accent: '#111111', shape: 'relay', style: 'zero' },
-    90: { name: 'THE RED NEON VOID', color: '#ff1d1d', accent: '#050000', shape: 'void-home', style: 'pull' },
+    90: { name: 'THE RED NEON VOID', color: '#ff1d1d', accent: '#050000', shape: 'void-home', style: 'redvoid' },
     91: { name: 'SECTOR NEON VOID WARSPINE', color: '#ff3355', accent: '#b000ff', shape: 'leviathan', style: 'spine' },
     92: { name: 'ALPHA BREAKER NODE', color: '#7df9ff', accent: '#ff3030', shape: 'monolith', style: 'breaker' },
     93: { name: 'CIVILIZATION EATER', color: '#ff8844', accent: '#111111', shape: 'harvester', style: 'eater' },
@@ -3599,9 +3599,15 @@ class Boss {
         else if (this.isAscendantBoss) {
             const cfg = this.ascendantConfig || ASCENDANT_CONFIGS[31];
             this.rot += 0.014 + (this.ascendantStage % 5) * 0.003;
-            const swing = cfg.style === 'pull' ? width * 0.08 : width * (0.12 + (this.ascendantStage % 3) * 0.025);
-            this.x = width/2 + Math.sin(frames * (0.008 + (this.ascendantStage % 4) * 0.0015) + this.ascendantStage) * swing;
-            this.y = this.targetY + Math.cos(frames * 0.013 + this.ascendantStage) * (28 + (this.ascendantStage % 3) * 8);
+            if (cfg.style === 'hao_jet') {
+                this.rot += 0.03;
+                this.x = width/2 + Math.sin(frames * 0.035) * (width * 0.34);
+                this.y = this.targetY + Math.cos(frames * 0.052) * 46;
+            } else {
+                const swing = cfg.style === 'pull' ? width * 0.08 : width * (0.12 + (this.ascendantStage % 3) * 0.025);
+                this.x = width/2 + Math.sin(frames * (0.008 + (this.ascendantStage % 4) * 0.0015) + this.ascendantStage) * swing;
+                this.y = this.targetY + Math.cos(frames * 0.013 + this.ascendantStage) * (28 + (this.ascendantStage % 3) * 8);
+            }
             if (cfg.style === 'pull' && this.currentAttack === 'ascendant_signature' && player.active) {
                 const pull = this.ascendantStage === 45 ? 0.028 : 0.018;
                 player.x += (this.x - player.x) * pull;
@@ -3946,6 +3952,52 @@ class Boss {
                     if (this.attackTimer % 78 === 20 && this.attackTimer < 260) {
                         const angle = Math.atan2(player.y - this.y, player.x - this.x);
                         bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*4.8, Math.sin(angle)*4.8, 'termination_zero'));
+                    }
+                } else if (cfg.style === 'hao_jet') {
+                    if (this.attackTimer % 6 === 0 && this.attackTimer < 250) {
+                        const base = Math.atan2(player.y - this.y, player.x - this.x);
+                        bullets.push(new Bullet(this.x - 28, this.y + 10, Math.cos(base - 0.18)*9.4, Math.sin(base - 0.18)*9.4, 'boss_orb'));
+                        bullets.push(new Bullet(this.x + 28, this.y + 10, Math.cos(base + 0.18)*9.4, Math.sin(base + 0.18)*9.4, 'boss_orb'));
+                    }
+                    if (this.attackTimer % 36 === 12 && this.attackTimer < 250) {
+                        bullets.push(new Bullet(this.x - 42, this.y + 24, -4, -2, 'missile'));
+                        bullets.push(new Bullet(this.x + 42, this.y + 24, 4, -2, 'missile'));
+                    }
+                    if (this.attackTimer % 78 === 20 && this.attackTimer < 250) {
+                        bullets.push(new Bullet(player.x + (Math.random() - 0.5) * 180, 0, 0, 0, 'glitch_laser'));
+                    }
+                } else if (cfg.style === 'void_fracture') {
+                    if (player.active) { player.x += (this.x - player.x) * 0.009; player.y += (this.y - player.y) * 0.009; }
+                    if (this.attackTimer % 18 === 0 && this.attackTimer < 250) {
+                        for(let i=0; i<6; i++) {
+                            const angle = this.rot + i * Math.PI / 3;
+                            bullets.push(new Bullet(this.x + Math.cos(angle)*90, this.y + Math.sin(angle)*45, Math.cos(angle)*7.2, Math.sin(angle)*7.2, 'fireball'));
+                        }
+                    }
+                } else if (cfg.style === 'void_orbit') {
+                    if (this.attackTimer % 10 === 0 && this.attackTimer < 260) {
+                        const angle = this.rot + this.attackTimer * 0.08;
+                        bullets.push(new Bullet(this.x + Math.cos(angle)*150, this.y + Math.sin(angle)*70, Math.cos(angle + Math.PI/2)*8, Math.sin(angle + Math.PI/2)*8, 'purple_fireball'));
+                        bullets.push(new Bullet(this.x + Math.cos(angle + Math.PI)*150, this.y + Math.sin(angle + Math.PI)*70, Math.cos(angle - Math.PI/2)*8, Math.sin(angle - Math.PI/2)*8, 'fireball'));
+                    }
+                    if (this.attackTimer % 74 === 24 && this.attackTimer < 250) bullets.push(new Bullet(this.x, this.y, 0, 4.6, 'termination_zero'));
+                } else if (cfg.style === 'void_eclipse') {
+                    if (this.attackTimer % 68 === 12 && this.attackTimer < 250) {
+                        bullets.push(new Bullet(player.x, 0, 0, 0, 'glitch_laser'));
+                        bullets.push(new Bullet(0, player.y, 1, 0, 'glitch_laser'));
+                    }
+                    if (this.attackTimer % 15 === 0 && this.attackTimer < 250) {
+                        const angle = Math.atan2(player.y - this.y, player.x - this.x) + Math.sin(this.attackTimer * 0.08) * 0.6;
+                        bullets.push(new Bullet(this.x, this.y, Math.cos(angle)*8.8, Math.sin(angle)*8.8, 'purple_fireball'));
+                    }
+                } else if (cfg.style === 'redvoid') {
+                    if (this.attackTimer % 14 === 0 && this.attackTimer < 255) {
+                        const angle = this.rot + this.attackTimer * 0.035;
+                        for(let i=0; i<4; i++) bullets.push(new Bullet(this.x, this.y, Math.cos(angle + i*Math.PI/2)*8.2, Math.sin(angle + i*Math.PI/2)*8.2, i%2 ? 'fireball' : 'purple_fireball'));
+                    }
+                    if (this.attackTimer % 82 === 22 && this.attackTimer < 250) {
+                        bullets.push(new Bullet(player.x, player.y - 230, 0, 6, 'arch_wall_h'));
+                        bullets.push(new Bullet(this.x, this.y, 0, 4.4, 'termination_zero'));
                     }
                 } else if (cfg.style === 'dt_tank') {
                     if (this.attackTimer % 34 === 4 && this.attackTimer < 260) {
@@ -5344,76 +5396,131 @@ class Boss {
         ctx.fillStyle = cfg.accent === '#000000' ? '#07000c' : 'rgba(12, 12, 20, 0.92)';
 
         if (cfg.shape && cfg.shape.startsWith('void')) {
-            const trueVoid = cfg.shape === 'void-true';
-            const redVoid = cfg.shape === 'void-home' || cfg.shape === 'void-red' || cfg.shape === 'void-orbit';
-            const coreColor = cfg.shape === 'void-eclipse' ? '#cc33ff' : (redVoid ? '#ff1d1d' : cfg.color);
-            ctx.save();
-            ctx.rotate(this.rot * 0.45);
-            ctx.strokeStyle = coreColor; ctx.lineWidth = cfg.shape === 'void-home' ? 3 : (trueVoid ? 5 : 4);
-            for(let ring=0; ring<(trueVoid ? 7 : 4); ring++) {
-                ctx.beginPath();
-                ctx.ellipse(0, 0, 150 + ring * (trueVoid ? 24 : 28), 66 + ring * (trueVoid ? 13 : 16), ring * 0.35, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-            ctx.restore();
-            ctx.save();
-            ctx.rotate(-this.rot * 0.7);
-            for(let i=0; i<(trueVoid ? 30 : 18); i++) {
-                const a = i * Math.PI * 2 / (trueVoid ? 30 : 18);
-                const r = 118 + (i % 3) * 28;
-                ctx.strokeStyle = i % 2 ? cfg.accent : coreColor;
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(a) * 48, Math.sin(a) * 48);
-                ctx.lineTo(Math.cos(a + Math.sin(frames * 0.02 + i) * 0.08) * r, Math.sin(a) * r * 0.78);
-                ctx.stroke();
-            }
-            ctx.restore();
-            ctx.fillStyle = cfg.shape === 'void-home' ? '#050000' : (trueVoid ? 'rgba(18,0,30,0.96)' : 'rgba(10, 0, 16, 0.94)');
-            ctx.beginPath();
-            for(let i=0; i<(trueVoid ? 24 : 16); i++) {
-                const a = -Math.PI / 2 + i * Math.PI / (trueVoid ? 12 : 8);
-                const r = i % 2 === 0 ? (trueVoid ? 132 : 106) : (trueVoid ? 72 : 62);
-                ctx.lineTo(Math.cos(a + this.rot * 0.2) * r, Math.sin(a + this.rot * 0.2) * r);
-            }
-            ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.fillStyle = coreColor;
-            ctx.beginPath(); ctx.arc(0, 0, (trueVoid ? 58 : 42) + Math.sin(frames * 0.12) * (trueVoid ? 8 : 5), 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
             if (cfg.shape === 'void-red') {
-                ctx.strokeStyle = '#ff8844'; ctx.lineWidth = 6;
-                ctx.beginPath(); ctx.arc(0, 0, 150, Math.sin(frames*0.02), Math.sin(frames*0.02) + Math.PI * 1.25); ctx.stroke();
-                ctx.fillStyle = '#330000';
-                [-120, 120].forEach(x => { ctx.fillRect(x - 16, -52, 32, 104); ctx.strokeRect(x - 16, -52, 32, 104); });
-            } else if (cfg.shape === 'void-orbit') {
-                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 4;
-                for(let i=0;i<8;i++) {
-                    const a = this.rot + i * Math.PI / 4;
-                    ctx.beginPath(); ctx.arc(Math.cos(a)*162, Math.sin(a)*86, 16 + (i%2)*8, 0, Math.PI*2); ctx.stroke();
-                }
-            } else if (cfg.shape === 'void-eclipse') {
-                ctx.fillStyle = 'rgba(0,0,0,0.78)';
-                ctx.beginPath(); ctx.arc(32 + Math.sin(frames*0.03)*18, 0, 82, 0, Math.PI*2); ctx.fill();
-                ctx.strokeStyle = '#ff3030'; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.arc(0, 0, 178, 0, Math.PI*2); ctx.stroke();
-            } else if (cfg.shape === 'void-home') {
-                ctx.strokeStyle = '#ff3030'; ctx.lineWidth = 2;
-                for(let i=0;i<18;i++) {
-                    const a = this.rot + i * Math.PI * 2 / 18;
+                ctx.rotate(this.rot * 0.18);
+                ctx.strokeStyle = '#ff3355'; ctx.lineWidth = 5;
+                for(let i=0; i<6; i++) {
+                    ctx.rotate(Math.PI / 3);
                     ctx.beginPath();
-                    ctx.moveTo(Math.cos(a) * 170, Math.sin(a) * 94);
-                    ctx.lineTo(Math.cos(a + 0.35) * 218, Math.sin(a + 0.35) * 122);
+                    ctx.moveTo(64, -22); ctx.lineTo(184, -48); ctx.lineTo(146, 20); ctx.lineTo(72, 34);
                     ctx.stroke();
                 }
-            } else if (trueVoid) {
-                ctx.strokeStyle = '#ff66ff'; ctx.lineWidth = 4;
-                for(let i=0;i<10;i++) {
-                    const a = -this.rot * 0.8 + i * Math.PI / 5;
-                    ctx.beginPath(); ctx.rect(Math.cos(a)*185 - 14, Math.sin(a)*110 - 14, 28, 28); ctx.stroke();
+                ctx.fillStyle = '#190000';
+                ctx.beginPath();
+                for(let i=0; i<12; i++) {
+                    const a = i * Math.PI / 6;
+                    const r = i % 2 ? 62 : 122 + Math.sin(frames * 0.04 + i) * 10;
+                    ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
                 }
-                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, 76, 0, Math.PI * 2); ctx.stroke();
+                ctx.fillStyle = '#ff3355';
+                ctx.beginPath(); ctx.arc(0, 0, 36 + Math.sin(frames * 0.18) * 5, 0, Math.PI * 2); ctx.fill();
+            } else if (cfg.shape === 'void-orbit') {
+                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 5;
+                ctx.beginPath(); ctx.ellipse(0, 0, 218, 82, this.rot * 0.35, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.ellipse(0, 0, 122, 188, -this.rot * 0.25, 0, Math.PI * 2); ctx.stroke();
+                for(let i=0;i<10;i++) {
+                    const a = this.rot * 0.9 + i * Math.PI * 2 / 10;
+                    const ox = Math.cos(a) * 176;
+                    const oy = Math.sin(a) * 76;
+                    ctx.fillStyle = i % 2 ? '#330000' : '#ff3030';
+                    ctx.beginPath(); ctx.arc(ox, oy, 18 + (i % 3) * 5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                }
+                ctx.fillStyle = '#270000';
+                ctx.beginPath(); ctx.roundRect(-76, -76, 152, 152, 24); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#ff3030';
+                ctx.beginPath(); ctx.arc(0, 0, 42 + Math.sin(frames * 0.13) * 6, 0, Math.PI*2); ctx.fill();
+            } else if (cfg.shape === 'void-eclipse') {
+                ctx.save();
+                ctx.rotate(-this.rot * 0.4);
+                ctx.strokeStyle = '#cc33ff'; ctx.lineWidth = 5;
+                for(let i=0; i<5; i++) {
+                    ctx.beginPath(); ctx.ellipse(0, 0, 190 - i * 26, 52 + i * 24, i * 0.6, 0, Math.PI*2); ctx.stroke();
+                }
+                ctx.restore();
+                ctx.fillStyle = '#cc33ff';
+                ctx.beginPath(); ctx.arc(-22, 0, 92, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'rgba(0,0,0,0.78)';
+                ctx.beginPath(); ctx.arc(30 + Math.sin(frames*0.03)*20, 0, 94, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#ff3030'; ctx.lineWidth = 5;
+                ctx.beginPath(); ctx.arc(0, 0, 128, 0, Math.PI*2); ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(-42, 0, 11, 0, Math.PI*2); ctx.fill();
+            } else if (cfg.shape === 'void-home') {
+                ctx.save();
+                ctx.rotate(this.rot * 0.5);
+                ctx.strokeStyle = '#ff1d1d'; ctx.lineWidth = 2;
+                for(let i=0;i<28;i++) {
+                    const a = i * Math.PI * 2 / 28;
+                    const b = a + Math.sin(frames * 0.02 + i) * 0.4;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(a) * 70, Math.sin(a) * 42);
+                    ctx.lineTo(Math.cos(b) * 232, Math.sin(b) * 142);
+                    ctx.stroke();
+                }
+                ctx.restore();
+                ctx.fillStyle = '#050000';
+                ctx.beginPath();
+                for(let i=0; i<18; i++) {
+                    const a = -Math.PI/2 + i * Math.PI/9 + this.rot * 0.1;
+                    const r = i % 2 ? 76 : 142;
+                    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+                }
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 7;
+                ctx.beginPath(); ctx.ellipse(0, 0, 190, 58, this.rot * 0.25, 0, Math.PI*2); ctx.stroke();
+                ctx.fillStyle = '#ff1d1d';
+                ctx.beginPath(); ctx.arc(0, 0, 48 + Math.sin(frames*0.16)*7, 0, Math.PI*2); ctx.fill();
+            } else if (cfg.shape === 'void-true') {
+                ctx.save();
+                ctx.rotate(-this.rot * 0.28);
+                ctx.strokeStyle = '#b000ff'; ctx.lineWidth = 5;
+                for(let i=0; i<9; i++) {
+                    ctx.beginPath(); ctx.ellipse(0, 0, 238 - i * 16, 54 + i * 18, i * 0.33, 0, Math.PI*2); ctx.stroke();
+                }
+                ctx.restore();
+                ctx.save();
+                ctx.rotate(this.rot * 0.64);
+                for(let i=0; i<14; i++) {
+                    const a = i * Math.PI * 2 / 14;
+                    ctx.strokeStyle = i % 2 ? '#ff66ff' : '#ffffff';
+                    ctx.strokeRect(Math.cos(a)*176 - 14, Math.sin(a)*112 - 14, 28, 28);
+                }
+                ctx.restore();
+                ctx.fillStyle = 'rgba(18,0,30,0.96)';
+                ctx.beginPath();
+                for(let i=0; i<32; i++) {
+                    const a = -Math.PI/2 + i * Math.PI/16 + Math.sin(frames*0.012) * 0.2;
+                    const r = i % 2 ? 78 : (i % 4 === 0 ? 162 : 132);
+                    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+                }
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#b000ff';
+                ctx.beginPath(); ctx.arc(0, 0, 62 + Math.sin(frames * 0.18) * 9, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#ff66ff'; ctx.lineWidth = 4;
                 ctx.beginPath(); ctx.moveTo(-220, 0); ctx.bezierCurveTo(-80, -170, 80, 170, 220, 0); ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
             }
+        } else if (cfg.shape === 'hao-jet') {
+            const aim = player && player.active ? Math.atan2(player.y - this.y, player.x - this.x) : Math.PI / 2;
+            ctx.rotate(aim - Math.PI / 2 + Math.sin(frames * 0.08) * 0.12);
+            ctx.fillStyle = '#071424';
+            ctx.beginPath();
+            ctx.moveTo(0, -120); ctx.lineTo(26, -34); ctx.lineTo(104, 32); ctx.lineTo(42, 24); ctx.lineTo(22, 112);
+            ctx.lineTo(0, 72); ctx.lineTo(-22, 112); ctx.lineTo(-42, 24); ctx.lineTo(-104, 32); ctx.lineTo(-26, -34);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = cfg.color;
+            ctx.beginPath(); ctx.moveTo(0, -86); ctx.lineTo(16, -28); ctx.lineTo(0, 4); ctx.lineTo(-16, -28); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = cfg.accent;
+            ctx.fillRect(-74, 24, 36, 10); ctx.fillRect(38, 24, 36, 10);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(0, -36, 9 + Math.sin(frames * 0.2) * 2, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ff8844';
+            ctx.beginPath(); ctx.moveTo(-18, 112); ctx.lineTo(-4, 150 + Math.sin(frames*0.4)*12); ctx.lineTo(8, 112); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(18, 112); ctx.lineTo(4, 150 + Math.cos(frames*0.4)*12); ctx.lineTo(-8, 112); ctx.fill();
         } else if (cfg.shape === 'dt-tank') {
             ctx.rotate(Math.sin(frames * 0.025) * 0.08);
             ctx.fillStyle = '#2a1010';
